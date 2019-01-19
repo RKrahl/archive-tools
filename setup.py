@@ -18,7 +18,7 @@ m = re.match(r"^(.*?)\s*<(.*)>$", AUTHOR)
 
 
 setup(
-    name = "archive",
+    name = "archive-tools",
     version = VERSION,
     description = DESCRIPTION,
     long_description = LONG_DESCRIPTION,
