@@ -12,6 +12,7 @@ from archive.manifest import Manifest
 class Archive:
 
     def __init__(self, path, mode='r', paths=None, basedir=None):
+        self.path = Path(path)
         if mode.startswith('r'):
             # FIXME: reading not yet implemented
             raise NotImplementedError
@@ -20,11 +21,11 @@ class Archive:
                 # The 'x' (exclusive creation) mode was added to
                 # tarfile in Python 3.5.
                 mode = 'w' + mode[1:]
-            self._create(path, mode, paths, basedir)
+            self._create(mode, paths, basedir)
         else:
             raise ValueError("invalid mode '%s'" % mode)
 
-    def _create(self, path, mode, paths, basedir):
+    def _create(self, mode, paths, basedir):
         self.basedir = Path(basedir)
         _paths = []
         if self.basedir.is_absolute():
@@ -50,7 +51,7 @@ class Archive:
         else:
             raise ValueError("refusing to create an empty archive")
         self.manifest = Manifest(paths=_paths)
-        with tarfile.open(str(path), mode) as tarf:
+        with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
