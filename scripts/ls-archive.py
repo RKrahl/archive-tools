@@ -3,35 +3,14 @@
 import argparse
 import datetime
 from pathlib import Path
-import stat
 from archive import Archive
+from archive.tools import modstr
+
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('archive',
                        help=("path to the archive file"), type=Path)
 args = argparser.parse_args()
-
-def modstr(t, m):
-    ftch = '-' if t == 'f' else t
-    urch = 'r' if m & stat.S_IRUSR else '-'
-    uwch = 'w' if m & stat.S_IWUSR else '-'
-    if m & stat.S_ISUID:
-        uxch = 's' if m & stat.S_IXUSR else 'S'
-    else:
-        uxch = 'x' if m & stat.S_IXUSR else '-'
-    grch = 'r' if m & stat.S_IRGRP else '-'
-    gwch = 'w' if m & stat.S_IWGRP else '-'
-    if m & stat.S_ISGID:
-        gxch = 's' if m & stat.S_IXGRP else 'S'
-    else:
-        gxch = 'x' if m & stat.S_IXGRP else '-'
-    orch = 'r' if m & stat.S_IROTH else '-'
-    owch = 'w' if m & stat.S_IWOTH else '-'
-    if m & stat.S_ISVTX:
-        oxch = 't' if m & stat.S_IXOTH else 'T'
-    else:
-        oxch = 'x' if m & stat.S_IXOTH else '-'
-    return ''.join((ftch, urch, uwch, uxch, grch, gwch, gxch, orch, owch, oxch))
 
 
 archive = Archive(args.archive, "r")

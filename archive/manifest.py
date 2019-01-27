@@ -3,30 +3,13 @@
 
 from collections import Sequence
 import grp
-import hashlib
 import os
 from pathlib import Path
 import pwd
 import stat
 import yaml
 import archive
-
-
-def _checksum(path, hashalg):
-    """Calculate hashes for a file.
-    """
-    if not hashalg:
-        return {}
-    m = { h:hashlib.new(h) for h in hashalg }
-    chunksize = 8192
-    with path.open('rb') as f:
-        while True:
-            chunk = f.read(chunksize)
-            if not chunk:
-                break
-            for h in hashalg:
-                m[h].update(chunk)
-    return { h: m[h].hexdigest() for h in hashalg }
+from archive.tools import checksum
 
 
 class FileInfo:
@@ -64,7 +47,8 @@ class FileInfo:
             if stat.S_ISREG(fstat.st_mode):
                 self.type = 'f'
                 self.size = fstat.st_size
-                self.checksum = _checksum(self.path, ['sha256'])
+                with self.path.open('rb') as f:
+                    self.checksum = checksum(f, ['sha256'])
             elif stat.S_ISDIR(fstat.st_mode):
                 self.type = 'd'
             elif stat.S_ISLNK(fstat.st_mode):
