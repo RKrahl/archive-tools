@@ -14,8 +14,7 @@ class Archive:
     def __init__(self, path, mode='r', paths=None, basedir=None):
         self.path = Path(path)
         if mode.startswith('r'):
-            # FIXME: reading not yet implemented
-            raise NotImplementedError
+            self._read_manifest(mode)
         elif mode.startswith('x'):
             if sys.version_info < (3, 5):
                 # The 'x' (exclusive creation) mode was added to
@@ -66,3 +65,13 @@ class Archive:
                 else:
                     name = str(p)
                 tarf.add(str(p), arcname=name, recursive=False)
+
+    def _read_manifest(self, mode):
+        assert mode.startswith('r')
+        with tarfile.open(str(self.path), mode) as tarf:
+            ti = tarf.next()
+            path = Path(ti.path)
+            if path.name != ".manifest.yaml":
+                raise ValueError("invalid archive: manifest not found")
+            self.basedir = path.parent
+            self.manifest = Manifest(fileobj=tarf.extractfile(ti))
