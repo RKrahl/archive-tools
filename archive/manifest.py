@@ -5,7 +5,7 @@ from collections import Sequence
 import grp
 import hashlib
 import os
-import pathlib
+from pathlib import Path
 import pwd
 import stat
 import yaml
@@ -34,7 +34,7 @@ class FileInfo:
     def __init__(self, data=None, path=None):
         if data is not None:
             self.type = data['type']
-            self.path = pathlib.Path(data['path'])
+            self.path = Path(data['path'])
             self.uid = data['uid']
             self.uname = data['uname']
             self.gid = data['gid']
@@ -45,7 +45,7 @@ class FileInfo:
                 self.size = data['size']
                 self.checksum = data['checksum']
             elif self.is_symlink():
-                self.target = data['target']
+                self.target = Path(data['target'])
         elif path is not None:
             self.path = path
             fstat = self.path.lstat()
@@ -69,7 +69,7 @@ class FileInfo:
                 self.type = 'd'
             elif stat.S_ISLNK(fstat.st_mode):
                 self.type = 'l'
-                self.target = os.readlink(str(self.path))
+                self.target = Path(os.readlink(str(self.path)))
             else:
                 raise ValueError("%s: invalid file type" % str(self.path))
         else:
@@ -99,7 +99,7 @@ class FileInfo:
             d['size'] = self.size
             d['checksum'] = self.checksum
         elif self.is_symlink():
-            d['target'] = self.target
+            d['target'] = str(self.target)
         return d
 
 
