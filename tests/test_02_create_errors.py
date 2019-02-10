@@ -19,6 +19,7 @@ testdirs = [
 testfiles = [
     (Path("base", "msg.txt"), 0o644),
     (Path("other", "rnd.dat"), 0o600),
+    (Path("msg.txt"), 0o644),
 ]
 testsymlinks = []
 
@@ -60,3 +61,12 @@ def test_create_norm_path(testdata, monkeypatch):
     paths = [ "base", "base/../../../etc/passwd" ]
     with pytest.raises(ValueError):
         Archive("archive.tar", mode="x:", paths=paths, basedir="base")
+
+@pytest.mark.xfail(reason="Issue #9")
+def test_create_rel_check_basedir(testdata, monkeypatch):
+    """Base directory must be a directory.
+    """
+    monkeypatch.chdir(str(testdata))
+    p = Path("msg.txt")
+    with pytest.raises(ValueError):
+        Archive("archive.tar", mode="x:", paths=[p], basedir=p)
