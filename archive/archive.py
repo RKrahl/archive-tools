@@ -8,6 +8,16 @@ import tarfile
 import tempfile
 from archive.manifest import Manifest
 
+def _is_normalized(p):
+    """Check if the path is normalized.
+    """
+    p = Path.cwd() / p
+    if p.resolve() == p:
+        return True
+    if p.is_symlink():
+        return p.resolve().parent == p.parent
+    else:
+        return False
 
 class Archive:
 
@@ -35,6 +45,8 @@ class Archive:
             # - all paths are relative and start with basedir.
             abspath = None
             for p in paths:
+                if not _is_normalized(p):
+                    raise ValueError("invalid path %s: must be normalized" % p)
                 p = Path(p)
                 if abspath is None:
                     abspath = p.is_absolute()

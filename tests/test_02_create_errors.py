@@ -13,6 +13,7 @@ from conftest import gettestdata, tmpdir
 testdirs = [
     (Path("base"), 0o755),
     (Path("base", "empty"), 0o755),
+    (Path("base", "data"), 0o755),
     (Path("other"), 0o755),
 ]
 testfiles = [
@@ -49,5 +50,13 @@ def test_create_rel_not_in_base(testdata, monkeypatch):
     """
     monkeypatch.chdir(str(testdata))
     paths = [ Path("other", "rnd.dat") ]
+    with pytest.raises(ValueError):
+        Archive("archive.tar", mode="x:", paths=paths, basedir="base")
+
+def test_create_norm_path(testdata, monkeypatch):
+    """Items in paths must be normalized.
+    """
+    monkeypatch.chdir(str(testdata))
+    paths = [ "base", "base/../../../etc/passwd" ]
     with pytest.raises(ValueError):
         Archive("archive.tar", mode="x:", paths=paths, basedir="base")
