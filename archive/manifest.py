@@ -115,6 +115,13 @@ class Manifest(Sequence):
     def __getitem__(self, index):
         return self.fileinfos.__getitem__(index)
 
+    def find(self, path):
+        for fi in self:
+            if fi.path == path:
+                return fi
+        else:
+            return None
+
     def write(self, fileobj):
         head = """%%YAML 1.1
 # Generator: archive-tools %s
