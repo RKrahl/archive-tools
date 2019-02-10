@@ -51,3 +51,12 @@ def test_create_rel_not_in_base(testdata, monkeypatch):
     paths = [ Path("other", "rnd.dat") ]
     with pytest.raises(ValueError):
         Archive("archive.tar", mode="x:", paths=paths, basedir="base")
+
+@pytest.mark.xfail(reason="Issue #6")
+def test_create_norm_path(testdata, monkeypatch):
+    """Items in paths must be normalized.
+    """
+    monkeypatch.chdir(str(testdata))
+    paths = [ "base", "base/../../../etc/passwd" ]
+    with pytest.raises(ValueError):
+        Archive("archive.tar", mode="x:", paths=paths, basedir="base")
