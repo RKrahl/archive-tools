@@ -18,16 +18,6 @@ args = argparser.parse_args()
 
 if args.compression == 'none':
     args.compression = ''
-
-if not args.basedir:
-    if args.files[0].is_absolute():
-        args.basedir = Path(args.archive.name.split('.')[0])
-    else:
-        if args.files[0].is_dir():
-            args.basedir = args.files[0]
-        else:
-            args.basedir = args.files[0].parent
-
 mode = 'x:%s' % args.compression
 
 archive = Archive(args.archive, mode, args.files, args.basedir)
