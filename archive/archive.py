@@ -66,6 +66,9 @@ class Archive:
                 # with basedir:
                 p.relative_to(self.basedir)
             _paths.append(p)
+        if not abspath:
+            if self.basedir.is_symlink() or not self.basedir.is_dir():
+                raise ValueError("basedir must be a directory")
         self.manifest = Manifest(paths=_paths)
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
