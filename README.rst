@@ -39,11 +39,15 @@ Required library packages:
 
 Optional library packages:
 
-+ `pytest`_
++ `pytest`_ >= 3.0
 
   Only needed to run the test suite.
 
 + `distutils-pytest`_
+
+  Only needed to run the test suite.
+
++ `pytest-dependency`_ >= 0.2
 
   Only needed to run the test suite.
 
@@ -62,7 +66,7 @@ customize the install process.
 
      $ python setup.py build
 
-3. Test (not yet implemented)::
+3. Test (optional)::
 
      $ python setup.py test
 
@@ -96,4 +100,5 @@ permissions and limitations under the License.
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
 .. _pytest: http://pytest.org/
 .. _distutils-pytest: https://github.com/RKrahl/distutils-pytest
+.. _pytest-dependency: https://pypi.python.org/pypi/pytest_dependency/
 .. _Installing Python Modules: https://docs.python.org/3.7/install/
