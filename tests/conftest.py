@@ -53,7 +53,7 @@ def tmpdir(request):
 def setup_testdata(main_dir, dirs=[], files=[], symlinks=[]):
     for d, m in dirs:
         p = main_dir / d
-        p.mkdir()
+        p.mkdir(parents=True)
         p.chmod(m)
     for f, m in files:
         p = main_dir / f
