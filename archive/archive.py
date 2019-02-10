@@ -35,32 +35,37 @@ class Archive:
             raise ValueError("invalid mode '%s'" % mode)
 
     def _create(self, mode, paths, basedir):
+        if not paths:
+            raise ValueError("refusing to create an empty archive")
+        if not basedir:
+            p = Path(paths[0])
+            if p.is_absolute():
+                basedir = Path(self.path.name.split('.')[0])
+            else:
+                basedir = Path(p.parts[0])
         self.basedir = Path(basedir)
-        _paths = []
         if self.basedir.is_absolute():
             raise ValueError("basedir must be relative")
-        if len(paths) > 0:
-            # We allow two different cases: either
-            # - all paths are absolute, or
-            # - all paths are relative and start with basedir.
-            abspath = None
-            for p in paths:
-                if not _is_normalized(p):
-                    raise ValueError("invalid path %s: must be normalized" % p)
-                p = Path(p)
-                if abspath is None:
-                    abspath = p.is_absolute()
-                else:
-                    if abspath != p.is_absolute():
-                        raise ValueError("mixing of absolute and relative "
-                                         "paths is not allowed")
-                if not p.is_absolute():
-                    # This will raise ValueError if p does not start
-                    # with basedir:
-                    p.relative_to(self.basedir)
-                _paths.append(p)
-        else:
-            raise ValueError("refusing to create an empty archive")
+        # We allow two different cases: either
+        # - all paths are absolute, or
+        # - all paths are relative and start with basedir.
+        abspath = None
+        _paths = []
+        for p in paths:
+            if not _is_normalized(p):
+                raise ValueError("invalid path %s: must be normalized" % p)
+            p = Path(p)
+            if abspath is None:
+                abspath = p.is_absolute()
+            else:
+                if abspath != p.is_absolute():
+                    raise ValueError("mixing of absolute and relative "
+                                     "paths is not allowed")
+            if not p.is_absolute():
+                # This will raise ValueError if p does not start
+                # with basedir:
+                p.relative_to(self.basedir)
+            _paths.append(p)
         self.manifest = Manifest(paths=_paths)
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:

@@ -26,7 +26,6 @@ def test_dir(tmpdir):
     return tmpdir
 
 
-@pytest.mark.xfail(reason="Issue #8")
 def test_create__default_basedir_rel(test_dir, monkeypatch):
     """Check the default basedir with relative paths.
     """
@@ -39,7 +38,6 @@ def test_create__default_basedir_rel(test_dir, monkeypatch):
     check_manifest(archive.manifest, **testdata)
 
 
-@pytest.mark.xfail(reason="Issue #8")
 def test_create__default_basedir_abs(test_dir, monkeypatch):
     """Check the default basedir with absolute paths.
     """
