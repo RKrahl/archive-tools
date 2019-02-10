@@ -52,7 +52,6 @@ def test_create_norm_path(test_dir, monkeypatch):
     with pytest.raises(ValueError):
         Archive("archive.tar", mode="x:", paths=paths, basedir="base")
 
-@pytest.mark.xfail(reason="Issue #9")
 def test_create_rel_check_basedir(test_dir, monkeypatch):
     """Base directory must be a directory.
     """
