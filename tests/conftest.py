@@ -50,6 +50,10 @@ def tmpdir(request):
     with TmpDir() as td:
         yield td
 
+@pytest.fixture(scope="function")
+def archive_name(request):
+    return "archive-%s.tar" % request.function.__name__
+
 def setup_testdata(main_dir, dirs=[], files=[], symlinks=[]):
     for d, m in dirs:
         p = main_dir / d
