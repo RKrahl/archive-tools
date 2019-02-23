@@ -45,7 +45,7 @@ def test_create_rel_not_in_base(test_dir, monkeypatch):
         Archive("archive.tar", mode="x:", paths=paths, basedir="base")
 
 def test_create_norm_path(test_dir, monkeypatch):
-    """Items in paths must be normalized.
+    """Items in paths must be normalized.  (Issue #6)
     """
     monkeypatch.chdir(str(test_dir))
     paths = [ "base", "base/../../../etc/passwd" ]
@@ -53,7 +53,7 @@ def test_create_norm_path(test_dir, monkeypatch):
         Archive("archive.tar", mode="x:", paths=paths, basedir="base")
 
 def test_create_rel_check_basedir(test_dir, monkeypatch):
-    """Base directory must be a directory.
+    """Base directory must be a directory.  (Issue #9)
     """
     monkeypatch.chdir(str(test_dir))
     p = Path("msg.txt")
