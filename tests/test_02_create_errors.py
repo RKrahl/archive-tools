@@ -59,3 +59,20 @@ def test_create_rel_check_basedir(test_dir, monkeypatch):
     p = Path("msg.txt")
     with pytest.raises(ValueError):
         Archive("archive.tar", mode="x:", paths=[p], basedir=p)
+
+@pytest.mark.xfail(reason="Issue #10")
+def test_create_no_manifest_file(test_dir, monkeypatch):
+    """The filename .manifest.yaml is reserved by archive-tools.
+    The archive content must not have an actual file with that name in
+    the base directory.  (Issue #10)
+    """
+    monkeypatch.chdir(str(test_dir))
+    base = Path("base")
+    manifest = base / ".manifest.yaml"
+    with manifest.open("wt") as f:
+        print("This is not a YAML file!", file=f)
+    try:
+        with pytest.raises(ValueError):
+            Archive("archive.tar", mode="x:", paths=[base])
+    finally:
+        manifest.unlink()
