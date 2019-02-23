@@ -60,7 +60,6 @@ def test_create_rel_check_basedir(test_dir, archive_name, monkeypatch):
     with pytest.raises(ValueError):
         Archive(archive_name, mode="x:", paths=[p], basedir=p)
 
-@pytest.mark.xfail(reason="Issue #10")
 def test_create_rel_no_manifest_file(test_dir, archive_name, monkeypatch):
     """The filename .manifest.yaml is reserved by archive-tools.
 

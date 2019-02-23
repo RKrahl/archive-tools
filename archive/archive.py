@@ -70,12 +70,13 @@ class Archive:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ValueError("basedir must be a directory")
         self.manifest = Manifest(paths=_paths)
+        manifest_name = str(self.basedir / ".manifest.yaml")
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
-                name = str(self.basedir / ".manifest.yaml")
-                manifest_info = tarf.gettarinfo(arcname=name, fileobj=tmpf)
+                manifest_info = tarf.gettarinfo(arcname=manifest_name, 
+                                                fileobj=tmpf)
                 manifest_info.mode = stat.S_IFREG | 0o444
                 tarf.addfile(manifest_info, tmpf)
             for fi in self.manifest:
@@ -84,6 +85,9 @@ class Archive:
                     name = str(self.basedir / p.relative_to(p.anchor))
                 else:
                     name = str(p)
+                if name == manifest_name:
+                    raise ValueError("cannot add %s: "
+                                     "this filename is reserved" % p)
                 tarf.add(str(p), arcname=name, recursive=False)
 
     def _read_manifest(self, mode):
