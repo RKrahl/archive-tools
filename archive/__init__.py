@@ -7,3 +7,4 @@ __version__ = "0.0"
 __author__ = "Rolf Krahl <rolf@rotkraut.de>"
 
 from archive.archive import Archive
+from archive.exception import *

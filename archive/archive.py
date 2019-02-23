@@ -7,6 +7,7 @@ import sys
 import tarfile
 import tempfile
 from archive.manifest import Manifest
+from archive.exception import ArchiveCreateError, ArchiveReadError
 
 def _is_normalized(p):
     """Check if the path is normalized.
@@ -36,7 +37,7 @@ class Archive:
 
     def _create(self, mode, paths, basedir):
         if not paths:
-            raise ValueError("refusing to create an empty archive")
+            raise ArchiveCreateError("refusing to create an empty archive")
         if not basedir:
             p = Path(paths[0])
             if p.is_absolute():
@@ -45,7 +46,7 @@ class Archive:
                 basedir = Path(p.parts[0])
         self.basedir = Path(basedir)
         if self.basedir.is_absolute():
-            raise ValueError("basedir must be relative")
+            raise ArchiveCreateError("basedir must be relative")
         # We allow two different cases: either
         # - all paths are absolute, or
         # - all paths are relative and start with basedir.
@@ -53,22 +54,26 @@ class Archive:
         _paths = []
         for p in paths:
             if not _is_normalized(p):
-                raise ValueError("invalid path %s: must be normalized" % p)
+                raise ArchiveCreateError("invalid path %s: must be normalized" 
+                                         % p)
             p = Path(p)
             if abspath is None:
                 abspath = p.is_absolute()
             else:
                 if abspath != p.is_absolute():
-                    raise ValueError("mixing of absolute and relative "
-                                     "paths is not allowed")
+                    raise ArchiveCreateError("mixing of absolute and relative "
+                                             "paths is not allowed")
             if not p.is_absolute():
-                # This will raise ValueError if p does not start
-                # with basedir:
-                p.relative_to(self.basedir)
+                try:
+                    # This will raise ValueError if p does not start
+                    # with basedir:
+                    p.relative_to(self.basedir)
+                except ValueError as e:
+                    raise ArchiveCreateError(str(e))
             _paths.append(p)
         if not abspath:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
-                raise ValueError("basedir must be a directory")
+                raise ArchiveCreateError("basedir must be a directory")
         self.manifest = Manifest(paths=_paths)
         manifest_name = str(self.basedir / ".manifest.yaml")
         with tarfile.open(str(self.path), mode) as tarf:
@@ -86,8 +91,8 @@ class Archive:
                 else:
                     name = str(p)
                 if name == manifest_name:
-                    raise ValueError("cannot add %s: "
-                                     "this filename is reserved" % p)
+                    raise ArchiveCreateError("cannot add %s: "
+                                             "this filename is reserved" % p)
                 tarf.add(str(p), arcname=name, recursive=False)
 
     def _read_manifest(self, mode):
@@ -96,6 +101,6 @@ class Archive:
             ti = tarf.next()
             path = Path(ti.path)
             if path.name != ".manifest.yaml":
-                raise ValueError("invalid archive: manifest not found")
+                raise ArchiveReadError("invalid archive: manifest not found")
             self.basedir = path.parent
             self.manifest = Manifest(fileobj=tarf.extractfile(ti))

@@ -9,6 +9,7 @@ import pwd
 import stat
 import yaml
 import archive
+from archive.exception import ArchiveCreateError
 from archive.tools import checksum
 
 
@@ -55,7 +56,8 @@ class FileInfo:
                 self.type = 'l'
                 self.target = Path(os.readlink(str(self.path)))
             else:
-                raise ValueError("%s: invalid file type" % str(self.path))
+                raise ArchiveCreateError("%s: invalid file type" 
+                                         % str(self.path))
         else:
             raise TypeError("Either data or path must be provided")
 

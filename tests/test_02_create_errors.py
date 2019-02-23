@@ -4,6 +4,7 @@
 from pathlib import Path
 import pytest
 from archive import Archive
+from archive.exception import ArchiveCreateError
 from conftest import tmpdir, archive_name, setup_testdata
 
 
@@ -33,7 +34,7 @@ def test_create_mixing_abs_rel(test_dir, archive_name, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     paths = [ Path("base", "msg.txt"), test_dir / "base" / "data" ]
-    with pytest.raises(ValueError):
+    with pytest.raises(ArchiveCreateError):
         Archive(archive_name, mode="x:", paths=paths, basedir="base")
 
 def test_create_rel_not_in_base(test_dir, archive_name, monkeypatch):
@@ -41,7 +42,7 @@ def test_create_rel_not_in_base(test_dir, archive_name, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     paths = [ Path("other", "rnd.dat") ]
-    with pytest.raises(ValueError):
+    with pytest.raises(ArchiveCreateError):
         Archive(archive_name, mode="x:", paths=paths, basedir="base")
 
 def test_create_norm_path(test_dir, archive_name, monkeypatch):
@@ -49,7 +50,7 @@ def test_create_norm_path(test_dir, archive_name, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     paths = [ "base", "base/../../../etc/passwd" ]
-    with pytest.raises(ValueError):
+    with pytest.raises(ArchiveCreateError):
         Archive(archive_name, mode="x:", paths=paths, basedir="base")
 
 def test_create_rel_check_basedir(test_dir, archive_name, monkeypatch):
@@ -57,7 +58,7 @@ def test_create_rel_check_basedir(test_dir, archive_name, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     p = Path("msg.txt")
-    with pytest.raises(ValueError):
+    with pytest.raises(ArchiveCreateError):
         Archive(archive_name, mode="x:", paths=[p], basedir=p)
 
 def test_create_rel_no_manifest_file(test_dir, archive_name, monkeypatch):
@@ -77,7 +78,7 @@ def test_create_rel_no_manifest_file(test_dir, archive_name, monkeypatch):
     with manifest.open("wt") as f:
         print("This is not a YAML file!", file=f)
     try:
-        with pytest.raises(ValueError):
+        with pytest.raises(ArchiveCreateError):
             Archive(archive_name, mode="x:", paths=[base])
     finally:
         manifest.unlink()
