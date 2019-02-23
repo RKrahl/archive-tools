@@ -61,10 +61,16 @@ def test_create_rel_check_basedir(test_dir, archive_name, monkeypatch):
         Archive(archive_name, mode="x:", paths=[p], basedir=p)
 
 @pytest.mark.xfail(reason="Issue #10")
-def test_create_no_manifest_file(test_dir, archive_name, monkeypatch):
+def test_create_rel_no_manifest_file(test_dir, archive_name, monkeypatch):
     """The filename .manifest.yaml is reserved by archive-tools.
-    The archive content must not have an actual file with that name in
-    the base directory.  (Issue #10)
+
+    If created with relative paths, the archive content must not have
+    an actual file with that name in the base directory.  (Issue #10)
+
+    Note that we can only test this case with relative paths.  The
+    case using absolute paths would mean adding a file named
+    /.manifest.yaml to the archive.  Obviously, we cannot create such
+    a file for the test.
     """
     monkeypatch.chdir(str(test_dir))
     base = Path("base")
