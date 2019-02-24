@@ -26,7 +26,7 @@ def test_dir(tmpdir):
     return tmpdir
 
 
-def test_create__default_basedir_rel(test_dir, monkeypatch):
+def test_create_default_basedir_rel(test_dir, monkeypatch):
     """Check the default basedir with relative paths.  (Issue #8)
     """
     monkeypatch.chdir(str(test_dir))
@@ -38,7 +38,7 @@ def test_create__default_basedir_rel(test_dir, monkeypatch):
     check_manifest(archive.manifest, **testdata)
 
 
-def test_create__default_basedir_abs(test_dir, monkeypatch):
+def test_create_default_basedir_abs(test_dir, monkeypatch):
     """Check the default basedir with absolute paths.  (Issue #8)
     """
     monkeypatch.chdir(str(test_dir))
