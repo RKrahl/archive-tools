@@ -2,6 +2,7 @@
 """
 
 from collections.abc import Sequence
+import datetime
 import grp
 import os
 from pathlib import Path
@@ -10,7 +11,7 @@ import stat
 import yaml
 import archive
 from archive.exception import ArchiveCreateError
-from archive.tools import checksum
+from archive.tools import checksum, modstr
 
 
 class FileInfo:
@@ -87,6 +88,18 @@ class FileInfo:
         elif self.is_symlink():
             d['target'] = str(self.target)
         return d
+
+    def __str__(self):
+        m = modstr(self.type, self.mode)
+        ug = "%s/%s" % (self.uname or self.uid, self.gname or self.gid)
+        s = str(self.size if self.type == 'f' else 0)
+        mtime = datetime.datetime.fromtimestamp(self.mtime)
+        d = mtime.strftime("%Y-%m-%d %H:%M")
+        if self.type == 'l':
+            p = "%s -> %s" % (self.path, self.target)
+        else:
+            p = str(self.path)
+        return "%s  %s  %s  %s  %s" % (m, ug, s, d, p)
 
 
 def _iterpaths(paths):
