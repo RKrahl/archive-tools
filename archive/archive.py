@@ -86,10 +86,7 @@ class Archive:
                 tarf.addfile(manifest_info, tmpf)
             for fi in self.manifest:
                 p = fi.path
-                if p.is_absolute():
-                    name = str(self.basedir / p.relative_to(p.anchor))
-                else:
-                    name = str(p)
+                name = self._arcname(p)
                 if name == manifest_name:
                     raise ArchiveCreateError("cannot add %s: "
                                              "this filename is reserved" % p)
@@ -104,3 +101,9 @@ class Archive:
                 raise ArchiveReadError("invalid archive: manifest not found")
             self.basedir = path.parent
             self.manifest = Manifest(fileobj=tarf.extractfile(ti))
+
+    def _arcname(self, p):
+        if p.is_absolute():
+            return str(self.basedir / p.relative_to(p.root))
+        else:
+            return str(p)
