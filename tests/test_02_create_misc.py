@@ -48,3 +48,20 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
     archive = Archive(archive_path, mode="r")
     assert archive.basedir == Path("archive-abs")
     check_manifest(archive.manifest, prefix_dir=test_dir, **testdata)
+
+def test_create_sorted(test_dir, monkeypatch):
+    """The entries in the manifest should be sorted.  (Issue #11)
+    """
+    monkeypatch.chdir(str(test_dir))
+    archive_path = "archive-sort.tar"
+    files = [ Path("base", fn) for fn in ("c", "a", "d", "b") ]
+    for p in files:
+        with p.open("wt") as f:
+            print("Some content for file %s" % p, file=f)
+    try:
+        Archive(archive_path, mode="x:", paths=files)
+        archive = Archive(archive_path, mode="r")
+        assert [fi.path for fi in archive.manifest] == sorted(files)
+    finally:
+        for p in files:
+            p.unlink()
