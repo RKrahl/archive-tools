@@ -107,7 +107,7 @@ class Manifest(Sequence):
         if fileobj is not None:
             self.fileinfos = [ FileInfo(data=d) for d in yaml.load(fileobj) ]
         elif paths is not None:
-            self.fileinfos = list(_iterpaths(paths))
+            self.fileinfos = sorted(_iterpaths(paths), key=lambda fi: fi.path)
         else:
             raise TypeError("Either fileobj or paths must be provided")
 

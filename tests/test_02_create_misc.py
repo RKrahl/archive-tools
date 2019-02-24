@@ -49,7 +49,6 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
     assert archive.basedir == Path("archive-abs")
     check_manifest(archive.manifest, prefix_dir=test_dir, **testdata)
 
-@pytest.mark.xfail(reason="Issue #11")
 def test_create_sorted(test_dir, monkeypatch):
     """The entries in the manifest should be sorted.  (Issue #11)
     """
