@@ -1,7 +1,7 @@
 """Provide the Manifest class that defines the archive metadata.
 """
 
-from collections import Sequence
+from collections.abc import Sequence
 import grp
 import os
 from pathlib import Path
