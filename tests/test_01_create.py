@@ -107,3 +107,9 @@ def test_check_content(test_dir, dep_testcase):
     sha256.wait()
     assert sha256.returncode == 0
 
+@pytest.mark.dependency()
+def test_verify(test_dir, dep_testcase):
+    compression, abspath = dep_testcase
+    archive_path = test_dir / archive_name(compression, abspath)
+    archive = Archive(archive_path, mode="r")
+    archive.verify()

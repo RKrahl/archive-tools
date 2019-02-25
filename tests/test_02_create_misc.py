@@ -36,7 +36,7 @@ def test_create_default_basedir_rel(test_dir, monkeypatch):
     archive = Archive(archive_path, mode="r")
     assert archive.basedir == Path("base")
     check_manifest(archive.manifest, **testdata)
-
+    archive.verify()
 
 def test_create_default_basedir_abs(test_dir, monkeypatch):
     """Check the default basedir with absolute paths.  (Issue #8)
@@ -48,6 +48,7 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
     archive = Archive(archive_path, mode="r")
     assert archive.basedir == Path("archive-abs")
     check_manifest(archive.manifest, prefix_dir=test_dir, **testdata)
+    archive.verify()
 
 def test_create_sorted(test_dir, monkeypatch):
     """The entries in the manifest should be sorted.  (Issue #11)
@@ -62,6 +63,7 @@ def test_create_sorted(test_dir, monkeypatch):
         Archive(archive_path, mode="x:", paths=files)
         archive = Archive(archive_path, mode="r")
         assert [fi.path for fi in archive.manifest] == sorted(files)
+        archive.verify()
     finally:
         for p in files:
             p.unlink()
