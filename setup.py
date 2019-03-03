@@ -27,7 +27,8 @@ setup(
     license = "Apache-2.0",
     requires = ["PyYAML"],
     packages = ["archive"],
-    scripts = ["scripts/create-archive.py", "scripts/ls-archive.py"],
+    scripts = ["scripts/create-archive.py", "scripts/ls-archive.py", 
+               "scripts/imap-to-archive.py"],
     classifiers = [
         "Development Status :: 1 - Planning",
         "Intended Audience :: System Administrators",
