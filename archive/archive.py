@@ -85,6 +85,7 @@ class Archive:
                                                 fileobj=tmpf)
                 manifest_info.mode = stat.S_IFREG | 0o444
                 tarf.addfile(manifest_info, tmpf)
+            self.metadata_hook(tarf)
             for fi in self.manifest:
                 p = fi.path
                 name = self._arcname(p)
@@ -108,6 +109,14 @@ class Archive:
             return str(self.basedir / p.relative_to(p.root))
         else:
             return str(p)
+
+    def metadata_hook(self, tarf):
+        """A hook to add additional metadata to the archive.
+
+        This hook is called after the manifest has been added to the
+        tarfile and before adding the payload.
+        """
+        pass
 
     def verify(self, mode='r'):
         if mode.startswith('r'):
