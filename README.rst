@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/RKrahl/archive-tools.svg?branch=master
+   :target: https://travis-ci.org/RKrahl/archive-tools
+
 Archive Tools
 =============
 
