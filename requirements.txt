@@ -1,0 +1,4 @@
+PyYAML
+pytest >=3.0.0
+distutils-pytest
+pytest-dependency >=0.2
