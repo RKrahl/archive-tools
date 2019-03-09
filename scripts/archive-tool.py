@@ -4,6 +4,7 @@ import argparse
 import datetime
 from pathlib import Path
 from archive import Archive
+from archive.exception import ArchiveReadError
 from archive.tools import modstr
 
 argparser = argparse.ArgumentParser()
@@ -64,22 +65,21 @@ def info(args):
     typename = {"f": "file", "d": "directory", "l": "symbolic link"}
     archive = Archive(args.archive, "r")
     fi = archive.manifest.find(args.entry)
-    if fi:
-        infolines = []
-        infolines.append("Path:   %s" % fi.path)
-        infolines.append("Type:   %s" % typename[fi.type])
-        infolines.append("Mode:   %s" % modstr(fi.type, fi.mode))
-        infolines.append("Owner:  %s:%s (%d:%d)"
-                         % (fi.uname, fi.gname, fi.uid, fi.gid))
-        mtime = datetime.datetime.fromtimestamp(fi.mtime)
-        infolines.append("Mtime:  %s" % mtime.strftime("%Y-%m-%d %H:%M:%S"))
-        if fi.is_file():
-            infolines.append("Size:   %d" % fi.size)
-        if fi.is_symlink():
-            infolines.append("Target: %s" % fi.target)
-        print(*infolines, sep="\n")
-    else:
-        print("%s: not found in archive" % args.entry)
+    if not fi:
+        raise ArchiveReadError("%s: not found in archive" % args.entry)
+    infolines = []
+    infolines.append("Path:   %s" % fi.path)
+    infolines.append("Type:   %s" % typename[fi.type])
+    infolines.append("Mode:   %s" % modstr(fi.type, fi.mode))
+    infolines.append("Owner:  %s:%s (%d:%d)"
+                     % (fi.uname, fi.gname, fi.uid, fi.gid))
+    mtime = datetime.datetime.fromtimestamp(fi.mtime)
+    infolines.append("Mtime:  %s" % mtime.strftime("%Y-%m-%d %H:%M:%S"))
+    if fi.is_file():
+        infolines.append("Size:   %d" % fi.size)
+    if fi.is_symlink():
+        infolines.append("Target: %s" % fi.target)
+    print(*infolines, sep="\n")
 
 info_parser = subparsers.add_parser('info',
                                     help=("show informations about "
