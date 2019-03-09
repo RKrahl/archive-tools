@@ -102,16 +102,21 @@ class FileInfo:
         return "%s  %s  %s  %s  %s" % (m, ug, s, d, p)
 
 
-def _iterpaths(paths):
+def iterpaths(paths):
     """Iterate over paths, descending directories.
-    Return a FileInfo object for each path.
+    Yield a FileInfo object for each path.
+
+    If last FileInfo object did correspond to a directory, the caller
+    may send a true value to the generator to skip descending into the
+    directory.  For other file types, any value sent to the generator
+    will have no effect.
     """
     for p in paths:
         info = FileInfo(path=p)
-        yield info
+        if (yield info):
+            continue
         if info.is_dir():
-            for cinfo in _iterpaths(p.iterdir()):
-                yield cinfo
+            yield from iterpaths(p.iterdir())
 
 
 class Manifest(Sequence):
@@ -120,7 +125,7 @@ class Manifest(Sequence):
         if fileobj is not None:
             self.fileinfos = [ FileInfo(data=d) for d in yaml.load(fileobj) ]
         elif paths is not None:
-            self.fileinfos = sorted(_iterpaths(paths), key=lambda fi: fi.path)
+            self.fileinfos = sorted(iterpaths(paths), key=lambda fi: fi.path)
         else:
             raise TypeError("Either fileobj or paths must be provided")
 
