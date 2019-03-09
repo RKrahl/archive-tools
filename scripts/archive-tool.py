@@ -1,8 +1,10 @@
 #! /usr/bin/python
 
 import argparse
+import datetime
 from pathlib import Path
 from archive import Archive
+from archive.tools import modstr
 
 argparser = argparse.ArgumentParser()
 subparsers = argparser.add_subparsers(title='subcommands')
@@ -56,6 +58,37 @@ ls_parser = subparsers.add_parser('ls', help="list files in the archive")
 ls_parser.add_argument('archive',
                        help=("path to the archive file"), type=Path)
 ls_parser.set_defaults(func=ls)
+
+
+def info(args):
+    typename = {"f": "file", "d": "directory", "l": "symbolic link"}
+    archive = Archive(args.archive, "r")
+    fi = archive.manifest.find(args.entry)
+    if fi:
+        infolines = []
+        infolines.append("Path:   %s" % fi.path)
+        infolines.append("Type:   %s" % typename[fi.type])
+        infolines.append("Mode:   %s" % modstr(fi.type, fi.mode))
+        infolines.append("Owner:  %s:%s (%d:%d)"
+                         % (fi.uname, fi.gname, fi.uid, fi.gid))
+        mtime = datetime.datetime.fromtimestamp(fi.mtime)
+        infolines.append("Mtime:  %s" % mtime.strftime("%Y-%m-%d %H:%M:%S"))
+        if fi.is_file():
+            infolines.append("Size:   %d" % fi.size)
+        if fi.is_symlink():
+            infolines.append("Target: %s" % fi.target)
+        print(*infolines, sep="\n")
+    else:
+        print("%s: not found in archive" % args.entry)
+
+info_parser = subparsers.add_parser('info',
+                                    help=("show informations about "
+                                          "an entry in the archive"))
+info_parser.add_argument('archive',
+                         help=("path to the archive file"), type=Path)
+info_parser.add_argument('entry',
+                         help=("path of the entry"), type=Path)
+info_parser.set_defaults(func=info)
 
 
 args = argparser.parse_args()
