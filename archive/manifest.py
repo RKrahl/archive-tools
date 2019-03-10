@@ -16,6 +16,8 @@ from archive.tools import checksum, modstr
 
 class FileInfo:
 
+    Checksums = ['sha256']
+
     def __init__(self, data=None, path=None):
         if data is not None:
             self.type = data['type']
@@ -50,7 +52,7 @@ class FileInfo:
                 self.type = 'f'
                 self.size = fstat.st_size
                 with self.path.open('rb') as f:
-                    self.checksum = checksum(f, ['sha256'])
+                    self.checksum = checksum(f, self.Checksums)
             elif stat.S_ISDIR(fstat.st_mode):
                 self.type = 'd'
             elif stat.S_ISLNK(fstat.st_mode):
