@@ -5,6 +5,7 @@ import datetime
 from pathlib import Path
 from archive import Archive
 from archive.exception import ArchiveReadError
+from archive.manifest import FileInfo
 from archive.tools import modstr
 
 argparser = argparse.ArgumentParser()
@@ -89,6 +90,46 @@ info_parser.add_argument('archive',
 info_parser.add_argument('entry',
                          help=("path of the entry"), type=Path)
 info_parser.set_defaults(func=info)
+
+
+def _matches(fi, entry):
+    if fi.path != entry.path or fi.type != entry.type:
+        return False
+    if fi.is_file():
+        if (fi.size != entry.size or fi.checksum != entry.checksum or 
+            fi.mtime > entry.mtime):
+            return False
+    if fi.is_symlink():
+        if fi.target != entry.target:
+            return False
+    return True
+
+def check(args):
+    archive = Archive(args.archive, "r")
+    FileInfo.Checksums = archive.manifest.head["Checksums"]
+    file_iter = FileInfo.iterpaths(args.files)
+    skip = None
+    while True:
+        try:
+            fi = file_iter.send(skip)
+        except StopIteration:
+            break
+        skip = False
+        entry = archive.manifest.find(fi.path)
+        if entry:
+            if _matches(fi, entry):
+                continue
+        elif fi.is_dir():
+            skip = True
+        print(str(fi.path))
+
+check_parser = subparsers.add_parser('check',
+                                     help="check if files are in the archive")
+check_parser.add_argument('archive',
+                          help=("path to the archive file"), type=Path)
+check_parser.add_argument('files', nargs='+', type=Path,
+                          help="files to be checked")
+check_parser.set_defaults(func=check)
 
 
 args = argparser.parse_args()
