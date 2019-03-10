@@ -40,9 +40,11 @@ Required library packages:
 
 + `PyYAML`_
 
+Optional library packages:
+
 + `python-dateutil`_
 
-Optional library packages:
+  Date strings will lack time zone indication if missing.
 
 + `pytest`_ >= 3.0
 

@@ -1,5 +1,22 @@
+import datetime
 import hashlib
 import stat
+try:
+    from dateutil.tz import gettz
+except ImportError:
+    gettz = None
+
+
+def now_str():
+    """Return the current local date and time as a string.
+    """
+    if gettz:
+        now = datetime.datetime.now(tz=gettz())
+        date_fmt = "%a, %d %b %Y %H:%M:%S %z"
+    else:
+        now = datetime.datetime.now()
+        date_fmt = "%a, %d %b %Y %H:%M:%S"
+    return now.strftime(date_fmt)
 
 
 def checksum(fileobj, hashalg):

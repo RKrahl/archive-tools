@@ -8,11 +8,10 @@ import os
 from pathlib import Path
 import pwd
 import stat
-import dateutil.tz
 import yaml
 import archive
 from archive.exception import ArchiveCreateError
-from archive.tools import checksum, modstr
+from archive.tools import now_str, checksum, modstr
 
 
 class FileInfo:
@@ -127,9 +126,8 @@ class Manifest(Sequence):
             self.head = next(docs)
             self.fileinfos = [ FileInfo(data=d) for d in next(docs) ]
         elif paths is not None:
-            now = datetime.datetime.now(tz=dateutil.tz.gettz())
             self.head = {
-                "Date": now.strftime("%a, %d %b %Y %H:%M:%S %z"),
+                "Date": now_str(),
                 "Generator": "archive-tools %s" % archive.__version__,
                 "Version": self.Version,
                 "Checksums": FileInfo.Checksums,

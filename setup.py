@@ -25,7 +25,7 @@ setup(
     author = AUTHOR_NAME,
     author_email = AUTHOR_EMAIL,
     license = "Apache-2.0",
-    requires = ["PyYAML", "dateutil"],
+    requires = ["PyYAML"],
     packages = ["archive"],
     scripts = ["scripts/create-archive.py", "scripts/ls-archive.py"],
     classifiers = [
