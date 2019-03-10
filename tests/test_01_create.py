@@ -8,6 +8,7 @@ import tarfile
 import pytest
 from pytest_dependency import depends
 from archive import Archive
+from archive.manifest import Manifest
 from conftest import checksums, tmpdir, setup_testdata, check_manifest
 
 
@@ -80,6 +81,9 @@ def test_check_manifest(test_dir, dep_testcase):
     archive_path = test_dir / archive_name(compression, abspath)
     archive = Archive(archive_path, mode="r")
     prefix_dir = test_dir if abspath else None
+    head = archive.manifest.head
+    assert set(head.keys()) == {"Date", "Generator", "Version", "Checksums"}
+    assert head["Version"] == Manifest.Version
     check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)
 
 @pytest.mark.dependency()
