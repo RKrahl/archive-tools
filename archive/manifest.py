@@ -11,10 +11,12 @@ import stat
 import yaml
 import archive
 from archive.exception import ArchiveCreateError
-from archive.tools import checksum, modstr
+from archive.tools import now_str, checksum, modstr
 
 
 class FileInfo:
+
+    Checksums = ['sha256']
 
     def __init__(self, data=None, path=None):
         if data is not None:
@@ -50,7 +52,7 @@ class FileInfo:
                 self.type = 'f'
                 self.size = fstat.st_size
                 with self.path.open('rb') as f:
-                    self.checksum = checksum(f, ['sha256'])
+                    self.checksum = checksum(f, self.Checksums)
             elif stat.S_ISDIR(fstat.st_mode):
                 self.type = 'd'
             elif stat.S_ISLNK(fstat.st_mode):
@@ -121,10 +123,20 @@ class FileInfo:
 
 class Manifest(Sequence):
 
+    Version = "1.0"
+
     def __init__(self, fileobj=None, paths=None):
         if fileobj is not None:
-            self.fileinfos = [ FileInfo(data=d) for d in yaml.load(fileobj) ]
+            docs = yaml.load_all(fileobj)
+            self.head = next(docs)
+            self.fileinfos = [ FileInfo(data=d) for d in next(docs) ]
         elif paths is not None:
+            self.head = {
+                "Date": now_str(),
+                "Generator": "archive-tools %s" % archive.__version__,
+                "Version": self.Version,
+                "Checksums": FileInfo.Checksums,
+            }
             fileinfos = FileInfo.iterpaths(paths)
             self.fileinfos = sorted(fileinfos, key=lambda fi: fi.path)
         else:
@@ -144,10 +156,9 @@ class Manifest(Sequence):
             return None
 
     def write(self, fileobj):
-        head = """%%YAML 1.1
-# Generator: archive-tools %s
-""" % (archive.__version__)
-        fileobj.write(head.encode("ascii"))
+        fileobj.write("%YAML 1.1\n".encode("ascii"))
+        yaml.dump(self.head, stream=fileobj, encoding="ascii", 
+                  default_flow_style=False, explicit_start=True)
         yaml.dump([ fi.as_dict() for fi in self ],
                   stream=fileobj, encoding="ascii",
                   default_flow_style=False, explicit_start=True)

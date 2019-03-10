@@ -42,6 +42,10 @@ Required library packages:
 
 Optional library packages:
 
++ `python-dateutil`_
+
+  Date strings will lack time zone indication if missing.
+
 + `pytest`_ >= 3.0
 
   Only needed to run the test suite.
@@ -101,6 +105,7 @@ permissions and limitations under the License.
 
 
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
+.. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
 .. _pytest: http://pytest.org/
 .. _distutils-pytest: https://github.com/RKrahl/distutils-pytest
 .. _pytest-dependency: https://pypi.python.org/pypi/pytest_dependency/
