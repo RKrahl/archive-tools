@@ -7,7 +7,16 @@ import tempfile
 import pytest
 
 
+_cleanup = True
 testdir = Path(__file__).parent
+
+def pytest_addoption(parser):
+    parser.addoption("--no-cleanup", action="store_true", default=False,
+                     help="do not clean up temporary data after the test.")
+
+def pytest_configure(config):
+    global _cleanup
+    _cleanup = not config.getoption("--no-cleanup")
 
 def gettestdata(fname):
     path = testdir / "data" / fname
@@ -28,14 +37,13 @@ def _get_checksums():
 
 checksums = _get_checksums()
 
-
 class TmpDir(object):
     """Provide a temporary directory.
     """
     def __init__(self):
         self.dir = Path(tempfile.mkdtemp(prefix="archive-tools-test-"))
     def cleanup(self):
-        if self.dir:
+        if self.dir and _cleanup:
             shutil.rmtree(str(self.dir))
         self.dir = None
     def __enter__(self):
