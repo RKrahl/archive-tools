@@ -1,8 +1,11 @@
 """pytest configuration.
 """
 
+import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import pytest
 
@@ -105,3 +108,13 @@ def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
             assert fileinfo.checksum['sha256'] == checksums[entry["Path"].name]
         elif entry["Type"] == "l":
             assert fileinfo.target == entry["Target"]
+
+def callscript(scriptname, args, stdin=None, stdout=None, stderr=None):
+    try:
+        script_dir = os.environ['BUILD_SCRIPTS_DIR']
+    except KeyError:
+        pytest.skip("BUILD_SCRIPTS_DIR is not set.")
+    script = Path(script_dir, scriptname)
+    cmd = [sys.executable, str(script)] + args
+    print("\n>", *cmd)
+    subprocess.check_call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
