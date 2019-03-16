@@ -75,30 +75,33 @@ def setup_testdata(main_dir, dirs=[], files=[], symlinks=[]):
         p = main_dir / f
         p.symlink_to(t)
 
-def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
-    assert len(manifest) == len(dirs) + len(files) + len(symlinks)
+def testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
+    items = []
     for p, m in dirs:
         if prefix_dir:
             p = prefix_dir / p
-        fi = manifest.find(p)
-        assert fi
-        assert fi.type == 'd'
-        assert fi.path == p
-        assert fi.mode == m
+        items.append({"Path": p, "Type": "d", "Mode": m})
     for p, m in files:
         if prefix_dir:
             p = prefix_dir / p
-        fi = manifest.find(p)
-        assert fi
-        assert fi.type == 'f'
-        assert fi.path == p
-        assert fi.mode == m
-        assert fi.checksum['sha256'] == checksums[p.name]
+        items.append({"Path": p, "Type": "f", "Mode": m})
     for p, t in symlinks:
         if prefix_dir:
             p = prefix_dir / p
-        fi = manifest.find(p)
-        assert fi
-        assert fi.type == 'l'
-        assert fi.path == p
-        assert fi.target == t
+        items.append({"Path": p, "Type": "l", "Mode": 0o777, "Target": t})
+    items.sort(key=lambda e: e["Path"])
+    return items
+
+def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
+    items = testdata_items(prefix_dir, dirs, files, symlinks)
+    assert len(manifest) == len(items)
+    for entry, fileinfo in zip(items, manifest):
+        assert fileinfo.type == entry["Type"]
+        assert fileinfo.path == entry["Path"]
+        if entry["Type"] == "d":
+            assert fileinfo.mode == entry["Mode"]
+        elif entry["Type"] == "f":
+            assert fileinfo.mode == entry["Mode"]
+            assert fileinfo.checksum['sha256'] == checksums[entry["Path"].name]
+        elif entry["Type"] == "l":
+            assert fileinfo.target == entry["Target"]
