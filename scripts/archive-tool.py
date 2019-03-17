@@ -56,8 +56,7 @@ verify_parser.add_argument('archive',
 verify_parser.set_defaults(func=verify)
 
 
-def ls(args):
-    archive = Archive(args.archive, "r")
+def ls_ls_format(archive):
     items = []
     l_ug = 0
     l_s = 0
@@ -70,7 +69,33 @@ def ls(args):
     for i in items:
         print(format_str % i)
 
+def ls_checksum_format(archive, algorithm):
+    for fi in archive.manifest:
+        if not fi.is_file():
+            continue
+        print("%s  %s" % (fi.checksum[algorithm], fi.path))
+
+def ls(args):
+    archive = Archive(args.archive, "r")
+    if args.format == 'ls':
+        ls_ls_format(archive)
+    elif args.format == 'checksum':
+        if not args.checksum:
+            args.checksum = archive.manifest.head['Checksums'][0]
+        else:
+            if args.checksum not in archive.manifest.head['Checksums']:
+                raise ValueError("Checksums using '%s' hashes not available"
+                                 % args.checksum)
+        ls_checksum_format(archive, args.checksum)
+    else:
+        raise ValueError("invalid format '%s'" % args.format)
+
 ls_parser = subparsers.add_parser('ls', help="list files in the archive")
+ls_parser.add_argument('--format',
+                       choices=['ls', 'checksum'], default='ls',
+                       help=("output style"))
+ls_parser.add_argument('--checksum',
+                       help=("hash algorithm"))
 ls_parser.add_argument('archive',
                        help=("path to the archive file"), type=Path)
 ls_parser.set_defaults(func=ls)

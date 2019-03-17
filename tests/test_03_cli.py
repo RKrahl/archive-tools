@@ -2,6 +2,7 @@
 """
 
 from pathlib import Path
+import subprocess
 from tempfile import TemporaryFile
 import pytest
 from pytest_dependency import depends
@@ -26,6 +27,7 @@ testdata = {
         (Path("base", "s.dat"), Path("data", "rnd.dat")),
     ]
 }
+sha256sum = "sha256sum"
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
@@ -105,6 +107,25 @@ def test_cli_ls(test_dir, dep_testcase):
             else:
                 assert len(fields) == 6
         assert not f.readline()
+
+@pytest.mark.dependency()
+def test_cli_checksums(test_dir, dep_testcase):
+    compression, abspath = dep_testcase
+    archive_path = test_dir / archive_name(compression, abspath)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["ls", "--format=checksum", str(archive_path)]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        try:
+            sha256 = subprocess.Popen([sha256sum, "--check"],
+                                      cwd=str(test_dir), stdin=subprocess.PIPE)
+        except FileNotFoundError:
+            pytest.skip("%s program not found" % sha256sum)
+        for line in f:
+            sha256.stdin.write(line.encode('ascii'))
+        sha256.stdin.close()
+        sha256.wait()
+        assert sha256.returncode == 0
 
 @pytest.mark.dependency()
 def test_cli_info(test_dir, dep_testcase):
