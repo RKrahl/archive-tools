@@ -12,7 +12,21 @@ argparser = argparse.ArgumentParser()
 subparsers = argparser.add_subparsers(title='subcommands')
 
 
+suffix_map = {
+    '.tar': 'none',
+    '.tar.gz': 'gz',
+    '.tar.bz2': 'bz2',
+    '.tar.xz': 'xz',
+}
+"""Map path suffix to compression mode."""
+
 def create(args):
+    if args.compression is None:
+        try:
+            args.compression = suffix_map["".join(args.archive.suffixes)]
+        except KeyError:
+            # Last ressort default
+            args.compression = 'gz'
     if args.compression == 'none':
         args.compression = ''
     mode = 'x:%s' % args.compression
@@ -20,7 +34,7 @@ def create(args):
 
 create_parser = subparsers.add_parser('create', help="create the archive")
 create_parser.add_argument('--compression',
-                           choices=['none', 'gz', 'bz2', 'xz'], default='gz',
+                           choices=['none', 'gz', 'bz2', 'xz'],
                            help=("compression mode"))
 create_parser.add_argument('--basedir',
                            help=("common base directory in the archive"))
