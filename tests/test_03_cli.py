@@ -116,9 +116,10 @@ def test_cli_checksums(test_dir, dep_testcase):
         args = ["ls", "--format=checksum", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
+        cwd = None if abspath else str(test_dir)
         try:
             sha256 = subprocess.Popen([sha256sum, "--check"],
-                                      cwd=str(test_dir), stdin=subprocess.PIPE)
+                                      cwd=cwd, stdin=subprocess.PIPE)
         except FileNotFoundError:
             pytest.skip("%s program not found" % sha256sum)
         for line in f:
