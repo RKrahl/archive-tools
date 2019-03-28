@@ -9,7 +9,7 @@ import pytest
 from pytest_dependency import depends
 from archive import Archive
 from archive.manifest import Manifest
-from conftest import checksums, tmpdir, setup_testdata, check_manifest
+from conftest import checksums, setup_testdata, check_manifest
 
 
 # Setup a directory with some test data to be put into an archive.

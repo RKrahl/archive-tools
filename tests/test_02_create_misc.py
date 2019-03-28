@@ -4,7 +4,7 @@
 from pathlib import Path
 import pytest
 from archive import Archive
-from conftest import tmpdir, setup_testdata, check_manifest
+from conftest import setup_testdata, check_manifest
 
 
 # Setup a directory with some test data to be put into an archive.
