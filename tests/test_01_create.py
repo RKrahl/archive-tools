@@ -9,7 +9,8 @@ import pytest
 from pytest_dependency import depends
 from archive import Archive
 from archive.manifest import Manifest
-from conftest import checksums, tmpdir, setup_testdata, check_manifest
+from conftest import (checksums, require_compression,
+                      setup_testdata, check_manifest)
 
 
 # Setup a directory with some test data to be put into an archive.
@@ -64,6 +65,7 @@ def dep_testcase(request, testcase):
 @pytest.mark.dependency()
 def test_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
+    require_compression(compression)
     monkeypatch.chdir(str(test_dir))
     mode = "x:%s" % compression
     archive_path = archive_name(compression, abspath)

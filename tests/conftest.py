@@ -40,6 +40,29 @@ def _get_checksums():
 
 checksums = _get_checksums()
 
+def require_compression(compression):
+    """Check if the library module needed for compression is available.
+    Skip if this is not the case.
+    """
+    msg = "%s module needed for '%s' compression is not available"
+    if not compression:
+        pass
+    elif compression == "gz":
+        try:
+            import zlib
+        except ImportError:
+            pytest.skip(msg % ("zlib", "gz"))
+    elif compression == "bz2":
+        try:
+            import bz2
+        except ImportError:
+            pytest.skip(msg % ("bz2", "bz2"))
+    elif compression == "xz":
+        try:
+            import lzma
+        except ImportError:
+            pytest.skip(msg % ("lzma", "xz"))
+
 class TmpDir(object):
     """Provide a temporary directory.
     """

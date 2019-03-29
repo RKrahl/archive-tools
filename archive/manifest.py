@@ -127,7 +127,7 @@ class Manifest(Sequence):
 
     def __init__(self, fileobj=None, paths=None):
         if fileobj is not None:
-            docs = yaml.load_all(fileobj)
+            docs = yaml.safe_load_all(fileobj)
             self.head = next(docs)
             self.fileinfos = [ FileInfo(data=d) for d in next(docs) ]
         elif paths is not None:
