@@ -84,8 +84,8 @@ def ls(args):
             args.checksum = archive.manifest.head['Checksums'][0]
         else:
             if args.checksum not in archive.manifest.head['Checksums']:
-                raise ValueError("Checksums using '%s' hashes not available"
-                                 % args.checksum)
+                raise ArchiveReadError("Checksums using '%s' hashes "
+                                       "not available" % args.checksum)
         ls_checksum_format(archive, args.checksum)
     else:
         raise ValueError("invalid format '%s'" % args.format)
