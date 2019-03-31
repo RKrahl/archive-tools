@@ -29,6 +29,21 @@ def test_dir(tmpdir):
     setup_testdata(tmpdir, **testdata)
     return tmpdir
 
+def test_create_empty(test_dir, archive_name, monkeypatch):
+    """Creating an empty archive will be refused.
+    """
+    monkeypatch.chdir(str(test_dir))
+    with pytest.raises(ArchiveCreateError):
+        Archive(archive_name, mode="x:", paths=[], basedir="base")
+
+def test_create_abs_basedir(test_dir, archive_name, monkeypatch):
+    """Base dir must be a a relative path.
+    """
+    monkeypatch.chdir(str(test_dir))
+    basedir = test_dir / "base"
+    with pytest.raises(ArchiveCreateError):
+        Archive(archive_name, mode="x:", paths=["base"], basedir=basedir)
+
 def test_create_mixing_abs_rel(test_dir, archive_name, monkeypatch):
     """Mixing absolute and relative paths is not allowed.
     """
