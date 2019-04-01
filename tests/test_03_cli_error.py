@@ -2,8 +2,11 @@
 """
 
 from pathlib import Path
+import stat
 import subprocess
+import tarfile
 from tempfile import TemporaryFile
+from archive.manifest import Manifest
 import pytest
 from conftest import archive_name, setup_testdata, callscript
 
@@ -72,9 +75,9 @@ def test_cli_create_bogus_compression(test_dir, archive_name, monkeypatch):
 
 def test_cli_ls_bogus_format(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
+    args = ["create", archive_name, "base"]
+    callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["create", archive_name, "base"]
-        callscript("archive-tool.py", args)
         args = ["ls", "--format=bogus_fmt", archive_name]
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
             callscript("archive-tool.py", args, stderr=f)
@@ -87,3 +90,97 @@ def test_cli_ls_bogus_format(test_dir, archive_name, monkeypatch):
             if not line.startswith(" "):
                 break
         assert "--format: invalid choice: 'bogus_fmt'" in line
+
+@pytest.mark.xfail(reason="proper error handling not yet implemented")
+def test_cli_create_normalized_path(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["create", archive_name, "base/empty/.."]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args)
+        assert exc_info.value.returncode == 1
+        f.seek(0)
+        line = f.readline()
+        assert "invalid path base/empty/..: must be normalized" in line
+
+@pytest.mark.xfail(reason="proper error handling not yet implemented")
+def test_cli_create_rel_start_basedir(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["create", "--basedir=base/data", archive_name, "base/msg.txt"]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args)
+        assert exc_info.value.returncode == 1
+        f.seek(0)
+        line = f.readline()
+        assert "'base/msg.txt' does not start with 'base/data'" in line
+
+@pytest.mark.xfail(reason="proper error handling not yet implemented")
+def test_cli_ls_checksum_invalid_hash(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    args = ["create", archive_name, "base"]
+    callscript("archive-tool.py", args)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["ls", "--format=checksum", "--checksum=bogus", archive_name]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args)
+        assert exc_info.value.returncode == 1
+        f.seek(0)
+        line = f.readline()
+        assert "'bogus' hashes not available" in line
+
+@pytest.mark.xfail(reason="proper error handling not yet implemented")
+def test_cli_info_missing_entry(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    args = ["create", archive_name, "base"]
+    callscript("archive-tool.py", args)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["info", archive_name, "base/data/not-present"]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args)
+        assert exc_info.value.returncode == 1
+        f.seek(0)
+        line = f.readline()
+        assert "base/data/not-present: not found in archive" in line
+
+@pytest.mark.xfail(reason="proper error handling not yet implemented")
+def test_cli_integrity_no_manifest(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    with tarfile.open(archive_name, "w") as tarf:
+        tarf.add("base", recursive=True)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["ls", archive_name]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args)
+        assert exc_info.value.returncode == 3
+        f.seek(0)
+        line = f.readline()
+        assert "manifest not found" in line
+
+@pytest.mark.xfail(reason="proper error handling not yet implemented")
+def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    base = Path("base")
+    missing = base / "data" / "not-present"
+    with missing.open("wt") as f:
+        f.write("Hello!")
+    manifest = Manifest(paths=[base])
+    with open("manifest.yaml", "wb") as f:
+        manifest.write(f)
+    missing.unlink()
+    with tarfile.open(archive_name, "w") as tarf:
+        with open("manifest.yaml", "rb") as f:
+            manifest_info = tarf.gettarinfo(arcname="base/.manifest.yaml", 
+                                            fileobj=f)
+            manifest_info.mode = stat.S_IFREG | 0o444
+            tarf.addfile(manifest_info, f)
+        tarf.add("base")
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["verify", archive_name]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args)
+        assert exc_info.value.returncode == 3
+        f.seek(0)
+        line = f.readline()
+        assert "%s:%s: missing" % (archive_name, missing) in line
+
