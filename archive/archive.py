@@ -99,7 +99,7 @@ class Archive:
             ti = tarf.next()
             path = Path(ti.path)
             if path.name != ".manifest.yaml":
-                raise ArchiveReadError("invalid archive: manifest not found")
+                raise ArchiveIntegrityError("manifest not found")
             self.basedir = path.parent
             self.manifest = Manifest(fileobj=tarf.extractfile(ti))
 
@@ -121,13 +121,13 @@ class Archive:
 
         def _check_condition(cond, item, message):
             if not cond:
-                raise ArchiveVerifyError("%s: %s" % (item, message))
+                raise ArchiveIntegrityError("%s: %s" % (item, message))
 
         itemname = "%s:%s" % (self.path, fileinfo.path)
         try:
             tarinfo = tarf.getmember(self._arcname(fileinfo.path))
         except KeyError:
-            raise ArchiveVerifyError("%s: missing" % itemname)
+            raise ArchiveIntegrityError("%s: missing" % itemname)
         _check_condition(tarinfo.mode == fileinfo.mode,
                          itemname, "wrong mode")
         _check_condition(int(tarinfo.mtime) == int(fileinfo.mtime),
@@ -150,4 +150,4 @@ class Archive:
             _check_condition(tarinfo.linkname == str(fileinfo.target),
                              itemname, "wrong link target")
         else:
-            raise ArchiveVerifyError("%s: invalid type" % (itemname))
+            raise ArchiveIntegrityError("%s: invalid type" % (itemname))
