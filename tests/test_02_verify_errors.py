@@ -50,7 +50,14 @@ def create_archive(archive_path):
             tarf.addfile(manifest_info, f)
         tarf.add("base")
 
-def test_verify_missing(test_data, archive_name):
+def test_verify_missing_manifest(test_data, archive_name):
+    with tarfile.open(archive_name, "w") as tarf:
+        tarf.add("base")
+    with pytest.raises(ArchiveIntegrityError) as err:
+        archive = Archive(archive_name, mode="r")
+    assert "manifest not found" in str(err.value)
+
+def test_verify_missing_file(test_data, archive_name):
     path = Path("base", "msg.txt")
     mtime_parent = os.stat(str(path.parent)).st_mtime
     path.unlink()
