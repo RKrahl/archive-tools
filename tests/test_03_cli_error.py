@@ -41,6 +41,22 @@ def test_cli_helpmessage(test_dir, monkeypatch):
         line = f.readline()
         assert line.startswith("usage: archive-tool.py ")
 
+def test_cli_missing_command(test_dir, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = []
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args, stderr=f)
+        assert exc_info.value.returncode == 2
+        f.seek(0)
+        line = f.readline()
+        assert line.startswith("usage: archive-tool.py ")
+        while True:
+            line = f.readline()
+            if not line.startswith(" "):
+                break
+        assert "subcommand is required" in line
+
 def test_cli_bogus_command(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
