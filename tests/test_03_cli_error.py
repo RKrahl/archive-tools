@@ -113,7 +113,7 @@ def test_cli_create_normalized_path(test_dir, archive_name, monkeypatch):
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["create", archive_name, "base/empty/.."]
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args)
+            callscript("archive-tool.py", args, stderr=f)
         assert exc_info.value.returncode == 1
         f.seek(0)
         line = f.readline()
@@ -125,7 +125,7 @@ def test_cli_create_rel_start_basedir(test_dir, archive_name, monkeypatch):
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["create", "--basedir=base/data", archive_name, "base/msg.txt"]
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args)
+            callscript("archive-tool.py", args, stderr=f)
         assert exc_info.value.returncode == 1
         f.seek(0)
         line = f.readline()
@@ -139,7 +139,7 @@ def test_cli_ls_checksum_invalid_hash(test_dir, archive_name, monkeypatch):
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", "--format=checksum", "--checksum=bogus", archive_name]
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args)
+            callscript("archive-tool.py", args, stderr=f)
         assert exc_info.value.returncode == 1
         f.seek(0)
         line = f.readline()
@@ -153,7 +153,7 @@ def test_cli_info_missing_entry(test_dir, archive_name, monkeypatch):
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["info", archive_name, "base/data/not-present"]
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args)
+            callscript("archive-tool.py", args, stderr=f)
         assert exc_info.value.returncode == 1
         f.seek(0)
         line = f.readline()
@@ -167,7 +167,7 @@ def test_cli_integrity_no_manifest(test_dir, archive_name, monkeypatch):
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", archive_name]
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args)
+            callscript("archive-tool.py", args, stderr=f)
         assert exc_info.value.returncode == 3
         f.seek(0)
         line = f.readline()
@@ -194,7 +194,7 @@ def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["verify", archive_name]
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args)
+            callscript("archive-tool.py", args, stderr=f)
         assert exc_info.value.returncode == 3
         f.seek(0)
         line = f.readline()
