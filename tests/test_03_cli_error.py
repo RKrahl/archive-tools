@@ -129,6 +129,17 @@ def test_cli_create_rel_start_basedir(test_dir, archive_name, monkeypatch):
         line = f.readline()
         assert "'base/msg.txt' does not start with 'base/data'" in line
 
+def test_cli_ls_archive_not_found(test_dir, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["ls", "bogus.tar"]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args, stderr=f)
+        assert exc_info.value.returncode == 1
+        f.seek(0)
+        line = f.readline()
+        assert "No such file or directory: 'bogus.tar'" in line
+
 def test_cli_ls_checksum_invalid_hash(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     args = ["create", archive_name, "base"]

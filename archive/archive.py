@@ -95,13 +95,17 @@ class Archive:
 
     def _read_manifest(self, mode):
         assert mode.startswith('r')
-        with tarfile.open(str(self.path), mode) as tarf:
-            ti = tarf.next()
-            path = Path(ti.path)
-            if path.name != ".manifest.yaml":
-                raise ArchiveIntegrityError("manifest not found")
-            self.basedir = path.parent
-            self.manifest = Manifest(fileobj=tarf.extractfile(ti))
+        try:
+            tarf = tarfile.open(str(self.path), mode)
+        except OSError as e:
+            raise ArchiveReadError(str(e))
+        ti = tarf.next()
+        path = Path(ti.path)
+        if path.name != ".manifest.yaml":
+            raise ArchiveIntegrityError("manifest not found")
+        self.basedir = path.parent
+        self.manifest = Manifest(fileobj=tarf.extractfile(ti))
+        tarf.close()
 
     def _arcname(self, p):
         if p.is_absolute():
