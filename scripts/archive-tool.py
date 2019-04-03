@@ -3,13 +3,14 @@
 import argparse
 import datetime
 from pathlib import Path
+import sys
 from archive import Archive
-from archive.exception import ArchiveReadError
+from archive.exception import *
 from archive.manifest import FileInfo
 from archive.tools import modstr
 
 argparser = argparse.ArgumentParser()
-subparsers = argparser.add_subparsers(title='subcommands')
+subparsers = argparser.add_subparsers(title='subcommands', dest='subcmd')
 
 
 suffix_map = {
@@ -174,4 +175,17 @@ check_parser.set_defaults(func=check)
 args = argparser.parse_args()
 if not hasattr(args, "func"):
     argparser.error("subcommand is required")
-args.func(args)
+try:
+    args.func(args)
+except ArchiveError as e:
+    if isinstance(e, ArchiveCreateError):
+        status = 1
+    elif isinstance(e, ArchiveReadError):
+        status = 1
+    elif isinstance(e, ArchiveIntegrityError):
+        status = 3
+    else:
+        raise
+    print("%s %s: error: %s" % (argparser.prog, args.subcmd, e), 
+          file=sys.stderr)
+    sys.exit(status)

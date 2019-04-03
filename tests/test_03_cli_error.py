@@ -107,7 +107,6 @@ def test_cli_ls_bogus_format(test_dir, archive_name, monkeypatch):
                 break
         assert "--format: invalid choice: 'bogus_fmt'" in line
 
-@pytest.mark.xfail(reason="proper error handling not yet implemented")
 def test_cli_create_normalized_path(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
@@ -119,7 +118,6 @@ def test_cli_create_normalized_path(test_dir, archive_name, monkeypatch):
         line = f.readline()
         assert "invalid path base/empty/..: must be normalized" in line
 
-@pytest.mark.xfail(reason="proper error handling not yet implemented")
 def test_cli_create_rel_start_basedir(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
@@ -131,7 +129,6 @@ def test_cli_create_rel_start_basedir(test_dir, archive_name, monkeypatch):
         line = f.readline()
         assert "'base/msg.txt' does not start with 'base/data'" in line
 
-@pytest.mark.xfail(reason="proper error handling not yet implemented")
 def test_cli_ls_checksum_invalid_hash(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     args = ["create", archive_name, "base"]
@@ -145,7 +142,6 @@ def test_cli_ls_checksum_invalid_hash(test_dir, archive_name, monkeypatch):
         line = f.readline()
         assert "'bogus' hashes not available" in line
 
-@pytest.mark.xfail(reason="proper error handling not yet implemented")
 def test_cli_info_missing_entry(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     args = ["create", archive_name, "base"]
@@ -159,7 +155,6 @@ def test_cli_info_missing_entry(test_dir, archive_name, monkeypatch):
         line = f.readline()
         assert "base/data/not-present: not found in archive" in line
 
-@pytest.mark.xfail(reason="proper error handling not yet implemented")
 def test_cli_integrity_no_manifest(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with tarfile.open(archive_name, "w") as tarf:
@@ -173,7 +168,6 @@ def test_cli_integrity_no_manifest(test_dir, archive_name, monkeypatch):
         line = f.readline()
         assert "manifest not found" in line
 
-@pytest.mark.xfail(reason="proper error handling not yet implemented")
 def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     base = Path("base")
