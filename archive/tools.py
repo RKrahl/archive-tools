@@ -1,10 +1,30 @@
 import datetime
 import hashlib
+import os
 import stat
 try:
     from dateutil.tz import gettz
 except ImportError:
     gettz = None
+
+
+class tmp_chdir():
+    """A context manager to temporarily change directory.
+    """
+    def __init__(self, dir):
+        self.save_dir = None
+        self.dir = str(dir)
+    def __enter__(self):
+        self.save_dir = os.getcwd()
+        os.chdir(self.dir)
+    def _restore_dir(self):
+        if self.save_dir:
+            os.chdir(self.save_dir)
+        self.save_dir = None
+    def __exit__(self, type, value, tb):
+        self._restore_dir()
+    def __del__(self):
+        self._restore_dir()
 
 
 def now_str():
