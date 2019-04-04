@@ -5,12 +5,12 @@ Archive Tools
 =============
 
 This package provides tools for managing archives.  An archive in
-terms of this package is a compressed tar archive file with some
-embedded metadata on the included files.  The metadata include the
+terms of this package is a (compressed) tar archive file with some
+embedded metadata on the included files.  This metadata include the
 name, file stats, and checksums of the file.
 
-The package provides (actually, is supposed to provide) command line
-tools to enable the following tasks:
+The package provides a command line tool to enable the following
+tasks:
 
 + Create an archive, takes a list of files to include in the archive
   as input.
@@ -24,9 +24,9 @@ tools to enable the following tasks:
 + Given a list of files as input, list those files that are either not
   in the archive or where the file in the archive differs.
 
-All tasks providing information on an archive should take this
-information from the embedded metadata.  Retrieving this metadata
-should not require reading through the compressed tar archive.
+All tasks providing information on an archive take this information
+from the embedded metadata.  Retrieving this metadata does not require
+reading through the compressed tar archive.
 
 
 System requirements
