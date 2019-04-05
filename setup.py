@@ -1,29 +1,37 @@
 #! /usr/bin/python
+"""Archive Tools.
+
+This package provides tools for managing archives.
+"""
 
 from distutils.core import setup
+import distutils.log
 try:
     import distutils_pytest
 except ImportError:
     pass
-import archive
-import re
+try:
+    import setuptools_scm
+    version = setuptools_scm.get_version()
+    with open(".version", "wt") as f:
+        f.write(version)
+except ImportError:
+    try:
+        with open(".version", "rt") as f:
+            version = f.read()
+    except OSError:
+        distutils.log.warn("warning: cannot determine version number")
+        version = "UNKNOWN"
 
-DOCLINES         = archive.__doc__.strip().split("\n")
-DESCRIPTION      = DOCLINES[0]
-LONG_DESCRIPTION = "\n".join(DOCLINES[2:])
-VERSION          = archive.__version__
-AUTHOR           = archive.__author__
-m = re.match(r"^(.*?)\s*<(.*)>$", AUTHOR)
-(AUTHOR_NAME, AUTHOR_EMAIL) = m.groups() if m else (AUTHOR, None)
-
+doclines = __doc__.strip().split("\n")
 
 setup(
     name = "archive-tools",
-    version = VERSION,
-    description = DESCRIPTION,
-    long_description = LONG_DESCRIPTION,
-    author = AUTHOR_NAME,
-    author_email = AUTHOR_EMAIL,
+    version = version,
+    description = doclines[0],
+    long_description = "\n".join(doclines[2:]),
+    author = "Rolf Krahl",
+    author_email = "rolf@rotkraut.de",
     license = "Apache-2.0",
     requires = ["PyYAML"],
     packages = ["archive"],

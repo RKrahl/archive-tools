@@ -15,7 +15,7 @@ clean:
 	rm -rf build
 
 distclean: clean
-	rm -f MANIFEST
+	rm -f MANIFEST .version
 	rm -f archive/*.pyc scripts/*.pyc tests/*.pyc
 	rm -rf archive/__pycache__ scripts/__pycache__ tests/__pycache__
 	rm -rf tests/.cache
