@@ -1,8 +1,8 @@
 .. image:: https://travis-ci.org/RKrahl/archive-tools.svg?branch=master
    :target: https://travis-ci.org/RKrahl/archive-tools
 
-Archive Tools
-=============
+Tools for managing archives
+===========================
 
 This package provides tools for managing archives.  An archive in
 terms of this package is a (compressed) tar archive file with some
