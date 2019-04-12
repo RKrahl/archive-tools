@@ -1,7 +1,9 @@
 *.pyc
 *~
 __pycache__/
+/.version
 /MANIFEST
+/archive/__init__.py
 /build/
 /dist/
 /tests/.cache/

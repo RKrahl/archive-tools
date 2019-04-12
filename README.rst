@@ -1,8 +1,8 @@
 .. image:: https://travis-ci.org/RKrahl/archive-tools.svg?branch=master
    :target: https://travis-ci.org/RKrahl/archive-tools
 
-Archive Tools
-=============
+Tools for managing archives
+===========================
 
 This package provides tools for managing archives.  An archive in
 terms of this package is a (compressed) tar archive file with some
@@ -45,6 +45,14 @@ Optional library packages:
 + `python-dateutil`_
 
   Date strings will lack time zone indication if missing.
+
++ `setuptools_scm`_
+
+  The version number is managed using this package.  All source
+  distributions add a static text file with the version number and
+  fall back using that if `setuptools_scm` is not available.  So this
+  package is only needed to build out of the plain development source
+  tree as cloned from GitHub.
 
 + `pytest`_ >= 3.0
 
@@ -106,6 +114,7 @@ permissions and limitations under the License.
 
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
 .. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
+.. _setuptools_scm: https://github.com/pypa/setuptools_scm/
 .. _pytest: http://pytest.org/
 .. _distutils-pytest: https://github.com/RKrahl/distutils-pytest
 .. _pytest-dependency: https://pypi.python.org/pypi/pytest_dependency/
