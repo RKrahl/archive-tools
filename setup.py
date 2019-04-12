@@ -109,7 +109,7 @@ setup(
     packages = ["archive"],
     scripts = ["scripts/archive-tool.py"],
     classifiers = [
-        "Development Status :: 1 - Planning",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
