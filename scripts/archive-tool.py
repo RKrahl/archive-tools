@@ -156,15 +156,20 @@ def check(args):
             break
         skip = False
         entry = archive.manifest.find(fi.path)
-        if entry:
-            if _matches(fi, entry):
-                continue
-        elif fi.is_dir():
-            skip = True
-        print(str(fi.path))
+        if entry and _matches(fi, entry):
+            if args.present and not fi.is_dir():
+                print(str(fi.path))
+        else:
+            if not args.present:
+                print(str(fi.path))
+            if fi.is_dir():
+                skip = True
 
 check_parser = subparsers.add_parser('check',
                                      help="check if files are in the archive")
+check_parser.add_argument('--present', action='store_true',
+                          help=("show files present in the archive, "
+                                "rather then missing ones"))
 check_parser.add_argument('archive',
                           help=("path to the archive file"), type=Path)
 check_parser.add_argument('files', nargs='+', type=Path,
