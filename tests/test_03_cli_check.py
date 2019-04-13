@@ -42,12 +42,12 @@ def copy_data(request, test_dir):
     return copy_dir
 
 def get_results(fileobj):
-    results = []
+    results = set()
     while True:
         line = fileobj.readline()
         if not line:
             break
-        results.append(line.strip())
+        results.add(line.strip())
     return results
 
 def test_check_allmatch(test_dir, copy_data, monkeypatch):
@@ -56,7 +56,7 @@ def test_check_allmatch(test_dir, copy_data, monkeypatch):
         args = ["check", "../archive.tar", "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == []
+        assert get_results(f) == set()
 
 def test_check_add_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -67,7 +67,7 @@ def test_check_add_file(test_dir, copy_data, monkeypatch):
         args = ["check", "../archive.tar", "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == [str(fp)]
+        assert get_results(f) == {str(fp)}
 
 def test_check_change_type(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -78,7 +78,7 @@ def test_check_change_type(test_dir, copy_data, monkeypatch):
         args = ["check", "../archive.tar", "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == [str(fp)]
+        assert get_results(f) == {str(fp)}
 
 def test_check_touch_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -88,7 +88,7 @@ def test_check_touch_file(test_dir, copy_data, monkeypatch):
         args = ["check", "../archive.tar", "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == [str(fp)]
+        assert get_results(f) == {str(fp)}
 
 def test_check_modify_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -101,7 +101,7 @@ def test_check_modify_file(test_dir, copy_data, monkeypatch):
         args = ["check", "../archive.tar", "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == [str(fp)]
+        assert get_results(f) == {str(fp)}
 
 def test_check_symlink_target(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -112,4 +112,4 @@ def test_check_symlink_target(test_dir, copy_data, monkeypatch):
         args = ["check", "../archive.tar", "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == [str(fp)]
+        assert get_results(f) == {str(fp)}
