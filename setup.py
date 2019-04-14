@@ -31,7 +31,9 @@ import distutils.command.sdist
 import distutils.core
 from distutils.core import setup
 import distutils.log
+from glob import glob
 from pathlib import Path
+import string
 try:
     import distutils_pytest
 except ImportError:
@@ -90,6 +92,16 @@ class sdist(distutils.command.sdist.sdist):
     def run(self):
         self.run_command('init_py')
         super().run()
+        subst = {
+            "version": self.distribution.get_version(),
+            "url": self.distribution.get_url(),
+            "description": self.distribution.get_description(),
+            "long_description": self.distribution.get_long_description(),
+        }
+        for spec in glob("*.spec"):
+            with Path(spec).open('rt') as inf:
+                with Path(self.dist_dir, spec).open('wt') as outf:
+                    outf.write(string.Template(inf.read()).substitute(subst))
 
 class build_py(distutils.command.build_py.build_py):
     def run(self):
