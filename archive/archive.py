@@ -8,7 +8,7 @@ import tarfile
 import tempfile
 from archive.manifest import Manifest
 from archive.exception import *
-from archive.tools import checksum
+from archive.tools import tmp_chdir, checksum
 
 def _is_normalized(p):
     """Check if the path is normalized.
@@ -23,16 +23,22 @@ def _is_normalized(p):
 
 class Archive:
 
-    def __init__(self, path, mode='r', paths=None, basedir=None):
-        self.path = Path(path)
+    def __init__(self, path, mode='r', paths=None, basedir=None, workdir=None):
         if mode.startswith('r'):
+            self.path = Path(path)
             self._read_manifest(mode)
         elif mode.startswith('x'):
             if sys.version_info < (3, 5):
                 # The 'x' (exclusive creation) mode was added to
                 # tarfile in Python 3.5.
                 mode = 'w' + mode[1:]
-            self._create(mode, paths, basedir)
+            if workdir:
+                self.path = Path(workdir, path)
+                with tmp_chdir(workdir):
+                    self._create(mode, paths, basedir)
+            else:
+                self.path = Path(path)
+                self._create(mode, paths, basedir)
         else:
             raise ValueError("invalid mode '%s'" % mode)
 

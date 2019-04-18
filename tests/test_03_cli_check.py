@@ -6,7 +6,6 @@ from pathlib import Path
 import shutil
 from tempfile import TemporaryFile
 from archive import Archive
-from archive.tools import tmp_chdir
 import pytest
 from conftest import setup_testdata, callscript
 
@@ -33,8 +32,7 @@ all_test_files = {
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
     setup_testdata(tmpdir, **testdata)
-    with tmp_chdir(tmpdir):
-        Archive("archive.tar", "x:", ["base"])
+    Archive("archive.tar", "x:", ["base"], workdir=tmpdir)
     return tmpdir
 
 @pytest.fixture(scope="function")
