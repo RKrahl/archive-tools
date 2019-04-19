@@ -8,7 +8,7 @@ import tarfile
 import tempfile
 from archive.manifest import Manifest
 from archive.exception import *
-from archive.tools import checksum
+from archive.tools import tmp_chdir, checksum
 
 def _is_normalized(p):
     """Check if the path is normalized.
@@ -23,16 +23,22 @@ def _is_normalized(p):
 
 class Archive:
 
-    def __init__(self, path, mode='r', paths=None, basedir=None):
-        self.path = Path(path)
+    def __init__(self, path, mode='r', paths=None, basedir=None, workdir=None):
         if mode.startswith('r'):
+            self.path = Path(path)
             self._read_manifest(mode)
         elif mode.startswith('x'):
             if sys.version_info < (3, 5):
                 # The 'x' (exclusive creation) mode was added to
                 # tarfile in Python 3.5.
                 mode = 'w' + mode[1:]
-            self._create(mode, paths, basedir)
+            if workdir:
+                self.path = Path(workdir, path)
+                with tmp_chdir(workdir):
+                    self._create(mode, paths, basedir)
+            else:
+                self.path = Path(path)
+                self._create(mode, paths, basedir)
         else:
             raise ValueError("invalid mode '%s'" % mode)
 
@@ -96,13 +102,17 @@ class Archive:
 
     def _read_manifest(self, mode):
         assert mode.startswith('r')
-        with tarfile.open(str(self.path), mode) as tarf:
-            ti = tarf.next()
-            path = Path(ti.path)
-            if path.name != ".manifest.yaml":
-                raise ArchiveReadError("invalid archive: manifest not found")
-            self.basedir = path.parent
-            self.manifest = Manifest(fileobj=tarf.extractfile(ti))
+        try:
+            tarf = tarfile.open(str(self.path), mode)
+        except OSError as e:
+            raise ArchiveReadError(str(e))
+        ti = tarf.next()
+        path = Path(ti.path)
+        if path.name != ".manifest.yaml":
+            raise ArchiveIntegrityError("manifest not found")
+        self.basedir = path.parent
+        self.manifest = Manifest(fileobj=tarf.extractfile(ti))
+        tarf.close()
 
     def _arcname(self, p):
         if p.is_absolute():
@@ -130,13 +140,13 @@ class Archive:
 
         def _check_condition(cond, item, message):
             if not cond:
-                raise ArchiveVerifyError("%s: %s" % (item, message))
+                raise ArchiveIntegrityError("%s: %s" % (item, message))
 
         itemname = "%s:%s" % (self.path, fileinfo.path)
         try:
             tarinfo = tarf.getmember(self._arcname(fileinfo.path))
         except KeyError:
-            raise ArchiveVerifyError("%s: missing" % itemname)
+            raise ArchiveIntegrityError("%s: missing" % itemname)
         _check_condition(tarinfo.mode == fileinfo.mode,
                          itemname, "wrong mode")
         _check_condition(int(tarinfo.mtime) == int(fileinfo.mtime),
@@ -159,4 +169,4 @@ class Archive:
             _check_condition(tarinfo.linkname == str(fileinfo.target),
                              itemname, "wrong link target")
         else:
-            raise ArchiveVerifyError("%s: invalid type" % (itemname))
+            raise ArchiveIntegrityError("%s: invalid type" % (itemname))

@@ -1,13 +1,16 @@
-Archive Tools
-=============
+.. image:: https://travis-ci.org/RKrahl/archive-tools.svg?branch=master
+   :target: https://travis-ci.org/RKrahl/archive-tools
+
+Tools for managing archives
+===========================
 
 This package provides tools for managing archives.  An archive in
-terms of this package is a compressed tar archive file with some
-embedded metadata on the included files.  The metadata include the
+terms of this package is a (compressed) tar archive file with some
+embedded metadata on the included files.  This metadata include the
 name, file stats, and checksums of the file.
 
-The package provides (actually, is supposed to provide) command line
-tools to enable the following tasks:
+The package provides a command line tool to enable the following
+tasks:
 
 + Create an archive, takes a list of files to include in the archive
   as input.
@@ -21,9 +24,9 @@ tools to enable the following tasks:
 + Given a list of files as input, list those files that are either not
   in the archive or where the file in the archive differs.
 
-All tasks providing information on an archive should take this
-information from the embedded metadata.  Retrieving this metadata
-should not require reading through the compressed tar archive.
+All tasks providing information on an archive take this information
+from the embedded metadata.  Retrieving this metadata does not require
+reading through the compressed tar archive.
 
 
 System requirements
@@ -38,6 +41,18 @@ Required library packages:
 + `PyYAML`_
 
 Optional library packages:
+
++ `python-dateutil`_
+
+  Date strings will lack time zone indication if missing.
+
++ `setuptools_scm`_
+
+  The version number is managed using this package.  All source
+  distributions add a static text file with the version number and
+  fall back using that if `setuptools_scm` is not available.  So this
+  package is only needed to build out of the plain development source
+  tree as cloned from GitHub.
 
 + `pytest`_ >= 3.0
 
@@ -98,6 +113,8 @@ permissions and limitations under the License.
 
 
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
+.. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
+.. _setuptools_scm: https://github.com/pypa/setuptools_scm/
 .. _pytest: http://pytest.org/
 .. _distutils-pytest: https://github.com/RKrahl/distutils-pytest
 .. _pytest-dependency: https://pypi.python.org/pypi/pytest_dependency/

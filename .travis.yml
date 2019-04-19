@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+matrix:
+  include:
+  - python: "3.7"
+    dist: xenial
+    sudo: true
+install: pip install 'PyYAML' 'python-dateutil' 'pytest >=3.6.0' 'distutils-pytest' 'pytest-dependency >=0.2'
+script: make test
+
+# Local Variables:
+# mode: yaml
+# End:

@@ -26,6 +26,6 @@ class ArchiveCreateError(ArchiveError):
 class ArchiveReadError(ArchiveError):
     pass
 
-class ArchiveVerifyError(ArchiveError):
+class ArchiveIntegrityError(ArchiveError):
     pass
 

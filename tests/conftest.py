@@ -1,13 +1,25 @@
 """pytest configuration.
 """
 
+import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import pytest
 
 
+_cleanup = True
 testdir = Path(__file__).parent
+
+def pytest_addoption(parser):
+    parser.addoption("--no-cleanup", action="store_true", default=False,
+                     help="do not clean up temporary data after the test.")
+
+def pytest_configure(config):
+    global _cleanup
+    _cleanup = not config.getoption("--no-cleanup")
 
 def gettestdata(fname):
     path = testdir / "data" / fname
@@ -28,6 +40,28 @@ def _get_checksums():
 
 checksums = _get_checksums()
 
+def require_compression(compression):
+    """Check if the library module needed for compression is available.
+    Skip if this is not the case.
+    """
+    msg = "%s module needed for '%s' compression is not available"
+    if not compression:
+        pass
+    elif compression == "gz":
+        try:
+            import zlib
+        except ImportError:
+            pytest.skip(msg % ("zlib", "gz"))
+    elif compression == "bz2":
+        try:
+            import bz2
+        except ImportError:
+            pytest.skip(msg % ("bz2", "bz2"))
+    elif compression == "xz":
+        try:
+            import lzma
+        except ImportError:
+            pytest.skip(msg % ("lzma", "xz"))
 
 class TmpDir(object):
     """Provide a temporary directory.
@@ -35,7 +69,7 @@ class TmpDir(object):
     def __init__(self):
         self.dir = Path(tempfile.mkdtemp(prefix="archive-tools-test-"))
     def cleanup(self):
-        if self.dir:
+        if self.dir and _cleanup:
             shutil.rmtree(str(self.dir))
         self.dir = None
     def __enter__(self):
@@ -67,30 +101,43 @@ def setup_testdata(main_dir, dirs=[], files=[], symlinks=[]):
         p = main_dir / f
         p.symlink_to(t)
 
-def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
-    assert len(manifest) == len(dirs) + len(files) + len(symlinks)
+def testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
+    items = []
     for p, m in dirs:
         if prefix_dir:
             p = prefix_dir / p
-        fi = manifest.find(p)
-        assert fi
-        assert fi.type == 'd'
-        assert fi.path == p
-        assert fi.mode == m
+        items.append({"Path": p, "Type": "d", "Mode": m})
     for p, m in files:
         if prefix_dir:
             p = prefix_dir / p
-        fi = manifest.find(p)
-        assert fi
-        assert fi.type == 'f'
-        assert fi.path == p
-        assert fi.mode == m
-        assert fi.checksum['sha256'] == checksums[p.name]
+        items.append({"Path": p, "Type": "f", "Mode": m})
     for p, t in symlinks:
         if prefix_dir:
             p = prefix_dir / p
-        fi = manifest.find(p)
-        assert fi
-        assert fi.type == 'l'
-        assert fi.path == p
-        assert fi.target == t
+        items.append({"Path": p, "Type": "l", "Mode": 0o777, "Target": t})
+    items.sort(key=lambda e: e["Path"])
+    return items
+
+def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
+    items = testdata_items(prefix_dir, dirs, files, symlinks)
+    assert len(manifest) == len(items)
+    for entry, fileinfo in zip(items, manifest):
+        assert fileinfo.type == entry["Type"]
+        assert fileinfo.path == entry["Path"]
+        if entry["Type"] == "d":
+            assert fileinfo.mode == entry["Mode"]
+        elif entry["Type"] == "f":
+            assert fileinfo.mode == entry["Mode"]
+            assert fileinfo.checksum['sha256'] == checksums[entry["Path"].name]
+        elif entry["Type"] == "l":
+            assert fileinfo.target == entry["Target"]
+
+def callscript(scriptname, args, stdin=None, stdout=None, stderr=None):
+    try:
+        script_dir = os.environ['BUILD_SCRIPTS_DIR']
+    except KeyError:
+        pytest.skip("BUILD_SCRIPTS_DIR is not set.")
+    script = Path(script_dir, scriptname)
+    cmd = [sys.executable, str(script)] + args
+    print("\n>", *cmd)
+    subprocess.check_call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)

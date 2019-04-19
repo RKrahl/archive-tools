@@ -9,9 +9,9 @@ import tarfile
 import time
 import pytest
 from archive import Archive
-from archive.exception import ArchiveVerifyError
+from archive.exception import ArchiveIntegrityError
 from archive.manifest import Manifest
-from conftest import tmpdir, archive_name, setup_testdata
+from conftest import archive_name, setup_testdata
 
 
 # Setup a directory with some test data to be put into an archive.
@@ -50,14 +50,21 @@ def create_archive(archive_path):
             tarf.addfile(manifest_info, f)
         tarf.add("base")
 
-def test_verify_missing(test_data, archive_name):
+def test_verify_missing_manifest(test_data, archive_name):
+    with tarfile.open(archive_name, "w") as tarf:
+        tarf.add("base")
+    with pytest.raises(ArchiveIntegrityError) as err:
+        archive = Archive(archive_name, mode="r")
+    assert "manifest not found" in str(err.value)
+
+def test_verify_missing_file(test_data, archive_name):
     path = Path("base", "msg.txt")
     mtime_parent = os.stat(str(path.parent)).st_mtime
     path.unlink()
     os.utime(str(path.parent), times=(mtime_parent, mtime_parent))
     create_archive(archive_name)
     archive = Archive(archive_name, mode="r")
-    with pytest.raises(ArchiveVerifyError) as err:
+    with pytest.raises(ArchiveIntegrityError) as err:
         archive.verify()
     assert "%s: missing" % path in str(err.value)
 
@@ -66,7 +73,7 @@ def test_verify_wrong_mode_file(test_data, archive_name):
     path.chmod(0o644)
     create_archive(archive_name)
     archive = Archive(archive_name, mode="r")
-    with pytest.raises(ArchiveVerifyError) as err:
+    with pytest.raises(ArchiveIntegrityError) as err:
         archive.verify()
     assert "%s: wrong mode" % path in str(err.value)
 
@@ -75,7 +82,7 @@ def test_verify_wrong_mode_dir(test_data, archive_name):
     path.chmod(0o755)
     create_archive(archive_name)
     archive = Archive(archive_name, mode="r")
-    with pytest.raises(ArchiveVerifyError) as err:
+    with pytest.raises(ArchiveIntegrityError) as err:
         archive.verify()
     assert "%s: wrong mode" % path in str(err.value)
 
@@ -85,7 +92,7 @@ def test_verify_wrong_mtime(test_data, archive_name):
     os.utime(str(path), times=(hour_ago, hour_ago))
     create_archive(archive_name)
     archive = Archive(archive_name, mode="r")
-    with pytest.raises(ArchiveVerifyError) as err:
+    with pytest.raises(ArchiveIntegrityError) as err:
         archive.verify()
     assert "%s: wrong modification time" % path in str(err.value)
 
@@ -101,7 +108,7 @@ def test_verify_wrong_type(test_data, archive_name):
     os.utime(str(path.parent), times=(mtime_parent, mtime_parent))
     create_archive(archive_name)
     archive = Archive(archive_name, mode="r")
-    with pytest.raises(ArchiveVerifyError) as err:
+    with pytest.raises(ArchiveIntegrityError) as err:
         archive.verify()
     assert "%s: wrong type" % path in str(err.value)
 
@@ -117,7 +124,7 @@ def test_verify_wrong_checksum(test_data, archive_name):
     os.utime(str(path), times=(mtime, mtime))
     create_archive(archive_name)
     archive = Archive(archive_name, mode="r")
-    with pytest.raises(ArchiveVerifyError) as err:
+    with pytest.raises(ArchiveIntegrityError) as err:
         archive.verify()
     assert "%s: checksum" % path in str(err.value)
 
