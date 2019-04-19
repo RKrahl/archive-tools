@@ -54,6 +54,7 @@ class MailArchive(Archive):
 
 os.umask(0o077)
 with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
+    archive_path = Path.cwd() / args.archive
     with tmp_chdir(tmpdir):
         maildir = Maildir("Maildir", create=True)
         mailindex = []
@@ -101,5 +102,5 @@ with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
             yaml.dump(mailindex, stream=tmpf, encoding="ascii",
                       default_flow_style=False, explicit_start=True)
             tmpf.seek(0)
-            log.debug("writing archive file %s", args.archive)
-            archive = MailArchive(args.archive, tmpf, paths=["Maildir"])
+            log.debug("writing archive file %s", archive_path)
+            archive = MailArchive(archive_path, tmpf, paths=["Maildir"])
