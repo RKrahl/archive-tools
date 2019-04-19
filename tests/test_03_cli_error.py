@@ -1,6 +1,7 @@
 """Test the error handling in the command line tool.
 """
 
+import os
 from pathlib import Path
 import stat
 import subprocess
@@ -188,7 +189,9 @@ def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
     manifest = Manifest(paths=[base])
     with open("manifest.yaml", "wb") as f:
         manifest.write(f)
+    mtime_parent = os.stat(str(missing.parent)).st_mtime
     missing.unlink()
+    os.utime(str(missing.parent), times=(mtime_parent, mtime_parent))
     with tarfile.open(archive_name, "w") as tarf:
         with open("manifest.yaml", "rb") as f:
             manifest_info = tarf.gettarinfo(arcname="base/.manifest.yaml", 
