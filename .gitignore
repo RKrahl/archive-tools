@@ -1,6 +1,7 @@
 *.pyc
 *~
 __pycache__/
+/.env
 /.version
 /MANIFEST
 /archive/__init__.py
