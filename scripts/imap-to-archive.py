@@ -94,6 +94,7 @@ with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
                     "key": key,
                 }
                 mailindex.append(idx_item)
+    log.debug("%d messages downloaded", len(mailindex))
     with tempfile.TemporaryFile(dir=tmpdir) as tmpf:
         head = """%%YAML 1.1
 # Fetched from %s at %s
@@ -102,5 +103,6 @@ with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
         yaml.dump(mailindex, stream=tmpf, encoding="ascii",
                   default_flow_style=False, explicit_start=True)
         tmpf.seek(0)
+        log.debug("writing archive file %s", args.archive)
         archive = MailArchive(args.archive, tmpf, paths=["Maildir"])
     os.chdir("/")
