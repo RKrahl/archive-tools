@@ -80,12 +80,12 @@ def test_create(test_dir, monkeypatch, testcase):
 def test_check_manifest(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
-    archive = Archive.open(archive_path)
-    prefix_dir = test_dir if abspath else None
-    head = archive.manifest.head
-    assert set(head.keys()) == {"Date", "Generator", "Version", "Checksums"}
-    assert head["Version"] == Manifest.Version
-    check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)
+    with Archive.open(archive_path) as archive:
+        prefix_dir = test_dir if abspath else None
+        head = archive.manifest.head
+        assert set(head.keys()) == {"Date", "Generator", "Version", "Checksums"}
+        assert head["Version"] == Manifest.Version
+        check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)
 
 @pytest.mark.dependency()
 def test_check_content(test_dir, dep_testcase):
@@ -116,5 +116,5 @@ def test_check_content(test_dir, dep_testcase):
 def test_verify(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
-    archive = Archive.open(archive_path)
-    archive.verify()
+    with Archive.open(archive_path) as archive:
+        archive.verify()

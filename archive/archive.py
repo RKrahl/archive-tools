@@ -27,6 +27,7 @@ class Archive:
         self.path = None
         self.basedir = None
         self.manifest = None
+        self._file = None
 
     @classmethod
     def create(cls, path, compression, paths, basedir=None, workdir=None):
@@ -107,18 +108,34 @@ class Archive:
     def open(cls, path):
         archive = cls()
         archive.path = Path(path)
-        try:
-            tarf = tarfile.open(str(archive.path), 'r')
-        except OSError as e:
-            raise ArchiveReadError(str(e))
-        ti = tarf.next()
+        archive._open()
+        ti = archive._file.next()
         path = Path(ti.path)
         if path.name != ".manifest.yaml":
             raise ArchiveIntegrityError("manifest not found")
         archive.basedir = path.parent
-        archive.manifest = Manifest(fileobj=tarf.extractfile(ti))
-        tarf.close()
+        archive.manifest = Manifest(fileobj=archive._file.extractfile(ti))
         return archive
+
+    def _open(self):
+        try:
+            self._file = tarfile.open(str(self.path), 'r')
+        except OSError as e:
+            raise ArchiveReadError(str(e))
+
+    def close(self):
+        if self._file:
+            self._file.close()
+        self._file = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.close()
+
+    def __del__(self):
+        self.close()
 
     def _arcname(self, p):
         if p.is_absolute():
@@ -127,11 +144,12 @@ class Archive:
             return str(p)
 
     def verify(self):
-        with tarfile.open(str(self.path), 'r') as tarf:
-            for fileinfo in self.manifest:
-                self._verify_item(tarf, fileinfo)
+        if not self._file:
+            raise ValueError("archive is closed.")
+        for fileinfo in self.manifest:
+            self._verify_item(fileinfo)
 
-    def _verify_item(self, tarf, fileinfo):
+    def _verify_item(self, fileinfo):
 
         def _check_condition(cond, item, message):
             if not cond:
@@ -139,7 +157,7 @@ class Archive:
 
         itemname = "%s:%s" % (self.path, fileinfo.path)
         try:
-            tarinfo = tarf.getmember(self._arcname(fileinfo.path))
+            tarinfo = self._file.getmember(self._arcname(fileinfo.path))
         except KeyError:
             raise ArchiveIntegrityError("%s: missing" % itemname)
         _check_condition(tarinfo.mode == fileinfo.mode,
@@ -154,7 +172,7 @@ class Archive:
                              itemname, "wrong type, expected regular file")
             _check_condition(tarinfo.size == fileinfo.size,
                              itemname, "wrong size")
-            with tarf.extractfile(tarinfo) as f:
+            with self._file.extractfile(tarinfo) as f:
                 cs = checksum(f, fileinfo.checksum.keys())
                 _check_condition(cs == fileinfo.checksum,
                                  itemname, "checksum does not match")
