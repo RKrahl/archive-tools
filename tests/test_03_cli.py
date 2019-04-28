@@ -76,7 +76,7 @@ def test_cli_create(test_dir, monkeypatch, testcase):
     args = ["create", "--compression", compression, "--basedir", basedir,
             archive_path, paths]
     callscript("archive-tool.py", args)
-    archive = Archive(archive_path, mode="r")
+    archive = Archive.open(archive_path)
     assert str(archive.basedir) == basedir
     prefix_dir = test_dir if abspath else None
     check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)

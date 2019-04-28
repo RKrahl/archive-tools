@@ -23,35 +23,39 @@ def _is_normalized(p):
 
 class Archive:
 
-    def __init__(self, path, mode='r', paths=None, basedir=None, workdir=None):
-        if mode.startswith('r'):
-            self.path = Path(path)
-            self._read_manifest(mode)
-        elif mode.startswith('x'):
-            if sys.version_info < (3, 5):
-                # The 'x' (exclusive creation) mode was added to
-                # tarfile in Python 3.5.
-                mode = 'w' + mode[1:]
-            if workdir:
-                self.path = Path(workdir, path)
-                with tmp_chdir(workdir):
-                    self._create(mode, paths, basedir)
-            else:
-                self.path = Path(path)
-                self._create(mode, paths, basedir)
-        else:
-            raise ValueError("invalid mode '%s'" % mode)
+    def __init__(self):
+        self.path = None
+        self.basedir = None
+        self.manifest = None
 
-    def _create(self, mode, paths, basedir):
+    @classmethod
+    def create(cls, path, compression, paths, basedir=None, workdir=None):
+        archive = cls()
+        if sys.version_info < (3, 5):
+            # The 'x' (exclusive creation) mode was added to tarfile
+            # in Python 3.5.
+            mode = 'w:' + compression
+        else:
+            mode = 'x:' + compression
+        if workdir:
+            with tmp_chdir(workdir):
+                archive._create(Path(workdir, path), mode, paths, basedir)
+        else:
+            archive._create(Path(path), mode, paths, basedir)
+        return archive
+
+    def _create(self, path, mode, paths, basedir):
+        self.path = path
         if not paths:
             raise ArchiveCreateError("refusing to create an empty archive")
         if not basedir:
             p = Path(paths[0])
             if p.is_absolute():
-                basedir = Path(self.path.name.split('.')[0])
+                self.basedir = Path(self.path.name.split('.')[0])
             else:
-                basedir = Path(p.parts[0])
-        self.basedir = Path(basedir)
+                self.basedir = Path(p.parts[0])
+        else:
+            self.basedir = Path(basedir)
         if self.basedir.is_absolute():
             raise ArchiveCreateError("basedir must be relative")
         # We allow two different cases: either
@@ -99,19 +103,22 @@ class Archive:
                                              "this filename is reserved" % p)
                 tarf.add(str(p), arcname=name, recursive=False)
 
-    def _read_manifest(self, mode):
-        assert mode.startswith('r')
+    @classmethod
+    def open(cls, path):
+        archive = cls()
+        archive.path = Path(path)
         try:
-            tarf = tarfile.open(str(self.path), mode)
+            tarf = tarfile.open(str(archive.path), 'r')
         except OSError as e:
             raise ArchiveReadError(str(e))
         ti = tarf.next()
         path = Path(ti.path)
         if path.name != ".manifest.yaml":
             raise ArchiveIntegrityError("manifest not found")
-        self.basedir = path.parent
-        self.manifest = Manifest(fileobj=tarf.extractfile(ti))
+        archive.basedir = path.parent
+        archive.manifest = Manifest(fileobj=tarf.extractfile(ti))
         tarf.close()
+        return archive
 
     def _arcname(self, p):
         if p.is_absolute():
@@ -119,13 +126,10 @@ class Archive:
         else:
             return str(p)
 
-    def verify(self, mode='r'):
-        if mode.startswith('r'):
-            with tarfile.open(str(self.path), mode) as tarf:
-                for fileinfo in self.manifest:
-                    self._verify_item(tarf, fileinfo)
-        else:
-            raise ValueError("invalid mode '%s'" % mode)
+    def verify(self):
+        with tarfile.open(str(self.path), 'r') as tarf:
+            for fileinfo in self.manifest:
+                self._verify_item(tarf, fileinfo)
 
     def _verify_item(self, tarf, fileinfo):
 
