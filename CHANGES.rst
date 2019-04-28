@@ -18,5 +18,9 @@ dev (not yet released)
           - Add a :meth:`Archive.close` method.
           - :class:`Archive` implements the context manager protocol.
 
+    Bug fixes and minor changes
+      + Issue #20: :meth:`Archive.create` takes a working directory as
+	optional argument.
+
 0.1 (2019-04-14)
     + Initial release.
