@@ -32,11 +32,11 @@ def test_create_default_basedir_rel(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     archive_path = "archive-rel.tar"
     p = Path("base", "data")
-    Archive(archive_path, mode="x:", paths=[p])
-    archive = Archive(archive_path, mode="r")
-    assert archive.basedir == Path("base")
-    check_manifest(archive.manifest, **testdata)
-    archive.verify()
+    Archive.create(archive_path, "", [p])
+    with Archive.open(archive_path) as archive:
+        assert archive.basedir == Path("base")
+        check_manifest(archive.manifest, **testdata)
+        archive.verify()
 
 def test_create_default_basedir_abs(test_dir, monkeypatch):
     """Check the default basedir with absolute paths.  (Issue #8)
@@ -44,11 +44,11 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     archive_path = "archive-abs.tar"
     p = test_dir / Path("base", "data")
-    Archive(archive_path, mode="x:", paths=[p])
-    archive = Archive(archive_path, mode="r")
-    assert archive.basedir == Path("archive-abs")
-    check_manifest(archive.manifest, prefix_dir=test_dir, **testdata)
-    archive.verify()
+    Archive.create(archive_path, "", [p])
+    with Archive.open(archive_path) as archive:
+        assert archive.basedir == Path("archive-abs")
+        check_manifest(archive.manifest, prefix_dir=test_dir, **testdata)
+        archive.verify()
 
 def test_create_sorted(test_dir, monkeypatch):
     """The entries in the manifest should be sorted.  (Issue #11)
@@ -60,10 +60,10 @@ def test_create_sorted(test_dir, monkeypatch):
         with p.open("wt") as f:
             print("Some content for file %s" % p, file=f)
     try:
-        Archive(archive_path, mode="x:", paths=files)
-        archive = Archive(archive_path, mode="r")
-        assert [fi.path for fi in archive.manifest] == sorted(files)
-        archive.verify()
+        Archive.create(archive_path, "", files)
+        with Archive.open(archive_path) as archive:
+            assert [fi.path for fi in archive.manifest] == sorted(files)
+            archive.verify()
     finally:
         for p in files:
             p.unlink()

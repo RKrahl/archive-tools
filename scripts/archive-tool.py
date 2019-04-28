@@ -30,8 +30,8 @@ def create(args):
             args.compression = 'gz'
     if args.compression == 'none':
         args.compression = ''
-    mode = 'x:%s' % args.compression
-    archive = Archive(args.archive, mode, args.files, args.basedir)
+    archive = Archive.create(args.archive, args.compression, args.files, 
+                             args.basedir)
 
 create_parser = subparsers.add_parser('create', help="create the archive")
 create_parser.add_argument('--compression',
@@ -47,8 +47,8 @@ create_parser.set_defaults(func=create)
 
 
 def verify(args):
-    archive = Archive(args.archive, "r")
-    archive.verify()
+    with Archive.open(args.archive) as archive:
+        archive.verify()
 
 verify_parser = subparsers.add_parser('verify',
                                       help="verify integrity of the archive")
@@ -77,19 +77,19 @@ def ls_checksum_format(archive, algorithm):
         print("%s  %s" % (fi.checksum[algorithm], fi.path))
 
 def ls(args):
-    archive = Archive(args.archive, "r")
-    if args.format == 'ls':
-        ls_ls_format(archive)
-    elif args.format == 'checksum':
-        if not args.checksum:
-            args.checksum = archive.manifest.head['Checksums'][0]
+    with Archive.open(args.archive) as archive:
+        if args.format == 'ls':
+            ls_ls_format(archive)
+        elif args.format == 'checksum':
+            if not args.checksum:
+                args.checksum = archive.manifest.head['Checksums'][0]
+            else:
+                if args.checksum not in archive.manifest.head['Checksums']:
+                    raise ArchiveReadError("Checksums using '%s' hashes "
+                                           "not available" % args.checksum)
+            ls_checksum_format(archive, args.checksum)
         else:
-            if args.checksum not in archive.manifest.head['Checksums']:
-                raise ArchiveReadError("Checksums using '%s' hashes "
-                                       "not available" % args.checksum)
-        ls_checksum_format(archive, args.checksum)
-    else:
-        raise ValueError("invalid format '%s'" % args.format)
+            raise ValueError("invalid format '%s'" % args.format)
 
 ls_parser = subparsers.add_parser('ls', help="list files in the archive")
 ls_parser.add_argument('--format',
@@ -104,23 +104,23 @@ ls_parser.set_defaults(func=ls)
 
 def info(args):
     typename = {"f": "file", "d": "directory", "l": "symbolic link"}
-    archive = Archive(args.archive, "r")
-    fi = archive.manifest.find(args.entry)
-    if not fi:
-        raise ArchiveReadError("%s: not found in archive" % args.entry)
-    infolines = []
-    infolines.append("Path:   %s" % fi.path)
-    infolines.append("Type:   %s" % typename[fi.type])
-    infolines.append("Mode:   %s" % modstr(fi.type, fi.mode))
-    infolines.append("Owner:  %s:%s (%d:%d)"
-                     % (fi.uname, fi.gname, fi.uid, fi.gid))
-    mtime = datetime.datetime.fromtimestamp(fi.mtime)
-    infolines.append("Mtime:  %s" % mtime.strftime("%Y-%m-%d %H:%M:%S"))
-    if fi.is_file():
-        infolines.append("Size:   %d" % fi.size)
-    if fi.is_symlink():
-        infolines.append("Target: %s" % fi.target)
-    print(*infolines, sep="\n")
+    with Archive.open(args.archive) as archive:
+        fi = archive.manifest.find(args.entry)
+        if not fi:
+            raise ArchiveReadError("%s: not found in archive" % args.entry)
+        infolines = []
+        infolines.append("Path:   %s" % fi.path)
+        infolines.append("Type:   %s" % typename[fi.type])
+        infolines.append("Mode:   %s" % modstr(fi.type, fi.mode))
+        infolines.append("Owner:  %s:%s (%d:%d)"
+                         % (fi.uname, fi.gname, fi.uid, fi.gid))
+        mtime = datetime.datetime.fromtimestamp(fi.mtime)
+        infolines.append("Mtime:  %s" % mtime.strftime("%Y-%m-%d %H:%M:%S"))
+        if fi.is_file():
+            infolines.append("Size:   %d" % fi.size)
+        if fi.is_symlink():
+            infolines.append("Target: %s" % fi.target)
+        print(*infolines, sep="\n")
 
 info_parser = subparsers.add_parser('info',
                                     help=("show informations about "
@@ -145,25 +145,25 @@ def _matches(fi, entry):
     return True
 
 def check(args):
-    archive = Archive(args.archive, "r")
-    FileInfo.Checksums = archive.manifest.head["Checksums"]
-    file_iter = FileInfo.iterpaths(args.files)
-    skip = None
-    while True:
-        try:
-            fi = file_iter.send(skip)
-        except StopIteration:
-            break
-        skip = False
-        entry = archive.manifest.find(fi.path)
-        if entry and _matches(fi, entry):
-            if args.present and not fi.is_dir():
-                print(str(fi.path))
-        else:
-            if not args.present:
-                print(str(fi.path))
-            if fi.is_dir():
-                skip = True
+    with Archive.open(args.archive) as archive:
+        FileInfo.Checksums = archive.manifest.head["Checksums"]
+        file_iter = FileInfo.iterpaths(args.files)
+        skip = None
+        while True:
+            try:
+                fi = file_iter.send(skip)
+            except StopIteration:
+                break
+            skip = False
+            entry = archive.manifest.find(fi.path)
+            if entry and _matches(fi, entry):
+                if args.present and not fi.is_dir():
+                    print(str(fi.path))
+            else:
+                if not args.present:
+                    print(str(fi.path))
+                if fi.is_dir():
+                    skip = True
 
 check_parser = subparsers.add_parser('check',
                                      help="check if files are in the archive")
