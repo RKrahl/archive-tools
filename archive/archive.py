@@ -29,9 +29,7 @@ class Archive:
         self.manifest = None
         self._file = None
 
-    @classmethod
-    def create(cls, path, compression, paths, basedir=None, workdir=None):
-        archive = cls()
+    def create(self, path, compression, paths, basedir=None, workdir=None):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
             # in Python 3.5.
@@ -40,10 +38,10 @@ class Archive:
             mode = 'x:' + compression
         if workdir:
             with tmp_chdir(workdir):
-                archive._create(Path(workdir, path), mode, paths, basedir)
+                self._create(Path(workdir, path), mode, paths, basedir)
         else:
-            archive._create(Path(path), mode, paths, basedir)
-        return archive
+            self._create(Path(path), mode, paths, basedir)
+        return self
 
     def _create(self, path, mode, paths, basedir):
         self.path = path
@@ -104,18 +102,16 @@ class Archive:
                                              "this filename is reserved" % p)
                 tarf.add(str(p), arcname=name, recursive=False)
 
-    @classmethod
-    def open(cls, path):
-        archive = cls()
-        archive.path = Path(path)
-        archive._open()
-        ti = archive._file.next()
+    def open(self, path):
+        self.path = Path(path)
+        self._open()
+        ti = self._file.next()
         path = Path(ti.path)
         if path.name != ".manifest.yaml":
             raise ArchiveIntegrityError("manifest not found")
-        archive.basedir = path.parent
-        archive.manifest = Manifest(fileobj=archive._file.extractfile(ti))
-        return archive
+        self.basedir = path.parent
+        self.manifest = Manifest(fileobj=self._file.extractfile(ti))
+        return self
 
     def _open(self):
         try:
