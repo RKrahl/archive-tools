@@ -104,7 +104,10 @@ class Archive:
 
     def open(self, path):
         self.path = Path(path)
-        self._open()
+        try:
+            self._file = tarfile.open(str(self.path), 'r')
+        except OSError as e:
+            raise ArchiveReadError(str(e))
         ti = self._file.next()
         path = Path(ti.path)
         if path.name != ".manifest.yaml":
@@ -112,12 +115,6 @@ class Archive:
         self.basedir = path.parent
         self.manifest = Manifest(fileobj=self._file.extractfile(ti))
         return self
-
-    def _open(self):
-        try:
-            self._file = tarfile.open(str(self.path), 'r')
-        except OSError as e:
-            raise ArchiveReadError(str(e))
 
     def close(self):
         if self._file:
