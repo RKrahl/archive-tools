@@ -56,7 +56,7 @@ def test_verify_missing_manifest(test_data, archive_name):
     with pytest.raises(ArchiveIntegrityError) as err:
         with Archive().open(archive_name) as archive:
             pass
-    assert "manifest not found" in str(err.value)
+    assert ".manifest.yaml not found" in str(err.value)
 
 def test_verify_missing_file(test_data, archive_name):
     path = Path("base", "msg.txt")
