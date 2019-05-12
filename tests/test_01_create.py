@@ -74,13 +74,13 @@ def test_create(test_dir, monkeypatch, testcase):
     else:
         paths = ["base"]
         basedir = "base"
-    Archive.create(archive_path, compression, paths, basedir=basedir)
+    Archive().create(archive_path, compression, paths, basedir=basedir)
 
 @pytest.mark.dependency()
 def test_check_manifest(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
-    with Archive.open(archive_path) as archive:
+    with Archive().open(archive_path) as archive:
         prefix_dir = test_dir if abspath else None
         head = archive.manifest.head
         assert set(head.keys()) == {"Date", "Generator", "Version", "Checksums"}
@@ -116,5 +116,5 @@ def test_check_content(test_dir, dep_testcase):
 def test_verify(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
-    with Archive.open(archive_path) as archive:
+    with Archive().open(archive_path) as archive:
         archive.verify()

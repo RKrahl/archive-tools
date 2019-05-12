@@ -30,8 +30,8 @@ def create(args):
             args.compression = 'gz'
     if args.compression == 'none':
         args.compression = ''
-    archive = Archive.create(args.archive, args.compression, args.files, 
-                             args.basedir)
+    archive = Archive().create(args.archive, args.compression, args.files, 
+                               args.basedir)
 
 create_parser = subparsers.add_parser('create', help="create the archive")
 create_parser.add_argument('--compression',
@@ -47,7 +47,7 @@ create_parser.set_defaults(func=create)
 
 
 def verify(args):
-    with Archive.open(args.archive) as archive:
+    with Archive().open(args.archive) as archive:
         archive.verify()
 
 verify_parser = subparsers.add_parser('verify',
@@ -77,7 +77,7 @@ def ls_checksum_format(archive, algorithm):
         print("%s  %s" % (fi.checksum[algorithm], fi.path))
 
 def ls(args):
-    with Archive.open(args.archive) as archive:
+    with Archive().open(args.archive) as archive:
         if args.format == 'ls':
             ls_ls_format(archive)
         elif args.format == 'checksum':
@@ -104,7 +104,7 @@ ls_parser.set_defaults(func=ls)
 
 def info(args):
     typename = {"f": "file", "d": "directory", "l": "symbolic link"}
-    with Archive.open(args.archive) as archive:
+    with Archive().open(args.archive) as archive:
         fi = archive.manifest.find(args.entry)
         if not fi:
             raise ArchiveReadError("%s: not found in archive" % args.entry)
@@ -145,7 +145,7 @@ def _matches(fi, entry):
     return True
 
 def check(args):
-    with Archive.open(args.archive) as archive:
+    with Archive().open(args.archive) as archive:
         FileInfo.Checksums = archive.manifest.head["Checksums"]
         file_iter = FileInfo.iterpaths(args.files)
         skip = None

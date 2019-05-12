@@ -21,6 +21,13 @@ def _is_normalized(p):
     else:
         return False
 
+class MetadataItem:
+
+    def __init__(self, path, fileobj, mode):
+        self.path = path
+        self.fileobj = fileobj
+        self.mode = mode
+
 class Archive:
 
     def __init__(self):
@@ -28,10 +35,9 @@ class Archive:
         self.basedir = None
         self.manifest = None
         self._file = None
+        self._metadata = []
 
-    @classmethod
-    def create(cls, path, compression, paths, basedir=None, workdir=None):
-        archive = cls()
+    def create(self, path, compression, paths, basedir=None, workdir=None):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
             # in Python 3.5.
@@ -40,10 +46,10 @@ class Archive:
             mode = 'x:' + compression
         if workdir:
             with tmp_chdir(workdir):
-                archive._create(Path(workdir, path), mode, paths, basedir)
+                self._create(Path(workdir, path), mode, paths, basedir)
         else:
-            archive._create(Path(path), mode, paths, basedir)
-        return archive
+            self._create(Path(path), mode, paths, basedir)
+        return self
 
     def _create(self, path, mode, paths, basedir):
         self.path = path
@@ -87,41 +93,52 @@ class Archive:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")
         self.manifest = Manifest(paths=_paths)
-        manifest_name = str(self.basedir / ".manifest.yaml")
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
-                manifest_info = tarf.gettarinfo(arcname=manifest_name, 
-                                                fileobj=tmpf)
-                manifest_info.mode = stat.S_IFREG | 0o444
-                tarf.addfile(manifest_info, tmpf)
+                self.add_metadata(".manifest.yaml", tmpf)
+                md_names = set()
+                for md in self._metadata:
+                    md.path = self.basedir / md.path
+                    name = str(md.path)
+                    if name in md_names:
+                        raise ArchiveCreateError("duplicate metadata %s" % name)
+                    md_names.add(name)
+                    ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
+                    ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
+                    tarf.addfile(ti, md.fileobj)
             for fi in self.manifest:
                 p = fi.path
                 name = self._arcname(p)
-                if name == manifest_name:
+                if name in md_names:
                     raise ArchiveCreateError("cannot add %s: "
                                              "this filename is reserved" % p)
                 tarf.add(str(p), arcname=name, recursive=False)
 
-    @classmethod
-    def open(cls, path):
-        archive = cls()
-        archive.path = Path(path)
-        archive._open()
-        ti = archive._file.next()
-        path = Path(ti.path)
-        if path.name != ".manifest.yaml":
-            raise ArchiveIntegrityError("manifest not found")
-        archive.basedir = path.parent
-        archive.manifest = Manifest(fileobj=archive._file.extractfile(ti))
-        return archive
+    def add_metadata(self, name, fileobj, mode=0o444):
+        md = MetadataItem(name, fileobj, mode)
+        self._metadata.insert(0, md)
 
-    def _open(self):
+    def open(self, path):
+        self.path = Path(path)
         try:
             self._file = tarfile.open(str(self.path), 'r')
         except OSError as e:
             raise ArchiveReadError(str(e))
+        md = self.get_metadata(".manifest.yaml")
+        self.basedir = md.path.parent
+        self.manifest = Manifest(fileobj=md.fileobj)
+        return self
+
+    def get_metadata(self, name):
+        ti = self._file.next()
+        path = Path(ti.path)
+        if path.name != name:
+            raise ArchiveIntegrityError("%s not found" % name)
+        md = MetadataItem(path, self._file.extractfile(ti), ti.mode)
+        self._metadata.append(md)
+        return md
 
     def close(self):
         if self._file:

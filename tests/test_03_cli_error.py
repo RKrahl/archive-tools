@@ -178,7 +178,7 @@ def test_cli_integrity_no_manifest(test_dir, archive_name, monkeypatch):
         assert exc_info.value.returncode == 3
         f.seek(0)
         line = f.readline()
-        assert "manifest not found" in line
+        assert ".manifest.yaml not found" in line
 
 def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
