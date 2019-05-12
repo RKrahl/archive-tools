@@ -2,6 +2,7 @@
 """
 
 from pathlib import Path
+from tempfile import TemporaryFile
 import pytest
 from archive import Archive
 from archive.exception import ArchiveCreateError
@@ -97,3 +98,33 @@ def test_create_rel_no_manifest_file(test_dir, archive_name, monkeypatch):
             Archive().create(archive_name, "", [base])
     finally:
         manifest.unlink()
+
+def test_create_duplicate_metadata(test_dir, archive_name, monkeypatch):
+    """Add additional custom metadata to the archive,
+    using a name that is already taken.
+    """
+    monkeypatch.chdir(str(test_dir))
+    p = Path("base")
+    with TemporaryFile(dir=str(test_dir)) as tmpf:
+        archive = Archive()
+        tmpf.write("Hello world!\n".encode("ascii"))
+        tmpf.seek(0)
+        with pytest.raises(ArchiveCreateError) as err:
+            archive.add_metadata(".manifest.yaml", tmpf)
+            archive.create(archive_name, "", [p])
+        assert "duplicate metadata" in str(err.value)
+
+def test_create_metadata_vs_content(test_dir, archive_name, monkeypatch):
+    """Add additional custom metadata to the archive,
+    using a name that conflicts with a content file.
+    """
+    monkeypatch.chdir(str(test_dir))
+    p = Path("base")
+    with TemporaryFile(dir=str(test_dir)) as tmpf:
+        archive = Archive()
+        tmpf.write("Hello world!\n".encode("ascii"))
+        tmpf.seek(0)
+        with pytest.raises(ArchiveCreateError) as err:
+            archive.add_metadata("msg.txt", tmpf)
+            archive.create(archive_name, "", [p])
+        assert "filename is reserved" in str(err.value)

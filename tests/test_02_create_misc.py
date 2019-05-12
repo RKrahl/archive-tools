@@ -2,6 +2,7 @@
 """
 
 from pathlib import Path
+from tempfile import TemporaryFile
 import pytest
 from archive import Archive
 from conftest import setup_testdata, check_manifest
@@ -67,3 +68,22 @@ def test_create_sorted(test_dir, monkeypatch):
     finally:
         for p in files:
             p.unlink()
+
+def test_create_custom_metadata(test_dir, monkeypatch):
+    """Add additional custom metadata to the archive.
+    """
+    monkeypatch.chdir(str(test_dir))
+    archive_path = "archive-custom-md.tar"
+    p = Path("base", "data")
+    with TemporaryFile(dir=str(test_dir)) as tmpf:
+        archive = Archive()
+        tmpf.write("Hello world!\n".encode("ascii"))
+        tmpf.seek(0)
+        archive.add_metadata(".msg.txt", tmpf)
+        archive.create(archive_path, "", [p])
+    with Archive().open(archive_path) as archive:
+        md = archive.get_metadata(".msg.txt")
+        assert md.path == archive.basedir / ".msg.txt"
+        assert md.fileobj.read() == "Hello world!\n".encode("ascii")
+        check_manifest(archive.manifest, **testdata)
+        archive.verify()
