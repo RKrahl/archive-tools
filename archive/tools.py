@@ -1,3 +1,11 @@
+"""A collection of internal helper routines.
+
+.. note::
+   This module is intended for the internal use in archive-tools and
+   is not considered to be part of the API.  No effort will be made to
+   keep anything in here compatible between different versions.
+"""
+
 import datetime
 import hashlib
 import os
