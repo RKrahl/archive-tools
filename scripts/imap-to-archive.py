@@ -38,18 +38,14 @@ args = argparser.parse_args()
 
 log = logging.getLogger(__name__)
 
+
 class MailArchive(Archive):
 
-    def __init__(self, path, indexfile, mode='x:xz', paths=None, basedir=None):
-        self.indexfile = indexfile
-        super().__init__(path, mode=mode, paths=paths, basedir=basedir)
+    def create(self, path, indexfile, 
+               compression='xz', paths=None, basedir=None):
+        self.add_metadata(".mailindex.yaml", indexfile)
+        super().create(path, compression, paths, basedir=basedir)
 
-    def metadata_hook(self, tarf):
-        mailindex_name = str(self.basedir / ".mailindex.yaml")
-        mailindex_info = tarf.gettarinfo(arcname=mailindex_name, 
-                                         fileobj=self.indexfile)
-        mailindex_info.mode = stat.S_IFREG | 0o400
-        tarf.addfile(mailindex_info, tmpf)
 
 
 os.umask(0o077)
@@ -103,4 +99,5 @@ with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
                       default_flow_style=False, explicit_start=True)
             tmpf.seek(0)
             log.debug("writing archive file %s", archive_path)
-            archive = MailArchive(archive_path, tmpf, paths=["Maildir"])
+            archive = MailArchive()
+            archive.create(archive_path, tmpf, paths=["Maildir"])

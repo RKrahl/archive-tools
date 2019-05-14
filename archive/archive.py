@@ -21,37 +21,48 @@ def _is_normalized(p):
     else:
         return False
 
+class MetadataItem:
+
+    def __init__(self, path, fileobj, mode):
+        self.path = path
+        self.fileobj = fileobj
+        self.mode = mode
+
 class Archive:
 
-    def __init__(self, path, mode='r', paths=None, basedir=None, workdir=None):
-        if mode.startswith('r'):
-            self.path = Path(path)
-            self._read_manifest(mode)
-        elif mode.startswith('x'):
-            if sys.version_info < (3, 5):
-                # The 'x' (exclusive creation) mode was added to
-                # tarfile in Python 3.5.
-                mode = 'w' + mode[1:]
-            if workdir:
-                self.path = Path(workdir, path)
-                with tmp_chdir(workdir):
-                    self._create(mode, paths, basedir)
-            else:
-                self.path = Path(path)
-                self._create(mode, paths, basedir)
-        else:
-            raise ValueError("invalid mode '%s'" % mode)
+    def __init__(self):
+        self.path = None
+        self.basedir = None
+        self.manifest = None
+        self._file = None
+        self._metadata = []
 
-    def _create(self, mode, paths, basedir):
+    def create(self, path, compression, paths, basedir=None, workdir=None):
+        if sys.version_info < (3, 5):
+            # The 'x' (exclusive creation) mode was added to tarfile
+            # in Python 3.5.
+            mode = 'w:' + compression
+        else:
+            mode = 'x:' + compression
+        if workdir:
+            with tmp_chdir(workdir):
+                self._create(Path(workdir, path), mode, paths, basedir)
+        else:
+            self._create(Path(path), mode, paths, basedir)
+        return self
+
+    def _create(self, path, mode, paths, basedir):
+        self.path = path
         if not paths:
             raise ArchiveCreateError("refusing to create an empty archive")
         if not basedir:
             p = Path(paths[0])
             if p.is_absolute():
-                basedir = Path(self.path.name.split('.')[0])
+                self.basedir = Path(self.path.name.split('.')[0])
             else:
-                basedir = Path(p.parts[0])
-        self.basedir = Path(basedir)
+                self.basedir = Path(p.parts[0])
+        else:
+            self.basedir = Path(basedir)
         if self.basedir.is_absolute():
             raise ArchiveCreateError("basedir must be relative")
         # We allow two different cases: either
@@ -82,37 +93,66 @@ class Archive:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")
         self.manifest = Manifest(paths=_paths)
-        manifest_name = str(self.basedir / ".manifest.yaml")
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
-                manifest_info = tarf.gettarinfo(arcname=manifest_name, 
-                                                fileobj=tmpf)
-                manifest_info.mode = stat.S_IFREG | 0o444
-                tarf.addfile(manifest_info, tmpf)
-            self.metadata_hook(tarf)
+                self.add_metadata(".manifest.yaml", tmpf)
+                md_names = set()
+                for md in self._metadata:
+                    md.path = self.basedir / md.path
+                    name = str(md.path)
+                    if name in md_names:
+                        raise ArchiveCreateError("duplicate metadata %s" % name)
+                    md_names.add(name)
+                    ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
+                    ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
+                    tarf.addfile(ti, md.fileobj)
             for fi in self.manifest:
                 p = fi.path
                 name = self._arcname(p)
-                if name == manifest_name:
+                if name in md_names:
                     raise ArchiveCreateError("cannot add %s: "
                                              "this filename is reserved" % p)
                 tarf.add(str(p), arcname=name, recursive=False)
 
-    def _read_manifest(self, mode):
-        assert mode.startswith('r')
+    def add_metadata(self, name, fileobj, mode=0o444):
+        md = MetadataItem(name, fileobj, mode)
+        self._metadata.insert(0, md)
+
+    def open(self, path):
+        self.path = Path(path)
         try:
-            tarf = tarfile.open(str(self.path), mode)
+            self._file = tarfile.open(str(self.path), 'r')
         except OSError as e:
             raise ArchiveReadError(str(e))
-        ti = tarf.next()
+        md = self.get_metadata(".manifest.yaml")
+        self.basedir = md.path.parent
+        self.manifest = Manifest(fileobj=md.fileobj)
+        return self
+
+    def get_metadata(self, name):
+        ti = self._file.next()
         path = Path(ti.path)
-        if path.name != ".manifest.yaml":
-            raise ArchiveIntegrityError("manifest not found")
-        self.basedir = path.parent
-        self.manifest = Manifest(fileobj=tarf.extractfile(ti))
-        tarf.close()
+        if path.name != name:
+            raise ArchiveIntegrityError("%s not found" % name)
+        md = MetadataItem(path, self._file.extractfile(ti), ti.mode)
+        self._metadata.append(md)
+        return md
+
+    def close(self):
+        if self._file:
+            self._file.close()
+        self._file = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.close()
+
+    def __del__(self):
+        self.close()
 
     def _arcname(self, p):
         if p.is_absolute():
@@ -120,23 +160,13 @@ class Archive:
         else:
             return str(p)
 
-    def metadata_hook(self, tarf):
-        """A hook to add additional metadata to the archive.
+    def verify(self):
+        if not self._file:
+            raise ValueError("archive is closed.")
+        for fileinfo in self.manifest:
+            self._verify_item(fileinfo)
 
-        This hook is called after the manifest has been added to the
-        tarfile and before adding the payload.
-        """
-        pass
-
-    def verify(self, mode='r'):
-        if mode.startswith('r'):
-            with tarfile.open(str(self.path), mode) as tarf:
-                for fileinfo in self.manifest:
-                    self._verify_item(tarf, fileinfo)
-        else:
-            raise ValueError("invalid mode '%s'" % mode)
-
-    def _verify_item(self, tarf, fileinfo):
+    def _verify_item(self, fileinfo):
 
         def _check_condition(cond, item, message):
             if not cond:
@@ -144,7 +174,7 @@ class Archive:
 
         itemname = "%s:%s" % (self.path, fileinfo.path)
         try:
-            tarinfo = tarf.getmember(self._arcname(fileinfo.path))
+            tarinfo = self._file.getmember(self._arcname(fileinfo.path))
         except KeyError:
             raise ArchiveIntegrityError("%s: missing" % itemname)
         _check_condition(tarinfo.mode == fileinfo.mode,
@@ -159,7 +189,7 @@ class Archive:
                              itemname, "wrong type, expected regular file")
             _check_condition(tarinfo.size == fileinfo.size,
                              itemname, "wrong size")
-            with tarf.extractfile(tarinfo) as f:
+            with self._file.extractfile(tarinfo) as f:
                 cs = checksum(f, fileinfo.checksum.keys())
                 _check_condition(cs == fileinfo.checksum,
                                  itemname, "checksum does not match")

@@ -1,5 +1,12 @@
-.. image:: https://travis-ci.org/RKrahl/archive-tools.svg?branch=master
+|travis| |pypi|
+
+.. |travis| image:: https://img.shields.io/travis/RKrahl/archive-tools/master.svg
    :target: https://travis-ci.org/RKrahl/archive-tools
+   :alt: travis build status
+
+.. |pypi| image:: https://img.shields.io/pypi/v/archive-tools.svg
+   :target: https://pypi.org/project/archive-tools/
+   :alt: pypi version
 
 Tools for managing archives
 ===========================
@@ -27,6 +34,13 @@ tasks:
 All tasks providing information on an archive take this information
 from the embedded metadata.  Retrieving this metadata does not require
 reading through the compressed tar archive.
+
+
+Download
+--------
+
+The latest release version is available on PyPI, see
+https://pypi.org/project/archive-tools/
 
 
 System requirements

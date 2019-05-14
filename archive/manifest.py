@@ -11,7 +11,22 @@ import stat
 import yaml
 import archive
 from archive.exception import ArchiveCreateError
-from archive.tools import now_str, checksum, modstr
+from archive.tools import now_str, checksum
+
+
+# map stat mode value to file type
+_mode_ft = {
+    stat.S_IFLNK: "l",
+    stat.S_IFREG: "f",
+    stat.S_IFDIR: "d",
+}
+
+# map file type to stat mode value
+_ft_mode = {
+    "l": stat.S_IFLNK,
+    "f": stat.S_IFREG,
+    "d": stat.S_IFDIR,
+}
 
 
 class FileInfo:
@@ -20,13 +35,12 @@ class FileInfo:
 
     def __init__(self, data=None, path=None):
         if data is not None:
-            self.type = data['type']
             self.path = Path(data['path'])
             self.uid = data['uid']
             self.uname = data['uname']
             self.gid = data['gid']
             self.gname = data['gname']
-            self.mode = data['mode']
+            self.st_mode = _ft_mode[data['type']] | data['mode']
             self.mtime = data['mtime']
             if self.is_file():
                 self.size = data['size']
@@ -46,17 +60,15 @@ class FileInfo:
                 self.gname = grp.getgrgid(self.gid)[0]
             except KeyError:
                 self.gname = None
-            self.mode = stat.S_IMODE(fstat.st_mode)
+            self.st_mode = fstat.st_mode
             self.mtime = fstat.st_mtime
             if stat.S_ISREG(fstat.st_mode):
-                self.type = 'f'
                 self.size = fstat.st_size
                 with self.path.open('rb') as f:
                     self.checksum = checksum(f, self.Checksums)
             elif stat.S_ISDIR(fstat.st_mode):
-                self.type = 'd'
+                pass
             elif stat.S_ISLNK(fstat.st_mode):
-                self.type = 'l'
                 self.target = Path(os.readlink(str(self.path)))
             else:
                 raise ArchiveCreateError("%s: invalid file type" 
@@ -64,14 +76,22 @@ class FileInfo:
         else:
             raise TypeError("Either data or path must be provided")
 
+    @property
+    def type(self):
+        return _mode_ft[stat.S_IFMT(self.st_mode)]
+
+    @property
+    def mode(self):
+        return stat.S_IMODE(self.st_mode)
+
     def is_dir(self):
-        return self.type == 'd'
+        return stat.S_ISDIR(self.st_mode)
 
     def is_file(self):
-        return self.type == 'f'
+        return stat.S_ISREG(self.st_mode)
 
     def is_symlink(self):
-        return self.type == 'l'
+        return stat.S_ISLNK(self.st_mode)
 
     def as_dict(self):
         d = {
@@ -92,7 +112,7 @@ class FileInfo:
         return d
 
     def __str__(self):
-        m = modstr(self.type, self.mode)
+        m = stat.filemode(self.st_mode)
         ug = "%s/%s" % (self.uname or self.uid, self.gname or self.gid)
         s = str(self.size if self.type == 'f' else 0)
         mtime = datetime.datetime.fromtimestamp(self.mtime)

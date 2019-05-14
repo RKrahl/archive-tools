@@ -32,7 +32,7 @@ all_test_files = {
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
     setup_testdata(tmpdir, **testdata)
-    Archive("archive.tar", "x:", ["base"], workdir=tmpdir)
+    Archive().create("archive.tar", "", ["base"], workdir=tmpdir)
     return tmpdir
 
 @pytest.fixture(scope="function")
