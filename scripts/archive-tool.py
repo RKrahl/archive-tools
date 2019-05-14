@@ -3,11 +3,11 @@
 import argparse
 import datetime
 from pathlib import Path
+import stat
 import sys
 from archive import Archive
 from archive.exception import *
 from archive.manifest import FileInfo
-from archive.tools import modstr
 
 argparser = argparse.ArgumentParser()
 subparsers = argparser.add_subparsers(title='subcommands', dest='subcmd')
@@ -111,7 +111,7 @@ def info(args):
         infolines = []
         infolines.append("Path:   %s" % fi.path)
         infolines.append("Type:   %s" % typename[fi.type])
-        infolines.append("Mode:   %s" % modstr(fi.type, fi.mode))
+        infolines.append("Mode:   %s" % stat.filemode(fi.st_mode))
         infolines.append("Owner:  %s:%s (%d:%d)"
                          % (fi.uname, fi.gname, fi.uid, fi.gid))
         mtime = datetime.datetime.fromtimestamp(fi.mtime)

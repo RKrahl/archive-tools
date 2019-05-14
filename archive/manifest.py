@@ -11,7 +11,7 @@ import stat
 import yaml
 import archive
 from archive.exception import ArchiveCreateError
-from archive.tools import now_str, checksum, modstr
+from archive.tools import now_str, checksum
 
 
 # map stat mode value to file type
@@ -112,7 +112,7 @@ class FileInfo:
         return d
 
     def __str__(self):
-        m = modstr(self.type, self.mode)
+        m = stat.filemode(self.st_mode)
         ug = "%s/%s" % (self.uname or self.uid, self.gname or self.gid)
         s = str(self.size if self.type == 'f' else 0)
         mtime = datetime.datetime.fromtimestamp(self.mtime)
