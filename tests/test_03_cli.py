@@ -2,12 +2,12 @@
 """
 
 from pathlib import Path
+import stat
 import subprocess
 from tempfile import TemporaryFile
 import pytest
 from pytest_dependency import depends
 from archive import Archive
-from archive.tools import modstr
 from conftest import (require_compression, setup_testdata, testdata_items, 
                       check_manifest, callscript)
 
@@ -101,7 +101,7 @@ def test_cli_ls(test_dir, dep_testcase):
         for entry in entries:
             line = f.readline()
             fields = line.split()
-            assert fields[0] == modstr(entry["Type"], entry["Mode"])
+            assert fields[0] == stat.filemode(entry["st_Mode"])
             assert fields[5] == str(entry["Path"])
             if entry["Type"] == "l":
                 assert len(fields) == 8
@@ -150,7 +150,7 @@ def test_cli_info(test_dir, dep_testcase):
                 k, v = line.split(':', maxsplit=1)
                 info[k] = v.strip()
             assert info["Path"] == str(entry["Path"])
-            assert info["Mode"] == modstr(entry["Type"], entry["Mode"])
+            assert info["Mode"] == stat.filemode(entry["st_Mode"])
             if entry["Type"] == "d":
                 assert info["Type"] == "directory"
             elif entry["Type"] == "f":

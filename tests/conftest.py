@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -106,15 +107,18 @@ def testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
     for p, m in dirs:
         if prefix_dir:
             p = prefix_dir / p
-        items.append({"Path": p, "Type": "d", "Mode": m})
+        items.append({"Path": p, "Type": "d", "Mode": m, 
+                      "st_Mode": (stat.S_IFDIR | m)})
     for p, m in files:
         if prefix_dir:
             p = prefix_dir / p
-        items.append({"Path": p, "Type": "f", "Mode": m})
+        items.append({"Path": p, "Type": "f", "Mode": m, 
+                      "st_Mode": (stat.S_IFREG | m)})
     for p, t in symlinks:
         if prefix_dir:
             p = prefix_dir / p
-        items.append({"Path": p, "Type": "l", "Mode": 0o777, "Target": t})
+        items.append({"Path": p, "Type": "l", "Mode": 0o777, 
+                      "st_Mode": (stat.S_IFLNK | 0o777), "Target": t})
     items.sort(key=lambda e: e["Path"])
     return items
 
