@@ -47,6 +47,27 @@ class MailArchive(Archive):
         super().create(path, compression, paths, basedir=basedir)
 
 
+def getmsgs(imap, basedir):
+    """Fetch all messages from an IMAP server, return `(folder, msg)` tuples.
+    """
+    folders = imap.list_folders(directory=basedir)
+    for _, delimiter, folder in folders:
+        log.debug("Considering folder %s", folder)
+        imap.select_folder(folder, readonly=True)
+        msgs = imap.search()
+        log.debug("%d messages in folder %s", len(msgs), folder)
+        if len(msgs) == 0:
+            continue
+        delimiter = delimiter.decode("ascii")
+        if delimiter == ".":
+            mailfolder_name = folder
+        else:
+            mailfolder_name = folder.replace(delimiter, ".")
+        for n in msgs:
+            data = imap.fetch(n, 'RFC822')
+            msgbytes = data[n][b'RFC822']
+            yield (mailfolder_name, msgbytes)
+
 
 os.umask(0o077)
 with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
@@ -58,37 +79,25 @@ with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
             imap.starttls()
             imap.login(args.user, getpass.getpass())
             log.debug("Login to %s successful", args.host)
-            folders = imap.list_folders(directory="INBOX")
-            for _, delimiter, folder in folders:
-                log.debug("Considering folder %s", folder)
-                imap.select_folder(folder, readonly=True)
-                msgs = imap.search()
-                log.debug("%d messages in folder %s", len(msgs), folder)
-                if len(msgs) == 0:
-                    continue
-                delimiter = delimiter.decode("ascii")
-                if delimiter == ".":
-                    mailfolder_name = folder
-                else:
-                    mailfolder_name = folder.replace(delimiter, ".")
-                mailfolder = maildir.add_folder(mailfolder_name)
-                for n in msgs:
-                    data = imap.fetch(n, 'RFC822')
-                    msgbytes = data[n][b'RFC822']
-                    sha256 = hashlib.sha256(msgbytes).hexdigest()
-                    key = mailfolder.add(msgbytes)
-                    msg = mailfolder.get_message(key)
-                    idx_item = {
-                        "Date": msg.get("Date"),
-                        "From": msg.get("From"),
-                        "MessageId": msg.get("Message-Id"),
-                        "Subject": msg.get("Subject"),
-                        "To": msg.get("To"),
-                        "checksum": { "sha256": sha256 },
-                        "folder": mailfolder_name,
-                        "key": key,
-                    }
-                    mailindex.append(idx_item)
+            last_folder = None
+            for folder, msgbytes in getmsgs(imap, "INBOX"):
+                if folder != last_folder:
+                    mailfolder = maildir.add_folder(folder)
+                    last_folder = folder
+                sha256 = hashlib.sha256(msgbytes).hexdigest()
+                key = mailfolder.add(msgbytes)
+                msg = mailfolder.get_message(key)
+                idx_item = {
+                    "Date": msg.get("Date"),
+                    "From": msg.get("From"),
+                    "MessageId": msg.get("Message-Id"),
+                    "Subject": msg.get("Subject"),
+                    "To": msg.get("To"),
+                    "checksum": { "sha256": sha256 },
+                    "folder": folder,
+                    "key": key,
+                }
+                mailindex.append(idx_item)
         log.debug("%d messages downloaded", len(mailindex))
         with tempfile.TemporaryFile(dir=tmpdir) as tmpf:
             head = """%%YAML 1.1
