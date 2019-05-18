@@ -3,19 +3,13 @@
 """
 
 import argparse
-import datetime
 import getpass
-import hashlib
 import logging
-from mailbox import Maildir
 import os
 from pathlib import Path
-import stat
-import tempfile
 from imapclient import IMAPClient
-import yaml
-from archive import Archive
-from archive.tools import tmp_chdir, now_str
+from archive.mailarchive import MailArchive
+from archive.tools import now_str
 
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(message)s")
 
@@ -39,17 +33,10 @@ args = argparser.parse_args()
 log = logging.getLogger(__name__)
 
 
-class MailArchive(Archive):
-
-    def create(self, path, indexfile, 
-               compression='xz', paths=None, basedir=None):
-        self.add_metadata(".mailindex.yaml", indexfile)
-        super().create(path, compression, paths, basedir=basedir)
-
-
 def getmsgs(imap, basedir):
     """Fetch all messages from an IMAP server, return `(folder, msg)` tuples.
     """
+    count = 0
     folders = imap.list_folders(directory=basedir)
     for _, delimiter, folder in folders:
         log.debug("Considering folder %s", folder)
@@ -67,46 +54,17 @@ def getmsgs(imap, basedir):
             data = imap.fetch(n, 'RFC822')
             msgbytes = data[n][b'RFC822']
             yield (mailfolder_name, msgbytes)
+            count += 1
+    log.debug("%d messages downloaded", count)
 
 
 os.umask(0o077)
-with tempfile.TemporaryDirectory(prefix="imap-to-archive-") as tmpdir:
-    archive_path = Path.cwd() / args.archive
-    with tmp_chdir(tmpdir):
-        maildir = Maildir("Maildir", create=True)
-        mailindex = []
-        with IMAPClient(args.host, ssl=False) as imap:
-            imap.starttls()
-            imap.login(args.user, getpass.getpass())
-            log.debug("Login to %s successful", args.host)
-            last_folder = None
-            for folder, msgbytes in getmsgs(imap, "INBOX"):
-                if folder != last_folder:
-                    mailfolder = maildir.add_folder(folder)
-                    last_folder = folder
-                sha256 = hashlib.sha256(msgbytes).hexdigest()
-                key = mailfolder.add(msgbytes)
-                msg = mailfolder.get_message(key)
-                idx_item = {
-                    "Date": msg.get("Date"),
-                    "From": msg.get("From"),
-                    "MessageId": msg.get("Message-Id"),
-                    "Subject": msg.get("Subject"),
-                    "To": msg.get("To"),
-                    "checksum": { "sha256": sha256 },
-                    "folder": folder,
-                    "key": key,
-                }
-                mailindex.append(idx_item)
-        log.debug("%d messages downloaded", len(mailindex))
-        with tempfile.TemporaryFile(dir=tmpdir) as tmpf:
-            head = """%%YAML 1.1
-# Fetched from %s at %s
-""" % (args.host, now_str())
-            tmpf.write(head.encode("ascii"))
-            yaml.dump(mailindex, stream=tmpf, encoding="ascii",
-                      default_flow_style=False, explicit_start=True)
-            tmpf.seek(0)
-            log.debug("writing archive file %s", archive_path)
-            archive = MailArchive()
-            archive.create(archive_path, tmpf, paths=["Maildir"])
+archive_path = Path.cwd() / args.archive
+with IMAPClient(args.host, ssl=False) as imap:
+    imap.starttls()
+    imap.login(args.user, getpass.getpass())
+    log.debug("Login to %s successful", args.host)
+    comment = "Fetched from %s at %s" % (args.host, now_str())
+    archive = MailArchive()
+    archive.create(archive_path, getmsgs(imap, "INBOX"), comment=comment)
+
