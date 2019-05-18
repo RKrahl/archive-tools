@@ -46,3 +46,9 @@ class MailArchive(Archive):
                     self.add_metadata(".mailindex.yaml", tmpf)
                     super().create(path, compression, [basedir])
         return self
+
+    def open(self, path):
+        super().open(path)
+        md = self.get_metadata(".mailindex.yaml")
+        self.mailindex = yaml.safe_load(md.fileobj)
+        return self
