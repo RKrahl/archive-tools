@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory, TemporaryFile
 import yaml
 from archive import Archive
-from archive.tools import tmp_chdir
+from archive.tools import tmp_chdir, tmp_umask
 
 
 class MailArchive(Archive):
@@ -12,7 +12,7 @@ class MailArchive(Archive):
     def create(self, path, mails, compression='xz', comment=None):
         path = Path(path)
         with TemporaryDirectory(prefix="mailarchive-") as tmpdir:
-            with tmp_chdir(tmpdir):
+            with tmp_chdir(tmpdir), tmp_umask(0o077):
                 basedir = Path(path.name.split('.')[0])
                 maildir = Maildir(str(basedir), create=True)
                 self.mailindex = []

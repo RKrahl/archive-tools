@@ -5,7 +5,6 @@
 import argparse
 import getpass
 import logging
-import os
 from pathlib import Path
 from imapclient import IMAPClient
 from archive.mailarchive import MailArchive
@@ -58,7 +57,6 @@ def getmsgs(imap, basedir):
     log.debug("%d messages downloaded", count)
 
 
-os.umask(0o077)
 archive_path = Path.cwd() / args.archive
 with IMAPClient(args.host, ssl=False) as imap:
     imap.starttls()
