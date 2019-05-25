@@ -2,6 +2,9 @@ History of changes to archive-tools
 ===================================
 
 dev (not yet released)
+    New features
+      + #28: support deduplication.
+
     Incompatible changes
       + #23 and #26: review the API of :class:`Archive`:
           - Add two methods :meth:`Archive.create` and
@@ -24,6 +27,7 @@ dev (not yet released)
     Bug fixes and minor changes
       + #20: :meth:`Archive.create` takes a working directory as
         optional argument.
+      + #29: Verfiy fails if archive contains hard links.
 
 0.1 (2019-04-14)
     + Initial release.
