@@ -5,7 +5,7 @@ import datetime
 from pathlib import Path
 import stat
 import sys
-from archive import Archive
+from archive.archive import Archive, DedupMode
 from archive.exception import *
 from archive.manifest import FileInfo
 
@@ -31,7 +31,8 @@ def create(args):
     if args.compression == 'none':
         args.compression = ''
     archive = Archive().create(args.archive, args.compression, args.files, 
-                               args.basedir)
+                               basedir=args.basedir, 
+                               dedup=DedupMode(args.deduplicate))
 
 create_parser = subparsers.add_parser('create', help="create the archive")
 create_parser.add_argument('--compression',
@@ -39,8 +40,11 @@ create_parser.add_argument('--compression',
                            help=("compression mode"))
 create_parser.add_argument('--basedir',
                            help=("common base directory in the archive"))
-create_parser.add_argument('archive',
-                           help=("path to the archive file"), type=Path)
+create_parser.add_argument('--deduplicate',
+                           choices=[d.value for d in DedupMode], default='link',
+                           help=("when to use hard links to duplicate files"))
+create_parser.add_argument('archive', type=Path,
+                           help=("path to the archive file"))
 create_parser.add_argument('files', nargs='+', type=Path,
                            help="files to add to the archive")
 create_parser.set_defaults(func=create)
@@ -52,8 +56,8 @@ def verify(args):
 
 verify_parser = subparsers.add_parser('verify',
                                       help="verify integrity of the archive")
-verify_parser.add_argument('archive',
-                           help=("path to the archive file"), type=Path)
+verify_parser.add_argument('archive', type=Path,
+                           help=("path to the archive file"))
 verify_parser.set_defaults(func=verify)
 
 
@@ -92,13 +96,12 @@ def ls(args):
             raise ValueError("invalid format '%s'" % args.format)
 
 ls_parser = subparsers.add_parser('ls', help="list files in the archive")
-ls_parser.add_argument('--format',
-                       choices=['ls', 'checksum'], default='ls',
+ls_parser.add_argument('--format', choices=['ls', 'checksum'], default='ls',
                        help=("output style"))
 ls_parser.add_argument('--checksum',
                        help=("hash algorithm"))
-ls_parser.add_argument('archive',
-                       help=("path to the archive file"), type=Path)
+ls_parser.add_argument('archive', type=Path,
+                       help=("path to the archive file"))
 ls_parser.set_defaults(func=ls)
 
 
@@ -125,10 +128,10 @@ def info(args):
 info_parser = subparsers.add_parser('info',
                                     help=("show informations about "
                                           "an entry in the archive"))
-info_parser.add_argument('archive',
-                         help=("path to the archive file"), type=Path)
-info_parser.add_argument('entry',
-                         help=("path of the entry"), type=Path)
+info_parser.add_argument('archive', type=Path,
+                         help=("path to the archive file"))
+info_parser.add_argument('entry', type=Path,
+                         help=("path of the entry"))
 info_parser.set_defaults(func=info)
 
 
@@ -170,8 +173,8 @@ check_parser = subparsers.add_parser('check',
 check_parser.add_argument('--present', action='store_true',
                           help=("show files present in the archive, "
                                 "rather then missing ones"))
-check_parser.add_argument('archive',
-                          help=("path to the archive file"), type=Path)
+check_parser.add_argument('archive', type=Path,
+                          help=("path to the archive file"))
 check_parser.add_argument('files', nargs='+', type=Path,
                           help="files to be checked")
 check_parser.set_defaults(func=check)

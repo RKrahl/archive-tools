@@ -1,6 +1,7 @@
 """Provide the Archive class.
 """
 
+from enum import Enum
 from pathlib import Path
 import stat
 import sys
@@ -21,6 +22,15 @@ def _is_normalized(p):
     else:
         return False
 
+class DedupMode(Enum):
+    NEVER = 'never'
+    LINK = 'link'
+    CONTENT = 'content'
+    def __repr__(self):
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
+    def __bool__(self):
+        return self != self.__class__.NEVER
+
 class MetadataItem:
 
     def __init__(self, path, fileobj, mode):
@@ -37,7 +47,8 @@ class Archive:
         self._file = None
         self._metadata = []
 
-    def create(self, path, compression, paths, basedir=None, workdir=None):
+    def create(self, path, compression, paths, 
+               basedir=None, workdir=None, dedup=DedupMode.LINK):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
             # in Python 3.5.
@@ -46,12 +57,12 @@ class Archive:
             mode = 'x:' + compression
         if workdir:
             with tmp_chdir(workdir):
-                self._create(Path(workdir, path), mode, paths, basedir)
+                self._create(Path(workdir, path), mode, paths, basedir, dedup)
         else:
-            self._create(Path(path), mode, paths, basedir)
+            self._create(Path(path), mode, paths, basedir, dedup)
         return self
 
-    def _create(self, path, mode, paths, basedir):
+    def _create(self, path, mode, paths, basedir, dedup):
         self.path = path
         if not paths:
             raise ArchiveCreateError("refusing to create an empty archive")
@@ -108,13 +119,52 @@ class Archive:
                     ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
                     ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
                     tarf.addfile(ti, md.fileobj)
+            dupindex = {}
             for fi in self.manifest:
                 p = fi.path
                 name = self._arcname(p)
                 if name in md_names:
                     raise ArchiveCreateError("cannot add %s: "
                                              "this filename is reserved" % p)
-                tarf.add(str(p), arcname=name, recursive=False)
+                if fi.is_file():
+                    ti = tarf.gettarinfo(str(p), arcname=name)
+                    dup = self._check_duplicate(fi, name, dedup, dupindex)
+                    if dup:
+                        ti.type = tarfile.LNKTYPE
+                        ti.linkname = dup
+                        tarf.addfile(ti)
+                    else:
+                        ti.size = fi.size
+                        ti.type = tarfile.REGTYPE
+                        ti.linkname = ''
+                        with p.open("rb") as f:
+                            tarf.addfile(ti, fileobj=f)
+                else:
+                    tarf.add(str(p), arcname=name, recursive=False)
+
+    def _check_duplicate(self, fileinfo, name, dedup, dupindex):
+        """Check if the archive item fileinfo should be linked
+        to another item already added to the archive.
+        """
+        assert fileinfo.is_file()
+        if dedup == DedupMode.LINK:
+            st = fileinfo.path.stat()
+            if st.st_nlink == 1:
+                return None
+            idxkey = (st.st_dev, st.st_ino)
+        elif dedup == DedupMode.CONTENT:
+            try:
+                hashalg = fileinfo.Checksums[0]
+            except IndexError:
+                return None
+            idxkey = fileinfo.checksum[hashalg]
+        else:
+            return None
+        if idxkey in dupindex:
+            return dupindex[idxkey]
+        else:
+            dupindex[idxkey] = name
+            return None
 
     def add_metadata(self, name, fileobj, mode=0o444):
         md = MetadataItem(name, fileobj, mode)
@@ -185,10 +235,11 @@ class Archive:
             _check_condition(tarinfo.isdir(),
                              itemname, "wrong type, expected directory")
         elif fileinfo.is_file():
-            _check_condition(tarinfo.isfile(),
+            _check_condition(tarinfo.isfile() or tarinfo.islnk(),
                              itemname, "wrong type, expected regular file")
-            _check_condition(tarinfo.size == fileinfo.size,
-                             itemname, "wrong size")
+            if tarinfo.isfile():
+                _check_condition(tarinfo.size == fileinfo.size,
+                                 itemname, "wrong size")
             with self._file.extractfile(tarinfo) as f:
                 cs = checksum(f, fileinfo.checksum.keys())
                 _check_condition(cs == fileinfo.checksum,
