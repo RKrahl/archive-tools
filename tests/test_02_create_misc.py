@@ -9,7 +9,7 @@ from conftest import setup_testdata, check_manifest
 
 
 # Setup a directory with some test data to be put into an archive.
-# Make sure that we have all kind if different things in there.
+# Make sure that we have all kind of different things in there.
 testdata = {
     "dirs": [
         (Path("base", "data"), 0o755),
