@@ -235,10 +235,11 @@ class Archive:
             _check_condition(tarinfo.isdir(),
                              itemname, "wrong type, expected directory")
         elif fileinfo.is_file():
-            _check_condition(tarinfo.isfile(),
+            _check_condition(tarinfo.isfile() or tarinfo.islnk(),
                              itemname, "wrong type, expected regular file")
-            _check_condition(tarinfo.size == fileinfo.size,
-                             itemname, "wrong size")
+            if tarinfo.isfile():
+                _check_condition(tarinfo.size == fileinfo.size,
+                                 itemname, "wrong size")
             with self._file.extractfile(tarinfo) as f:
                 cs = checksum(f, fileinfo.checksum.keys())
                 _check_condition(cs == fileinfo.checksum,
