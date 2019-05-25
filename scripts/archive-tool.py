@@ -41,7 +41,7 @@ create_parser.add_argument('--compression',
 create_parser.add_argument('--basedir',
                            help=("common base directory in the archive"))
 create_parser.add_argument('--deduplicate',
-                           choices=['never', 'link', 'content'], default='link',
+                           choices=[d.value for d in DedupMode], default='link',
                            help=("when to use hard links to duplicate files"))
 create_parser.add_argument('archive', type=Path,
                            help=("path to the archive file"))
