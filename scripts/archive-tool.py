@@ -5,7 +5,7 @@ import datetime
 from pathlib import Path
 import stat
 import sys
-from archive import Archive
+from archive.archive import Archive, DedupMode
 from archive.exception import *
 from archive.manifest import FileInfo
 
@@ -31,7 +31,8 @@ def create(args):
     if args.compression == 'none':
         args.compression = ''
     archive = Archive().create(args.archive, args.compression, args.files, 
-                               args.basedir)
+                               basedir=args.basedir, 
+                               dedup=DedupMode(args.deduplicate))
 
 create_parser = subparsers.add_parser('create', help="create the archive")
 create_parser.add_argument('--compression',
@@ -39,6 +40,10 @@ create_parser.add_argument('--compression',
                            help=("compression mode"))
 create_parser.add_argument('--basedir',
                            help=("common base directory in the archive"))
+create_parser.add_argument('--deduplicate',
+                           choices=['never', 'link', 'content'],
+                           help=("when to use hard links to duplicate files"),
+                           default='link')
 create_parser.add_argument('archive',
                            help=("path to the archive file"), type=Path)
 create_parser.add_argument('files', nargs='+', type=Path,
