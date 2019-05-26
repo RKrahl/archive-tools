@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 import shutil
+import tarfile
 from tempfile import TemporaryFile
 from archive import Archive
 import pytest
@@ -178,3 +179,45 @@ def test_check_present_symlink_target(test_dir, copy_data, monkeypatch):
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         assert get_results(f) == all_test_files - {str(fp)}
+
+@pytest.mark.xfail(reason="Issue #25")
+def test_check_extract_archive(test_dir, request, monkeypatch):
+    """When extracting an archive and checking the result, 
+    check should not report any file to be missing in the archive.
+
+    In particular, it should not report metadata such as the manifest
+    file to be missing in the archive, even though these metadata are
+    not listed in the manifest.  Issue #25.
+    """
+    check_dir = test_dir / request.function.__name__
+    check_dir.mkdir()
+    monkeypatch.chdir(str(check_dir))
+    with tarfile.open("../archive.tar", "r") as tarf:
+        tarf.extractall()
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "../archive.tar", "base"]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == set()
+
+@pytest.mark.xfail(reason="Issue #25")
+def test_check_present_extract_archive(test_dir, request, monkeypatch):
+    """When extracting an archive and checking the result, 
+    check should report all file to be present in the archive.
+
+    If called with the "--present" flag, it should list the full
+    content of the directory extracted from the archive, including
+    metadata such as the manifest file, even though these metadata are
+    not listed in the manifest.  Issue #25.
+    """
+    check_dir = test_dir / request.function.__name__
+    check_dir.mkdir()
+    monkeypatch.chdir(str(check_dir))
+    with tarfile.open("../archive.tar", "r") as tarf:
+        tarf.extractall()
+    all_files = all_test_files | { 'base/.manifest.yaml' }
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "--present", "../archive.tar", "base"]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == all_files
