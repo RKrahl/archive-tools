@@ -149,6 +149,7 @@ def _matches(fi, entry):
 
 def check(args):
     with Archive().open(args.archive) as archive:
+        metadata = { md.path for md in archive._metadata }
         FileInfo.Checksums = archive.manifest.head["Checksums"]
         file_iter = FileInfo.iterpaths(args.files)
         skip = None
@@ -159,7 +160,7 @@ def check(args):
                 break
             skip = False
             entry = archive.manifest.find(fi.path)
-            if entry and _matches(fi, entry):
+            if fi.path in metadata or entry and _matches(fi, entry):
                 if args.present and not fi.is_dir():
                     print(str(fi.path))
             else:

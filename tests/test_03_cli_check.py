@@ -180,7 +180,6 @@ def test_check_present_symlink_target(test_dir, copy_data, monkeypatch):
         f.seek(0)
         assert get_results(f) == all_test_files - {str(fp)}
 
-@pytest.mark.xfail(reason="Issue #25")
 def test_check_extract_archive(test_dir, request, monkeypatch):
     """When extracting an archive and checking the result, 
     check should not report any file to be missing in the archive.
@@ -200,7 +199,6 @@ def test_check_extract_archive(test_dir, request, monkeypatch):
         f.seek(0)
         assert get_results(f) == set()
 
-@pytest.mark.xfail(reason="Issue #25")
 def test_check_present_extract_archive(test_dir, request, monkeypatch):
     """When extracting an archive and checking the result, 
     check should report all file to be present in the archive.

@@ -28,6 +28,7 @@ dev (not yet released)
       + #20: :meth:`Archive.create` takes a working directory as
         optional argument.
       + #29: Verfiy fails if archive contains hard links.
+      + #25: `archive-tool check` should ignore metadata.
 
 0.1 (2019-04-14)
     + Initial release.
