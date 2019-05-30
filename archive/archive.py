@@ -64,6 +64,51 @@ class Archive:
 
     def _create(self, path, mode, paths, basedir, dedup):
         self.path = path
+        self.manifest = Manifest(paths=self._check_paths(paths, basedir))
+        with tarfile.open(str(self.path), mode) as tarf:
+            with tempfile.TemporaryFile() as tmpf:
+                self.manifest.write(tmpf)
+                tmpf.seek(0)
+                self.add_metadata(".manifest.yaml", tmpf)
+                md_names = set()
+                for md in self._metadata:
+                    md.path = self.basedir / md.path
+                    name = str(md.path)
+                    if name in md_names:
+                        raise ArchiveCreateError("duplicate metadata %s" % name)
+                    md_names.add(name)
+                    ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
+                    ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
+                    tarf.addfile(ti, md.fileobj)
+            dupindex = {}
+            for fi in self.manifest:
+                p = fi.path
+                name = self._arcname(p)
+                if name in md_names:
+                    raise ArchiveCreateError("cannot add %s: "
+                                             "this filename is reserved" % p)
+                if fi.is_file():
+                    ti = tarf.gettarinfo(str(p), arcname=name)
+                    dup = self._check_duplicate(fi, name, dedup, dupindex)
+                    if dup:
+                        ti.type = tarfile.LNKTYPE
+                        ti.linkname = dup
+                        tarf.addfile(ti)
+                    else:
+                        ti.size = fi.size
+                        ti.type = tarfile.REGTYPE
+                        ti.linkname = ''
+                        with p.open("rb") as f:
+                            tarf.addfile(ti, fileobj=f)
+                else:
+                    tarf.add(str(p), arcname=name, recursive=False)
+
+    def _check_paths(self, paths, basedir):
+        """Check the paths to be added to an archive for several error
+        conditions.  Accept a list of either strings or path-like
+        objects.  Convert them to a list of Path objects.  Also sets
+        self.basedir.
+        """
         if not paths:
             raise ArchiveCreateError("refusing to create an empty archive")
         if not basedir:
@@ -103,44 +148,7 @@ class Archive:
         if not abspath:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")
-        self.manifest = Manifest(paths=_paths)
-        with tarfile.open(str(self.path), mode) as tarf:
-            with tempfile.TemporaryFile() as tmpf:
-                self.manifest.write(tmpf)
-                tmpf.seek(0)
-                self.add_metadata(".manifest.yaml", tmpf)
-                md_names = set()
-                for md in self._metadata:
-                    md.path = self.basedir / md.path
-                    name = str(md.path)
-                    if name in md_names:
-                        raise ArchiveCreateError("duplicate metadata %s" % name)
-                    md_names.add(name)
-                    ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
-                    ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
-                    tarf.addfile(ti, md.fileobj)
-            dupindex = {}
-            for fi in self.manifest:
-                p = fi.path
-                name = self._arcname(p)
-                if name in md_names:
-                    raise ArchiveCreateError("cannot add %s: "
-                                             "this filename is reserved" % p)
-                if fi.is_file():
-                    ti = tarf.gettarinfo(str(p), arcname=name)
-                    dup = self._check_duplicate(fi, name, dedup, dupindex)
-                    if dup:
-                        ti.type = tarfile.LNKTYPE
-                        ti.linkname = dup
-                        tarf.addfile(ti)
-                    else:
-                        ti.size = fi.size
-                        ti.type = tarfile.REGTYPE
-                        ti.linkname = ''
-                        with p.open("rb") as f:
-                            tarf.addfile(ti, fileobj=f)
-                else:
-                    tarf.add(str(p), arcname=name, recursive=False)
+        return _paths
 
     def _check_duplicate(self, fileinfo, name, dedup, dupindex):
         """Check if the archive item fileinfo should be linked
