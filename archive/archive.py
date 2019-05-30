@@ -70,16 +70,7 @@ class Archive:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
                 self.add_metadata(".manifest.yaml", tmpf)
-                md_names = set()
-                for md in self._metadata:
-                    md.path = self.basedir / md.path
-                    name = str(md.path)
-                    if name in md_names:
-                        raise ArchiveCreateError("duplicate metadata %s" % name)
-                    md_names.add(name)
-                    ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
-                    ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
-                    tarf.addfile(ti, md.fileobj)
+                md_names = self._add_metadata_files(tarf)
             dupindex = {}
             for fi in self.manifest:
                 p = fi.path
@@ -149,6 +140,21 @@ class Archive:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")
         return _paths
+
+    def _add_metadata_files(self, tarf):
+        """Add the metadata files to the tar file.
+        """
+        md_names = set()
+        for md in self._metadata:
+            md.path = self.basedir / md.path
+            name = str(md.path)
+            if name in md_names:
+                raise ArchiveCreateError("duplicate metadata %s" % name)
+            md_names.add(name)
+            ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
+            ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
+            tarf.addfile(ti, md.fileobj)
+        return md_names
 
     def _check_duplicate(self, fileinfo, name, dedup, dupindex):
         """Check if the archive item fileinfo should be linked
