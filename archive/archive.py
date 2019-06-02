@@ -33,10 +33,21 @@ class DedupMode(Enum):
 
 class MetadataItem:
 
-    def __init__(self, path, fileobj, mode):
+    def __init__(self, name=None, path=None, tarinfo=None, fileobj=None,
+                 mode=None):
+        self.name = name
         self.path = path
         self.fileobj = fileobj
+        self.tarinfo = tarinfo
         self.mode = mode
+        if self.path and self.name is None:
+            self.name = self.path.name
+        if self.tarinfo and self.mode is None:
+            self.mode = self.tarinfo.mode
+
+    def set_path(self, basedir):
+        self.path = basedir / self.name
+
 
 class Archive:
 
@@ -146,7 +157,7 @@ class Archive:
         """
         md_names = set()
         for md in self._metadata:
-            md.path = self.basedir / md.path
+            md.set_path(self.basedir)
             name = str(md.path)
             if name in md_names:
                 raise ArchiveCreateError("duplicate metadata %s" % name)
@@ -181,7 +192,7 @@ class Archive:
             return None
 
     def add_metadata(self, name, fileobj, mode=0o444):
-        md = MetadataItem(name, fileobj, mode)
+        md = MetadataItem(name=name, fileobj=fileobj, mode=mode)
         self._metadata.insert(0, md)
 
     def open(self, path):
@@ -200,7 +211,8 @@ class Archive:
         path = Path(ti.path)
         if path.name != name:
             raise ArchiveIntegrityError("%s not found" % name)
-        md = MetadataItem(path, self._file.extractfile(ti), ti.mode)
+        fileobj = self._file.extractfile(ti)
+        md = MetadataItem(path=path, tarinfo=ti, fileobj=fileobj)
         self._metadata.append(md)
         return md
 
