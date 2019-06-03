@@ -76,6 +76,10 @@ class Archive:
     def _create(self, path, mode, paths, basedir, dedup):
         self.path = path
         self.manifest = Manifest(paths=self._check_paths(paths, basedir))
+        self.manifest.add_metadata(self.basedir / ".manifest.yaml")
+        for md in self._metadata:
+            md.set_path(self.basedir)
+            self.manifest.add_metadata(md.path)
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
@@ -157,7 +161,6 @@ class Archive:
         """
         md_names = set()
         for md in self._metadata:
-            md.set_path(self.basedir)
             name = str(md.path)
             if name in md_names:
                 raise ArchiveCreateError("duplicate metadata %s" % name)
@@ -192,7 +195,8 @@ class Archive:
             return None
 
     def add_metadata(self, name, fileobj, mode=0o444):
-        md = MetadataItem(name=name, fileobj=fileobj, mode=mode)
+        path = self.basedir / name if self.basedir else None
+        md = MetadataItem(name=name, path=path, fileobj=fileobj, mode=mode)
         self._metadata.insert(0, md)
 
     def open(self, path):

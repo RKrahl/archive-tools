@@ -144,7 +144,7 @@ class FileInfo:
 
 class Manifest(Sequence):
 
-    Version = "1.0"
+    Version = "1.1"
 
     def __init__(self, fileobj=None, paths=None):
         if fileobj is not None:
@@ -153,10 +153,11 @@ class Manifest(Sequence):
             self.fileinfos = [ FileInfo(data=d) for d in next(docs) ]
         elif paths is not None:
             self.head = {
+                "Checksums": FileInfo.Checksums,
                 "Date": now_str(),
                 "Generator": "archive-tools %s" % archive.__version__,
+                "Metadata": [],
                 "Version": self.Version,
-                "Checksums": FileInfo.Checksums,
             }
             fileinfos = FileInfo.iterpaths(paths)
             self.fileinfos = sorted(fileinfos, key=lambda fi: fi.path)
@@ -180,6 +181,13 @@ class Manifest(Sequence):
     @property
     def checksums(self):
         return tuple(self.head["Checksums"])
+
+    @property
+    def metadata(self):
+        return tuple(self.head["Metadata"])
+
+    def add_metadata(self, path):
+        self.head["Metadata"].append(str(path))
 
     def find(self, path):
         for fi in self:

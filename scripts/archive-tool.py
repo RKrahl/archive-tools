@@ -149,7 +149,7 @@ def _matches(fi, entry):
 
 def check(args):
     with Archive().open(args.archive) as archive:
-        metadata = { md.path for md in archive._metadata }
+        metadata = { Path(md) for md in archive.manifest.metadata }
         FileInfo.Checksums = archive.manifest.checksums
         file_iter = FileInfo.iterpaths(args.files)
         skip = None
