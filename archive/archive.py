@@ -246,6 +246,17 @@ class Archive:
     def verify(self):
         if not self._file:
             raise ValueError("archive is closed.")
+        # Verify that all metadata items are present in the proper
+        # order at the beginning of the tar file.  Start iterating for
+        # TarInfo objects in the tarfile from the beginning,
+        # regardless of what has already been read:
+        tarf_it = iter(self._file)
+        for md in self.manifest.metadata:
+            ti = next(tarf_it)
+            if ti.name != md:
+                raise ArchiveIntegrityError("Expected metadata item '%s' "
+                                            "not found" % (md))
+        # Check the content of the archive.
         for fileinfo in self.manifest:
             self._verify_item(fileinfo)
 

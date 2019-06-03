@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import stat
 import tarfile
+import tempfile
 import time
 import pytest
 from archive import Archive
@@ -37,6 +38,7 @@ def test_data(tmpdir, monkeypatch):
     shutil.rmtree("base", ignore_errors=True)
     setup_testdata(tmpdir, **testdata)
     manifest = Manifest(paths=[Path("base")])
+    manifest.add_metadata(Path("base", ".manifest.yaml"))
     with open("manifest.yaml", "wb") as f:
         manifest.write(f)
     return tmpdir
@@ -57,6 +59,24 @@ def test_verify_missing_manifest(test_data, archive_name):
         with Archive().open(archive_name) as archive:
             pass
     assert ".manifest.yaml not found" in str(err.value)
+
+def test_verify_missing_metadata_item(test_data, archive_name):
+    manifest = Manifest(paths=[Path("base")])
+    manifest.add_metadata(Path("base", ".manifest.yaml"))
+    manifest.add_metadata(Path("base", ".msg.txt"))
+    with tarfile.open(archive_name, "w") as tarf:
+        with tempfile.TemporaryFile(dir=str(test_data)) as tmpf:
+            manifest.write(tmpf)
+            tmpf.seek(0)
+            ti = tarf.gettarinfo(arcname="base/.manifest.yaml", 
+                                 fileobj=tmpf)
+            ti.mode = stat.S_IFREG | stat.S_IMODE(0o444)
+            tarf.addfile(ti, tmpf)
+        tarf.add("base")
+    with Archive().open(archive_name) as archive:
+        with pytest.raises(ArchiveIntegrityError) as err:
+            archive.verify()
+        assert "'base/.msg.txt' not found" in str(err.value)
 
 def test_verify_missing_file(test_data, archive_name):
     path = Path("base", "msg.txt")
