@@ -3,6 +3,7 @@
 
 from collections.abc import Sequence
 import datetime
+from distutils.version import StrictVersion
 import grp
 import os
 from pathlib import Path
@@ -11,7 +12,7 @@ import stat
 import yaml
 import archive
 from archive.exception import ArchiveCreateError
-from archive.tools import now_str, checksum
+from archive.tools import now_str, parse_date, checksum
 
 
 # map stat mode value to file type
@@ -167,6 +168,18 @@ class Manifest(Sequence):
 
     def __getitem__(self, index):
         return self.fileinfos.__getitem__(index)
+
+    @property
+    def version(self):
+        return StrictVersion(self.head["Version"])
+
+    @property
+    def date(self):
+        return parse_date(self.head["Date"])
+
+    @property
+    def checksums(self):
+        return tuple(self.head["Checksums"])
 
     def find(self, path):
         for fi in self:
