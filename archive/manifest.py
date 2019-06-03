@@ -150,6 +150,8 @@ class Manifest(Sequence):
         if fileobj is not None:
             docs = yaml.safe_load_all(fileobj)
             self.head = next(docs)
+            # Legacy: version 1.0 head did not have Metadata:
+            self.head.setdefault("Metadata", [])
             self.fileinfos = [ FileInfo(data=d) for d in next(docs) ]
         elif paths is not None:
             self.head = {

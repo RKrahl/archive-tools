@@ -208,6 +208,9 @@ class Archive:
         md = self.get_metadata(".manifest.yaml")
         self.basedir = md.path.parent
         self.manifest = Manifest(fileobj=md.fileobj)
+        if not self.manifest.metadata:
+            # Legacy: Manifest version 1.0 did not have metadata.
+            self.manifest.add_metadata(self.basedir / ".manifest.yaml")
         return self
 
     def get_metadata(self, name):
