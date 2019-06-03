@@ -86,9 +86,9 @@ def ls(args):
             ls_ls_format(archive)
         elif args.format == 'checksum':
             if not args.checksum:
-                args.checksum = archive.manifest.head['Checksums'][0]
+                args.checksum = archive.manifest.checksums[0]
             else:
-                if args.checksum not in archive.manifest.head['Checksums']:
+                if args.checksum not in archive.manifest.checksums:
                     raise ArchiveReadError("Checksums using '%s' hashes "
                                            "not available" % args.checksum)
             ls_checksum_format(archive, args.checksum)
@@ -149,8 +149,8 @@ def _matches(fi, entry):
 
 def check(args):
     with Archive().open(args.archive) as archive:
-        metadata = { md.path for md in archive._metadata }
-        FileInfo.Checksums = archive.manifest.head["Checksums"]
+        metadata = { Path(md) for md in archive.manifest.metadata }
+        FileInfo.Checksums = archive.manifest.checksums
         file_iter = FileInfo.iterpaths(args.files)
         skip = None
         while True:

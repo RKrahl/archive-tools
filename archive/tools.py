@@ -14,6 +14,10 @@ try:
     from dateutil.tz import gettz
 except ImportError:
     gettz = None
+try:
+    from dateutil.parser import parse as _dateutil_parse
+except ImportError:
+    _dateutil_parse = None
 
 
 class tmp_chdir():
@@ -45,6 +49,20 @@ def now_str():
         now = datetime.datetime.now()
         date_fmt = "%a, %d %b %Y %H:%M:%S"
     return now.strftime(date_fmt)
+
+
+def parse_date(date_string):
+    """Parse a date string as returned from now_str() into a datetime object.
+    """
+    if _dateutil_parse:
+        return _dateutil_parse(date_string)
+    else:
+        try:
+            date_fmt = "%a, %d %b %Y %H:%M:%S %z"
+            return datetime.datetime.strptime(date_string, date_fmt)
+        except ValueError:
+            date_fmt = "%a, %d %b %Y %H:%M:%S"
+            return datetime.datetime.strptime(date_string, date_fmt)
 
 
 def checksum(fileobj, hashalg):

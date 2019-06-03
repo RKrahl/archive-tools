@@ -33,10 +33,21 @@ class DedupMode(Enum):
 
 class MetadataItem:
 
-    def __init__(self, path, fileobj, mode):
+    def __init__(self, name=None, path=None, tarinfo=None, fileobj=None,
+                 mode=None):
+        self.name = name
         self.path = path
         self.fileobj = fileobj
+        self.tarinfo = tarinfo
         self.mode = mode
+        if self.path and self.name is None:
+            self.name = self.path.name
+        if self.tarinfo and self.mode is None:
+            self.mode = self.tarinfo.mode
+
+    def set_path(self, basedir):
+        self.path = basedir / self.name
+
 
 class Archive:
 
@@ -65,6 +76,10 @@ class Archive:
     def _create(self, path, mode, paths, basedir, dedup):
         self.path = path
         self.manifest = Manifest(paths=self._check_paths(paths, basedir))
+        self.manifest.add_metadata(self.basedir / ".manifest.yaml")
+        for md in self._metadata:
+            md.set_path(self.basedir)
+            self.manifest.add_metadata(md.path)
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
@@ -146,7 +161,6 @@ class Archive:
         """
         md_names = set()
         for md in self._metadata:
-            md.path = self.basedir / md.path
             name = str(md.path)
             if name in md_names:
                 raise ArchiveCreateError("duplicate metadata %s" % name)
@@ -181,7 +195,8 @@ class Archive:
             return None
 
     def add_metadata(self, name, fileobj, mode=0o444):
-        md = MetadataItem(name, fileobj, mode)
+        path = self.basedir / name if self.basedir else None
+        md = MetadataItem(name=name, path=path, fileobj=fileobj, mode=mode)
         self._metadata.insert(0, md)
 
     def open(self, path):
@@ -193,6 +208,9 @@ class Archive:
         md = self.get_metadata(".manifest.yaml")
         self.basedir = md.path.parent
         self.manifest = Manifest(fileobj=md.fileobj)
+        if not self.manifest.metadata:
+            # Legacy: Manifest version 1.0 did not have metadata.
+            self.manifest.add_metadata(self.basedir / ".manifest.yaml")
         return self
 
     def get_metadata(self, name):
@@ -200,7 +218,8 @@ class Archive:
         path = Path(ti.path)
         if path.name != name:
             raise ArchiveIntegrityError("%s not found" % name)
-        md = MetadataItem(path, self._file.extractfile(ti), ti.mode)
+        fileobj = self._file.extractfile(ti)
+        md = MetadataItem(path=path, tarinfo=ti, fileobj=fileobj)
         self._metadata.append(md)
         return md
 
@@ -227,6 +246,17 @@ class Archive:
     def verify(self):
         if not self._file:
             raise ValueError("archive is closed.")
+        # Verify that all metadata items are present in the proper
+        # order at the beginning of the tar file.  Start iterating for
+        # TarInfo objects in the tarfile from the beginning,
+        # regardless of what has already been read:
+        tarf_it = iter(self._file)
+        for md in self.manifest.metadata:
+            ti = next(tarf_it)
+            if ti.name != md:
+                raise ArchiveIntegrityError("Expected metadata item '%s' "
+                                            "not found" % (md))
+        # Check the content of the archive.
         for fileinfo in self.manifest:
             self._verify_item(fileinfo)
 

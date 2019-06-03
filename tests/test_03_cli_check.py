@@ -199,6 +199,31 @@ def test_check_extract_archive(test_dir, request, monkeypatch):
         f.seek(0)
         assert get_results(f) == set()
 
+def test_check_extract_archive_custom_metadata(test_dir, request, monkeypatch):
+    """When extracting an archive and checking the result, 
+    check should not report any file to be missing in the archive.
+
+    Same as test_check_extract_archive(), but now using an archive
+    having custom metadata.  Issue #25.
+    """
+    archive_path = test_dir / "archive-custom-md.tar"
+    with TemporaryFile(dir=str(test_dir)) as tmpf:
+        archive = Archive()
+        tmpf.write("Hello world!\n".encode("ascii"))
+        tmpf.seek(0)
+        archive.add_metadata(".msg.txt", tmpf)
+        archive.create(archive_path, "", ["base"], workdir=test_dir)
+    check_dir = test_dir / request.function.__name__
+    check_dir.mkdir()
+    monkeypatch.chdir(str(check_dir))
+    with tarfile.open(str(archive_path), "r") as tarf:
+        tarf.extractall()
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", str(archive_path), "base"]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == set()
+
 def test_check_present_extract_archive(test_dir, request, monkeypatch):
     """When extracting an archive and checking the result, 
     check should report all file to be present in the archive.
