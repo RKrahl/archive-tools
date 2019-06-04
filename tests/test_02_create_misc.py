@@ -9,7 +9,7 @@ from conftest import setup_testdata, check_manifest
 
 
 # Setup a directory with some test data to be put into an archive.
-# Make sure that we have all kind if different things in there.
+# Make sure that we have all kind of different things in there.
 testdata = {
     "dirs": [
         (Path("base", "data"), 0o755),
@@ -82,6 +82,8 @@ def test_create_custom_metadata(test_dir, monkeypatch):
         archive.add_metadata(".msg.txt", tmpf)
         archive.create(archive_path, "", [p])
     with Archive().open(archive_path) as archive:
+        metadata = ( "base/.manifest.yaml", "base/.msg.txt" )
+        assert archive.manifest.metadata == metadata
         md = archive.get_metadata(".msg.txt")
         assert md.path == archive.basedir / ".msg.txt"
         assert md.fileobj.read() == "Hello world!\n".encode("ascii")

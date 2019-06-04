@@ -4,13 +4,14 @@
 import os
 from pathlib import Path
 import shutil
+import tarfile
 from tempfile import TemporaryFile
 from archive import Archive
 import pytest
 from conftest import setup_testdata, callscript
 
 # Setup a directory with some test data to be put into an archive.
-# Make sure that we have all kind if different things in there.
+# Make sure that we have all kind of different things in there.
 testdata = {
     "dirs": [
         (Path("base"), 0o755),
@@ -178,3 +179,68 @@ def test_check_present_symlink_target(test_dir, copy_data, monkeypatch):
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         assert get_results(f) == all_test_files - {str(fp)}
+
+def test_check_extract_archive(test_dir, request, monkeypatch):
+    """When extracting an archive and checking the result, 
+    check should not report any file to be missing in the archive.
+
+    In particular, it should not report metadata such as the manifest
+    file to be missing in the archive, even though these metadata are
+    not listed in the manifest.  Issue #25.
+    """
+    check_dir = test_dir / request.function.__name__
+    check_dir.mkdir()
+    monkeypatch.chdir(str(check_dir))
+    with tarfile.open("../archive.tar", "r") as tarf:
+        tarf.extractall()
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "../archive.tar", "base"]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == set()
+
+def test_check_extract_archive_custom_metadata(test_dir, request, monkeypatch):
+    """When extracting an archive and checking the result, 
+    check should not report any file to be missing in the archive.
+
+    Same as test_check_extract_archive(), but now using an archive
+    having custom metadata.  Issue #25.
+    """
+    archive_path = test_dir / "archive-custom-md.tar"
+    with TemporaryFile(dir=str(test_dir)) as tmpf:
+        archive = Archive()
+        tmpf.write("Hello world!\n".encode("ascii"))
+        tmpf.seek(0)
+        archive.add_metadata(".msg.txt", tmpf)
+        archive.create(archive_path, "", ["base"], workdir=test_dir)
+    check_dir = test_dir / request.function.__name__
+    check_dir.mkdir()
+    monkeypatch.chdir(str(check_dir))
+    with tarfile.open(str(archive_path), "r") as tarf:
+        tarf.extractall()
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", str(archive_path), "base"]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == set()
+
+def test_check_present_extract_archive(test_dir, request, monkeypatch):
+    """When extracting an archive and checking the result, 
+    check should report all file to be present in the archive.
+
+    If called with the "--present" flag, it should list the full
+    content of the directory extracted from the archive, including
+    metadata such as the manifest file, even though these metadata are
+    not listed in the manifest.  Issue #25.
+    """
+    check_dir = test_dir / request.function.__name__
+    check_dir.mkdir()
+    monkeypatch.chdir(str(check_dir))
+    with tarfile.open("../archive.tar", "r") as tarf:
+        tarf.extractall()
+    all_files = all_test_files | { 'base/.manifest.yaml' }
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "--present", "../archive.tar", "base"]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == all_files

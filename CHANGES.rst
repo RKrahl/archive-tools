@@ -2,6 +2,16 @@ History of changes to archive-tools
 ===================================
 
 dev (not yet released)
+    New features
+      + #28: support deduplication.
+      + #26 and #30: add support for custom metadata:
+	  - Add methods :meth:`Archive.add_metadata` and
+            :meth:`Archive.get_metadata` to add and to retrieve custom
+            metadata to and from archives.
+	  - Add a list of metadata items in the header of the
+            manifest.
+	  - Bump manifest version to 1.1.
+
     Incompatible changes
       + #23 and #26: review the API of :class:`Archive`:
           - Add two methods :meth:`Archive.create` and
@@ -17,13 +27,12 @@ dev (not yet released)
             relies on the internal file object to be left open.
           - Add a :meth:`Archive.close` method.
           - :class:`Archive` implements the context manager protocol.
-          - add methods :meth:`Archive.add_metadata` and
-            :meth:`Archive.get_metadata` to add and to retrieve custom
-            metadata to and from archives.
 
     Bug fixes and minor changes
       + #20: :meth:`Archive.create` takes a working directory as
         optional argument.
+      + #29: Verfiy fails if archive contains hard links.
+      + #25: `archive-tool check` should ignore metadata.
 
 0.1 (2019-04-14)
     + Initial release.

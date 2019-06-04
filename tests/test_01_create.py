@@ -1,6 +1,7 @@
 """Test creating an archive and check its content.
 """
 
+import datetime
 from pathlib import Path
 import shutil
 import subprocess
@@ -8,13 +9,13 @@ import tarfile
 import pytest
 from pytest_dependency import depends
 from archive import Archive
-from archive.manifest import Manifest
+from archive.manifest import FileInfo, Manifest
 from conftest import (checksums, require_compression,
                       setup_testdata, check_manifest)
 
 
 # Setup a directory with some test data to be put into an archive.
-# Make sure that we have all kind if different things in there.
+# Make sure that we have all kind of different things in there.
 testdata = {
     "dirs": [
         (Path("base"), 0o755),
@@ -81,10 +82,16 @@ def test_check_manifest(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
     with Archive().open(archive_path) as archive:
-        prefix_dir = test_dir if abspath else None
         head = archive.manifest.head
-        assert set(head.keys()) == {"Date", "Generator", "Version", "Checksums"}
-        assert head["Version"] == Manifest.Version
+        assert set(head.keys()) == {
+            "Checksums", "Date", "Generator", "Metadata", "Version"
+        }
+        assert archive.manifest.version == Manifest.Version
+        assert isinstance(archive.manifest.date, datetime.datetime)
+        assert archive.manifest.checksums == tuple(FileInfo.Checksums)
+        manifest_path = archive.basedir / ".manifest.yaml"
+        assert archive.manifest.metadata == (str(manifest_path),)
+        prefix_dir = test_dir if abspath else None
         check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)
 
 @pytest.mark.dependency()

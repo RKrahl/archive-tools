@@ -3,6 +3,7 @@
 
 from collections.abc import Sequence
 import datetime
+from distutils.version import StrictVersion
 import grp
 import os
 from pathlib import Path
@@ -11,7 +12,7 @@ import stat
 import yaml
 import archive
 from archive.exception import ArchiveCreateError
-from archive.tools import now_str, checksum
+from archive.tools import now_str, parse_date, checksum
 
 
 # map stat mode value to file type
@@ -143,19 +144,22 @@ class FileInfo:
 
 class Manifest(Sequence):
 
-    Version = "1.0"
+    Version = "1.1"
 
     def __init__(self, fileobj=None, paths=None):
         if fileobj is not None:
             docs = yaml.safe_load_all(fileobj)
             self.head = next(docs)
+            # Legacy: version 1.0 head did not have Metadata:
+            self.head.setdefault("Metadata", [])
             self.fileinfos = [ FileInfo(data=d) for d in next(docs) ]
         elif paths is not None:
             self.head = {
+                "Checksums": FileInfo.Checksums,
                 "Date": now_str(),
                 "Generator": "archive-tools %s" % archive.__version__,
+                "Metadata": [],
                 "Version": self.Version,
-                "Checksums": FileInfo.Checksums,
             }
             fileinfos = FileInfo.iterpaths(paths)
             self.fileinfos = sorted(fileinfos, key=lambda fi: fi.path)
@@ -167,6 +171,25 @@ class Manifest(Sequence):
 
     def __getitem__(self, index):
         return self.fileinfos.__getitem__(index)
+
+    @property
+    def version(self):
+        return StrictVersion(self.head["Version"])
+
+    @property
+    def date(self):
+        return parse_date(self.head["Date"])
+
+    @property
+    def checksums(self):
+        return tuple(self.head["Checksums"])
+
+    @property
+    def metadata(self):
+        return tuple(self.head["Metadata"])
+
+    def add_metadata(self, path):
+        self.head["Metadata"].append(str(path))
 
     def find(self, path):
         for fi in self:

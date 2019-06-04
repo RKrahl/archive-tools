@@ -1,6 +1,7 @@
 """Provide the Archive class.
 """
 
+from enum import Enum
 from pathlib import Path
 import stat
 import sys
@@ -21,12 +22,32 @@ def _is_normalized(p):
     else:
         return False
 
+class DedupMode(Enum):
+    NEVER = 'never'
+    LINK = 'link'
+    CONTENT = 'content'
+    def __repr__(self):
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
+    def __bool__(self):
+        return self != self.__class__.NEVER
+
 class MetadataItem:
 
-    def __init__(self, path, fileobj, mode):
+    def __init__(self, name=None, path=None, tarinfo=None, fileobj=None,
+                 mode=None):
+        self.name = name
         self.path = path
         self.fileobj = fileobj
+        self.tarinfo = tarinfo
         self.mode = mode
+        if self.path and self.name is None:
+            self.name = self.path.name
+        if self.tarinfo and self.mode is None:
+            self.mode = self.tarinfo.mode
+
+    def set_path(self, basedir):
+        self.path = basedir / self.name
+
 
 class Archive:
 
@@ -37,7 +58,8 @@ class Archive:
         self._file = None
         self._metadata = []
 
-    def create(self, path, compression, paths, basedir=None, workdir=None):
+    def create(self, path, compression, paths, 
+               basedir=None, workdir=None, dedup=DedupMode.LINK):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
             # in Python 3.5.
@@ -46,13 +68,53 @@ class Archive:
             mode = 'x:' + compression
         if workdir:
             with tmp_chdir(workdir):
-                self._create(Path(workdir, path), mode, paths, basedir)
+                self._create(Path(workdir, path), mode, paths, basedir, dedup)
         else:
-            self._create(Path(path), mode, paths, basedir)
+            self._create(Path(path), mode, paths, basedir, dedup)
         return self
 
-    def _create(self, path, mode, paths, basedir):
+    def _create(self, path, mode, paths, basedir, dedup):
         self.path = path
+        self.manifest = Manifest(paths=self._check_paths(paths, basedir))
+        self.manifest.add_metadata(self.basedir / ".manifest.yaml")
+        for md in self._metadata:
+            md.set_path(self.basedir)
+            self.manifest.add_metadata(md.path)
+        with tarfile.open(str(self.path), mode) as tarf:
+            with tempfile.TemporaryFile() as tmpf:
+                self.manifest.write(tmpf)
+                tmpf.seek(0)
+                self.add_metadata(".manifest.yaml", tmpf)
+                md_names = self._add_metadata_files(tarf)
+            dupindex = {}
+            for fi in self.manifest:
+                p = fi.path
+                name = self._arcname(p)
+                if name in md_names:
+                    raise ArchiveCreateError("cannot add %s: "
+                                             "this filename is reserved" % p)
+                if fi.is_file():
+                    ti = tarf.gettarinfo(str(p), arcname=name)
+                    dup = self._check_duplicate(fi, name, dedup, dupindex)
+                    if dup:
+                        ti.type = tarfile.LNKTYPE
+                        ti.linkname = dup
+                        tarf.addfile(ti)
+                    else:
+                        ti.size = fi.size
+                        ti.type = tarfile.REGTYPE
+                        ti.linkname = ''
+                        with p.open("rb") as f:
+                            tarf.addfile(ti, fileobj=f)
+                else:
+                    tarf.add(str(p), arcname=name, recursive=False)
+
+    def _check_paths(self, paths, basedir):
+        """Check the paths to be added to an archive for several error
+        conditions.  Accept a list of either strings or path-like
+        objects.  Convert them to a list of Path objects.  Also sets
+        self.basedir.
+        """
         if not paths:
             raise ArchiveCreateError("refusing to create an empty archive")
         if not basedir:
@@ -92,32 +154,49 @@ class Archive:
         if not abspath:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")
-        self.manifest = Manifest(paths=_paths)
-        with tarfile.open(str(self.path), mode) as tarf:
-            with tempfile.TemporaryFile() as tmpf:
-                self.manifest.write(tmpf)
-                tmpf.seek(0)
-                self.add_metadata(".manifest.yaml", tmpf)
-                md_names = set()
-                for md in self._metadata:
-                    md.path = self.basedir / md.path
-                    name = str(md.path)
-                    if name in md_names:
-                        raise ArchiveCreateError("duplicate metadata %s" % name)
-                    md_names.add(name)
-                    ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
-                    ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
-                    tarf.addfile(ti, md.fileobj)
-            for fi in self.manifest:
-                p = fi.path
-                name = self._arcname(p)
-                if name in md_names:
-                    raise ArchiveCreateError("cannot add %s: "
-                                             "this filename is reserved" % p)
-                tarf.add(str(p), arcname=name, recursive=False)
+        return _paths
+
+    def _add_metadata_files(self, tarf):
+        """Add the metadata files to the tar file.
+        """
+        md_names = set()
+        for md in self._metadata:
+            name = str(md.path)
+            if name in md_names:
+                raise ArchiveCreateError("duplicate metadata %s" % name)
+            md_names.add(name)
+            ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
+            ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
+            tarf.addfile(ti, md.fileobj)
+        return md_names
+
+    def _check_duplicate(self, fileinfo, name, dedup, dupindex):
+        """Check if the archive item fileinfo should be linked
+        to another item already added to the archive.
+        """
+        assert fileinfo.is_file()
+        if dedup == DedupMode.LINK:
+            st = fileinfo.path.stat()
+            if st.st_nlink == 1:
+                return None
+            idxkey = (st.st_dev, st.st_ino)
+        elif dedup == DedupMode.CONTENT:
+            try:
+                hashalg = fileinfo.Checksums[0]
+            except IndexError:
+                return None
+            idxkey = fileinfo.checksum[hashalg]
+        else:
+            return None
+        if idxkey in dupindex:
+            return dupindex[idxkey]
+        else:
+            dupindex[idxkey] = name
+            return None
 
     def add_metadata(self, name, fileobj, mode=0o444):
-        md = MetadataItem(name, fileobj, mode)
+        path = self.basedir / name if self.basedir else None
+        md = MetadataItem(name=name, path=path, fileobj=fileobj, mode=mode)
         self._metadata.insert(0, md)
 
     def open(self, path):
@@ -129,6 +208,9 @@ class Archive:
         md = self.get_metadata(".manifest.yaml")
         self.basedir = md.path.parent
         self.manifest = Manifest(fileobj=md.fileobj)
+        if not self.manifest.metadata:
+            # Legacy: Manifest version 1.0 did not have metadata.
+            self.manifest.add_metadata(self.basedir / ".manifest.yaml")
         return self
 
     def get_metadata(self, name):
@@ -136,7 +218,8 @@ class Archive:
         path = Path(ti.path)
         if path.name != name:
             raise ArchiveIntegrityError("%s not found" % name)
-        md = MetadataItem(path, self._file.extractfile(ti), ti.mode)
+        fileobj = self._file.extractfile(ti)
+        md = MetadataItem(path=path, tarinfo=ti, fileobj=fileobj)
         self._metadata.append(md)
         return md
 
@@ -163,6 +246,17 @@ class Archive:
     def verify(self):
         if not self._file:
             raise ValueError("archive is closed.")
+        # Verify that all metadata items are present in the proper
+        # order at the beginning of the tar file.  Start iterating for
+        # TarInfo objects in the tarfile from the beginning,
+        # regardless of what has already been read:
+        tarf_it = iter(self._file)
+        for md in self.manifest.metadata:
+            ti = next(tarf_it)
+            if ti.name != md:
+                raise ArchiveIntegrityError("Expected metadata item '%s' "
+                                            "not found" % (md))
+        # Check the content of the archive.
         for fileinfo in self.manifest:
             self._verify_item(fileinfo)
 
@@ -185,10 +279,11 @@ class Archive:
             _check_condition(tarinfo.isdir(),
                              itemname, "wrong type, expected directory")
         elif fileinfo.is_file():
-            _check_condition(tarinfo.isfile(),
+            _check_condition(tarinfo.isfile() or tarinfo.islnk(),
                              itemname, "wrong type, expected regular file")
-            _check_condition(tarinfo.size == fileinfo.size,
-                             itemname, "wrong size")
+            if tarinfo.isfile():
+                _check_condition(tarinfo.size == fileinfo.size,
+                                 itemname, "wrong size")
             with self._file.extractfile(tarinfo) as f:
                 cs = checksum(f, fileinfo.checksum.keys())
                 _check_condition(cs == fileinfo.checksum,
