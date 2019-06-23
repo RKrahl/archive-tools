@@ -10,7 +10,7 @@ from archive.tools import tmp_chdir, tmp_umask
 class MailArchive(Archive):
 
     def create(self, path, mails, compression='xz', comment=None):
-        path = Path(path)
+        path = Path.cwd() / path
         with TemporaryDirectory(prefix="mailarchive-") as tmpdir:
             with tmp_chdir(tmpdir), tmp_umask(0o077):
                 basedir = Path(path.name.split('.')[0])
