@@ -4,6 +4,7 @@ include MANIFEST.in
 include README.rst
 include tests/conftest.py
 include tests/data/.sha256
+include tests/data/legacy-1_0.tar.gz
 include tests/data/msg.txt
 include tests/data/rnd.dat
 include tests/pytest.ini
