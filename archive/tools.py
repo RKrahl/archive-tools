@@ -39,6 +39,24 @@ class tmp_chdir():
         self._restore_dir()
 
 
+class tmp_umask():
+    """A context manager to temporarily set the umask.
+    """
+    def __init__(self, mask):
+        self.save_mask = None
+        self.mask = mask
+    def __enter__(self):
+        self.save_mask = os.umask(self.mask)
+    def _restore_mask(self):
+        if self.save_mask:
+            os.umask(self.save_mask)
+        self.save_mask = None
+    def __exit__(self, type, value, tb):
+        self._restore_mask()
+    def __del__(self):
+        self._restore_mask()
+
+
 def now_str():
     """Return the current local date and time as a string.
     """

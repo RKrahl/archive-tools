@@ -119,7 +119,7 @@ setup(
     license = "Apache-2.0",
     requires = ["PyYAML"],
     packages = ["archive"],
-    scripts = ["scripts/archive-tool.py"],
+    scripts = ["scripts/archive-tool.py", "scripts/imap-to-archive.py"],
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Intended Audience :: System Administrators",
