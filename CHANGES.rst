@@ -11,6 +11,8 @@ dev (not yet released)
 	  - Add a list of metadata items in the header of the
             manifest.
 	  - Bump manifest version to 1.1.
+      + #4, #32: Add :class:`MailArchive` implementing a special
+        flavour of an :class:`Archive` for storing mails.
 
     Incompatible changes
       + #23 and #26: review the API of :class:`Archive`:
