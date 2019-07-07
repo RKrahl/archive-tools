@@ -56,6 +56,10 @@ Required library packages:
 
 Optional library packages:
 
++ `imapclient`_
+
+  Required for the `imap-to-archive.py` script.
+
 + `python-dateutil`_
 
   Date strings will lack time zone indication if missing.
@@ -127,6 +131,7 @@ permissions and limitations under the License.
 
 
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
+.. _imapclient: https://github.com/mjs/imapclient/
 .. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm/
 .. _pytest: http://pytest.org/
