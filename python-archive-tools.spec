@@ -16,6 +16,7 @@ BuildRequires:	python3-pytest-dependency >= 0.2
 BuildRequires:	python3-pytest >= 3.0
 %endif
 Requires:	python3-PyYAML
+Recommends:	python3-IMAPClient
 Recommends:	python3-python-dateutil
 BuildArch:	noarch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-build
