@@ -135,8 +135,8 @@ info_parser.add_argument('entry', type=Path,
 info_parser.set_defaults(func=info)
 
 
-def _matches(fi, entry):
-    if fi.path != entry.path or fi.type != entry.type:
+def _matches(prefix, fi, entry):
+    if prefix / fi.path != entry.path or fi.type != entry.type:
         return False
     if fi.is_file():
         if (fi.size != entry.size or fi.checksum != entry.checksum or 
@@ -159,8 +159,9 @@ def check(args):
             except StopIteration:
                 break
             skip = False
-            entry = archive.manifest.find(fi.path)
-            if fi.path in metadata or entry and _matches(fi, entry):
+            entry = archive.manifest.find(args.prefix / fi.path)
+            if (args.prefix / fi.path in metadata or 
+                entry and _matches(args.prefix, fi, entry)):
                 if args.present and not fi.is_dir():
                     print(str(fi.path))
             else:
@@ -171,6 +172,9 @@ def check(args):
 
 check_parser = subparsers.add_parser('check',
                                      help="check if files are in the archive")
+check_parser.add_argument('--prefix', type=Path, default=Path(""),
+                          help=("prefix for the path in the archive "
+                                "of files to be checked"))
 check_parser.add_argument('--present', action='store_true',
                           help=("show files present in the archive, "
                                 "rather then missing ones"))
