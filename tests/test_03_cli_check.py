@@ -244,3 +244,35 @@ def test_check_present_extract_archive(test_dir, request, monkeypatch):
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         assert get_results(f) == all_files
+
+def test_check_prefix_allmatch(test_dir, copy_data, monkeypatch):
+    """Test the --prefix argument to archive-tool check.
+
+    The test situation is that all files to be checked are in some
+    subdirectory in the archive.  All files (actually, it's only one)
+    match.
+    """
+    archive_path = test_dir / "archive.tar"
+    prefix = Path("base", "data")
+    monkeypatch.chdir(str(copy_data / prefix))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "--prefix", str(prefix), str(archive_path), "."]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == set()
+
+def test_check_prefix_present_allmatch(test_dir, copy_data, monkeypatch):
+    """Test the --prefix argument to archive-tool check.
+
+    Same test situation as above, but now use the --present flag to
+    show all matching files.
+    """
+    archive_path = test_dir / "archive.tar"
+    prefix = Path("base", "data")
+    monkeypatch.chdir(str(copy_data / prefix))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "--prefix", str(prefix), "--present", 
+                str(archive_path), "."]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == {"rnd.dat"}
