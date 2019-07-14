@@ -277,3 +277,39 @@ def test_check_prefix_present_allmatch(test_dir, copy_data, monkeypatch):
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         assert get_results(f) == {"rnd.dat"}
+
+def test_check_prefix_extract(test_dir, extract_archive, monkeypatch):
+    """Test the --prefix argument to archive-tool check.
+
+    Call check from within the basedir of an extracted archive.  This
+    test essentially checks that the --prefix argument also works for
+    metadata files.
+    """
+    archive_path = test_dir / "archive.tar"
+    prefix = Path("base")
+    monkeypatch.chdir(str(extract_archive / prefix))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "--prefix", str(prefix), str(archive_path), "."]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == set()
+
+def test_check_prefix_present_extract(test_dir, extract_archive, monkeypatch):
+    """Test the --prefix argument to archive-tool check.
+
+    Same test situation as above, but now use the --present flag to
+    show all matching files.
+    """
+    archive_path = test_dir / "archive.tar"
+    prefix = Path("base")
+    monkeypatch.chdir(str(extract_archive / prefix))
+    all_files = {
+        str(f[0].relative_to(prefix)) 
+        for f in testdata["files"] + testdata["symlinks"]
+    } | { '.manifest.yaml' }
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "--prefix", str(prefix), "--present", 
+                str(archive_path), "."]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_results(f) == all_files
