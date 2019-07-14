@@ -313,3 +313,35 @@ def test_check_prefix_present_extract(test_dir, extract_archive, monkeypatch):
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         assert get_results(f) == all_files
+
+def test_check_stdin(test_dir, copy_data, monkeypatch):
+    monkeypatch.chdir(str(copy_data))
+    old_file = Path("base", "data", "rnd.dat")
+    new_file = Path("base", "new_msg.txt")
+    with new_file.open("wt") as f:
+        print("Greeting!", file=f)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f_out:
+        args = ["check", "--stdin", str(test_dir / "archive.tar")]
+        with TemporaryFile(mode="w+t", dir=str(test_dir)) as f_in:
+            print(str(old_file), file=f_in)
+            print(str(new_file), file=f_in)
+            f_in.seek(0)
+            callscript("archive-tool.py", args, stdin=f_in, stdout=f_out)
+        f_out.seek(0)
+        assert get_results(f_out) == {str(new_file)}
+
+def test_check_stdin_present(test_dir, copy_data, monkeypatch):
+    monkeypatch.chdir(str(copy_data))
+    old_file = Path("base", "data", "rnd.dat")
+    new_file = Path("base", "new_msg.txt")
+    with new_file.open("wt") as f:
+        print("Greeting!", file=f)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f_out:
+        args = ["check", "--present", "--stdin", str(test_dir / "archive.tar")]
+        with TemporaryFile(mode="w+t", dir=str(test_dir)) as f_in:
+            print(str(old_file), file=f_in)
+            print(str(new_file), file=f_in)
+            f_in.seek(0)
+            callscript("archive-tool.py", args, stdin=f_in, stdout=f_out)
+        f_out.seek(0)
+        assert get_results(f_out) == {str(old_file)}
