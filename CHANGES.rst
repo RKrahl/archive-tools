@@ -13,6 +13,8 @@ dev (not yet released)
 	  - Bump manifest version to 1.1.
       + #4, #32: Add :class:`MailArchive` implementing a special
         flavour of an :class:`Archive` for storing mails.
+      + #27: Add command line flags `--prefix <dir>` and `--stdin` to
+	`archive-tool check`.
 
     Incompatible changes
       + #23 and #26: review the API of :class:`Archive`:

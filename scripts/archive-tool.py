@@ -21,6 +21,10 @@ suffix_map = {
 }
 """Map path suffix to compression mode."""
 
+class ArgError(Exception):
+    pass
+
+
 def create(args):
     if args.compression is None:
         try:
@@ -135,8 +139,8 @@ info_parser.add_argument('entry', type=Path,
 info_parser.set_defaults(func=info)
 
 
-def _matches(fi, entry):
-    if fi.path != entry.path or fi.type != entry.type:
+def _matches(prefix, fi, entry):
+    if prefix / fi.path != entry.path or fi.type != entry.type:
         return False
     if fi.is_file():
         if (fi.size != entry.size or fi.checksum != entry.checksum or 
@@ -148,10 +152,18 @@ def _matches(fi, entry):
     return True
 
 def check(args):
+    if args.stdin:
+        if args.files:
+            raise ArgError("can't accept both, --stdin and the files argument")
+        files = [Path(l.strip()) for l in sys.stdin]
+    else:
+        if not args.files:
+            raise ArgError("either --stdin or the files argument is required")
+        files = args.files
     with Archive().open(args.archive) as archive:
         metadata = { Path(md) for md in archive.manifest.metadata }
         FileInfo.Checksums = archive.manifest.checksums
-        file_iter = FileInfo.iterpaths(args.files)
+        file_iter = FileInfo.iterpaths(files)
         skip = None
         while True:
             try:
@@ -159,8 +171,9 @@ def check(args):
             except StopIteration:
                 break
             skip = False
-            entry = archive.manifest.find(fi.path)
-            if fi.path in metadata or entry and _matches(fi, entry):
+            entry = archive.manifest.find(args.prefix / fi.path)
+            if (args.prefix / fi.path in metadata or 
+                entry and _matches(args.prefix, fi, entry)):
                 if args.present and not fi.is_dir():
                     print(str(fi.path))
             else:
@@ -171,12 +184,18 @@ def check(args):
 
 check_parser = subparsers.add_parser('check',
                                      help="check if files are in the archive")
+check_parser.add_argument('--prefix', type=Path, default=Path(""),
+                          help=("prefix for the path in the archive "
+                                "of files to be checked"))
 check_parser.add_argument('--present', action='store_true',
                           help=("show files present in the archive, "
                                 "rather then missing ones"))
+check_parser.add_argument('--stdin', action='store_true',
+                          help=("read files to be checked from stdin, "
+                                "rather then from the command line"))
 check_parser.add_argument('archive', type=Path,
                           help=("path to the archive file"))
-check_parser.add_argument('files', nargs='+', type=Path,
+check_parser.add_argument('files', nargs='*', type=Path,
                           help="files to be checked")
 check_parser.set_defaults(func=check)
 
@@ -186,6 +205,8 @@ if not hasattr(args, "func"):
     argparser.error("subcommand is required")
 try:
     args.func(args)
+except ArgError as e:
+    argparser.error(str(e))
 except ArchiveError as e:
     if isinstance(e, ArchiveCreateError):
         status = 1

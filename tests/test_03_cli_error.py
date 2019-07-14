@@ -208,3 +208,39 @@ def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
         line = f.readline()
         assert "%s:%s: missing" % (archive_name, missing) in line
 
+def test_cli_check_missing_files(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    args = ["create", archive_name, "base"]
+    callscript("archive-tool.py", args)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", archive_name]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args, stderr=f)
+        assert exc_info.value.returncode == 2
+        f.seek(0)
+        line = f.readline()
+        assert line.startswith("usage: archive-tool.py ")
+        while True:
+            line = f.readline()
+            if not line.startswith(" "):
+                break
+        assert "either --stdin or the files argument is required" in line
+
+def test_cli_check_stdin_and_files(test_dir, archive_name, monkeypatch):
+    monkeypatch.chdir(str(test_dir))
+    args = ["create", archive_name, "base"]
+    callscript("archive-tool.py", args)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", "--stdin", archive_name, "base"]
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            callscript("archive-tool.py", args, stderr=f)
+        assert exc_info.value.returncode == 2
+        f.seek(0)
+        line = f.readline()
+        assert line.startswith("usage: archive-tool.py ")
+        while True:
+            line = f.readline()
+            if not line.startswith(" "):
+                break
+        assert "can't accept both, --stdin and the files argument" in line
+
