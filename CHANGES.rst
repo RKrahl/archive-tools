@@ -1,7 +1,7 @@
 History of changes to archive-tools
 ===================================
 
-dev (not yet released)
+0.2 (2019-07-14)
     New features
       + #28: support deduplication.
       + #26 and #30: add support for custom metadata:
