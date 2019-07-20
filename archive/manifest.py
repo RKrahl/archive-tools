@@ -45,7 +45,7 @@ class FileInfo:
             self.mtime = data['mtime']
             if self.is_file():
                 self.size = data['size']
-                self.checksum = data['checksum']
+                self.checksum = data['checksum'] or []
             elif self.is_symlink():
                 self.target = Path(data['target'])
         elif path is not None:
