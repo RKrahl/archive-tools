@@ -45,7 +45,7 @@ class FileInfo:
             self.mtime = data['mtime']
             if self.is_file():
                 self.size = data['size']
-                self.checksum = data['checksum'] or []
+                self._checksum = data['checksum'] or []
             elif self.is_symlink():
                 self.target = Path(data['target'])
         elif path is not None:
@@ -66,7 +66,7 @@ class FileInfo:
             if stat.S_ISREG(fstat.st_mode):
                 self.size = fstat.st_size
                 with self.path.open('rb') as f:
-                    self.checksum = checksum(f, self.Checksums)
+                    self._checksum = checksum(f, self.Checksums)
             elif stat.S_ISDIR(fstat.st_mode):
                 pass
             elif stat.S_ISLNK(fstat.st_mode):
@@ -84,6 +84,10 @@ class FileInfo:
     @property
     def mode(self):
         return stat.S_IMODE(self.st_mode)
+
+    @property
+    def checksum(self):
+        return self._checksum
 
     def is_dir(self):
         return stat.S_ISDIR(self.st_mode)
