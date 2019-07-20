@@ -65,8 +65,7 @@ class FileInfo:
             self.mtime = fstat.st_mtime
             if stat.S_ISREG(fstat.st_mode):
                 self.size = fstat.st_size
-                with self.path.open('rb') as f:
-                    self._checksum = checksum(f, self.Checksums)
+                self._checksum = None
             elif stat.S_ISDIR(fstat.st_mode):
                 pass
             elif stat.S_ISLNK(fstat.st_mode):
@@ -87,6 +86,9 @@ class FileInfo:
 
     @property
     def checksum(self):
+        if self._checksum is None:
+            with self.path.open('rb') as f:
+                self._checksum = checksum(f, self.Checksums)
         return self._checksum
 
     def is_dir(self):
