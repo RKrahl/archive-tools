@@ -6,7 +6,7 @@ from pathlib import Path
 import socket
 import pytest
 from archive import Archive
-from archive.exception import ArchiveInvalidTypeError
+from archive.exception import ArchiveWarning
 from conftest import setup_testdata, check_manifest
 
 
@@ -56,27 +56,29 @@ class tmp_fifo():
     def __exit__(self, type, value, tb):
         self.path.unlink()
 
-@pytest.mark.xfail(raises=ArchiveInvalidTypeError, reason="Issue #34")
 def test_create_invalid_file_socket(test_dir, archive_name, monkeypatch):
     """Create an archive from a directory containing a socket.
     """
     monkeypatch.chdir(str(test_dir))
     p = Path("base")
-    with tmp_socket(p / "socket"):
-        Archive().create(archive_name, "", [p])
+    fp = p / "socket"
+    with tmp_socket(fp):
+        with pytest.warns(ArchiveWarning, match="%s: socket ignored" % fp):
+            Archive().create(archive_name, "", [p])
     with Archive().open(archive_name) as archive:
         assert archive.basedir == Path("base")
         check_manifest(archive.manifest, **testdata)
         archive.verify()
 
-@pytest.mark.xfail(raises=ArchiveInvalidTypeError, reason="Issue #34")
 def test_create_invalid_file_fifo(test_dir, archive_name, monkeypatch):
     """Create an archive from a directory containing a FIFO.
     """
     monkeypatch.chdir(str(test_dir))
     p = Path("base")
-    with tmp_fifo(p / "fifo"):
-        Archive().create(archive_name, "", [p])
+    fp = p / "fifo"
+    with tmp_fifo(fp):
+        with pytest.warns(ArchiveWarning, match="%s: FIFO ignored" % fp):
+            Archive().create(archive_name, "", [p])
     with Archive().open(archive_name) as archive:
         assert archive.basedir == Path("base")
         check_manifest(archive.manifest, **testdata)

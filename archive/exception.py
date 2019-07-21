@@ -46,3 +46,6 @@ class ArchiveInvalidTypeError(ArchiveError):
         else:
             tstr = "unsuported type %x" % ftype
         super().__init__("%s: %s" % (str(path), tstr))
+
+class ArchiveWarning(Warning):
+    pass

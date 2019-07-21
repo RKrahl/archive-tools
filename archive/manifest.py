@@ -9,9 +9,10 @@ import os
 from pathlib import Path
 import pwd
 import stat
+import warnings
 import yaml
 import archive
-from archive.exception import ArchiveInvalidTypeError
+from archive.exception import ArchiveInvalidTypeError, ArchiveWarning
 from archive.tools import now_str, parse_date, checksum
 
 
@@ -141,7 +142,11 @@ class FileInfo:
         will have no effect.
         """
         for p in paths:
-            info = cls(path=p)
+            try:
+                info = cls(path=p)
+            except ArchiveInvalidTypeError as e:
+                warnings.warn(ArchiveWarning("%s ignored" % e))
+                continue
             if (yield info):
                 continue
             if info.is_dir():
