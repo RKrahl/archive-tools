@@ -33,7 +33,7 @@ def test_dir(tmpdir):
     return tmpdir
 
 def test_fileinfo_lazy_checksum(test_dir, monkeypatch):
-    """Check that checksums are created lazily.
+    """Check that checksums are calculated lazily.  Ref. #35.
     """
     monkeypatch.chdir(str(test_dir))
     checksum_count = ChecksumCounter()
