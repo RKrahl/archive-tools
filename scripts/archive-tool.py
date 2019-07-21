@@ -5,6 +5,7 @@ import datetime
 from pathlib import Path
 import stat
 import sys
+import warnings
 from archive.archive import Archive, DedupMode
 from archive.exception import *
 from archive.manifest import FileInfo
@@ -23,6 +24,27 @@ suffix_map = {
 
 class ArgError(Exception):
     pass
+
+
+def showwarning(message, category, filename, lineno, file=None, line=None):
+    """Display ArchiveWarning in a somewhat more user friendly manner.
+    All other warnings are formatted the standard way.
+    """
+    if file is None:
+        file = sys.stderr
+        if file is None:
+            # sys.stderr is None when run with pythonw.exe - warnings get lost
+            return
+    try:
+        if issubclass(category, ArchiveWarning):
+            s =  "%s: %s\n" % (argparser.prog, message)
+        else:
+            s = warnings.formatwarning(message, category, 
+                                       filename, lineno, line)
+        file.write(s)
+    except OSError:
+        pass # the file (probably stderr) is invalid - this warning gets lost.
+warnings.showwarning = showwarning
 
 
 def create(args):
