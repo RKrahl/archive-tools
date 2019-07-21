@@ -1,6 +1,10 @@
 History of changes to archive-tools
 ===================================
 
+dev (not yet released)
+    New features
+      + #35: class FileInfo calculates checksums lazily.
+
 0.2 (2019-07-14)
     New features
       + #28: support deduplication.
