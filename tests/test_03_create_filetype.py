@@ -6,7 +6,7 @@ from pathlib import Path
 import socket
 import pytest
 from archive import Archive
-from archive.exception import ArchiveCreateError
+from archive.exception import ArchiveInvalidTypeError
 from conftest import setup_testdata, check_manifest
 
 
@@ -56,7 +56,7 @@ class tmp_fifo():
     def __exit__(self, type, value, tb):
         self.path.unlink()
 
-@pytest.mark.xfail(raises=ArchiveCreateError, reason="Issue #34")
+@pytest.mark.xfail(raises=ArchiveInvalidTypeError, reason="Issue #34")
 def test_create_invalid_file_socket(test_dir, archive_name, monkeypatch):
     """Create an archive from a directory containing a socket.
     """
@@ -69,7 +69,7 @@ def test_create_invalid_file_socket(test_dir, archive_name, monkeypatch):
         check_manifest(archive.manifest, **testdata)
         archive.verify()
 
-@pytest.mark.xfail(raises=ArchiveCreateError, reason="Issue #34")
+@pytest.mark.xfail(raises=ArchiveInvalidTypeError, reason="Issue #34")
 def test_create_invalid_file_fifo(test_dir, archive_name, monkeypatch):
     """Create an archive from a directory containing a FIFO.
     """
