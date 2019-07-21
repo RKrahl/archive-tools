@@ -1,6 +1,8 @@
 """Exception handling.
 """
 
+import stat
+
 class _BaseException(Exception):
     """An exception that tries to suppress misleading context.
 
@@ -29,3 +31,21 @@ class ArchiveReadError(ArchiveError):
 class ArchiveIntegrityError(ArchiveError):
     pass
 
+class ArchiveInvalidTypeError(ArchiveError):
+    def __init__(self, path, ftype):
+        self.path = path
+        self.ftype = ftype
+        if stat.S_ISFIFO(ftype):
+            tstr = "FIFO"
+        elif stat.S_ISCHR(ftype):
+            tstr = "character device file"
+        elif stat.S_ISBLK(ftype):
+            tstr = "block device file"
+        elif stat.S_ISSOCK(ftype):
+            tstr = "socket"
+        else:
+            tstr = "unsuported type %x" % ftype
+        super().__init__("%s: %s" % (str(path), tstr))
+
+class ArchiveWarning(Warning):
+    pass

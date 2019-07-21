@@ -9,9 +9,10 @@ import os
 from pathlib import Path
 import pwd
 import stat
+import warnings
 import yaml
 import archive
-from archive.exception import ArchiveCreateError
+from archive.exception import ArchiveInvalidTypeError, ArchiveWarning
 from archive.tools import now_str, parse_date, checksum
 
 
@@ -71,8 +72,8 @@ class FileInfo:
             elif stat.S_ISLNK(fstat.st_mode):
                 self.target = Path(os.readlink(str(self.path)))
             else:
-                raise ArchiveCreateError("%s: invalid file type" 
-                                         % str(self.path))
+                ftype = stat.S_IFMT(fstat.st_mode)
+                raise ArchiveInvalidTypeError(self.path, ftype)
         else:
             raise TypeError("Either data or path must be provided")
 
@@ -141,7 +142,11 @@ class FileInfo:
         will have no effect.
         """
         for p in paths:
-            info = cls(path=p)
+            try:
+                info = cls(path=p)
+            except ArchiveInvalidTypeError as e:
+                warnings.warn(ArchiveWarning("%s ignored" % e))
+                continue
             if (yield info):
                 continue
             if info.is_dir():
