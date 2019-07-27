@@ -30,6 +30,8 @@ def showwarning(message, category, filename, lineno, file=None, line=None):
     """Display ArchiveWarning in a somewhat more user friendly manner.
     All other warnings are formatted the standard way.
     """
+    # This is a modified version of the function of the same name from
+    # the Python standard library warnings module.
     if file is None:
         file = sys.stderr
         if file is None:
@@ -37,7 +39,7 @@ def showwarning(message, category, filename, lineno, file=None, line=None):
             return
     try:
         if issubclass(category, ArchiveWarning):
-            s =  "%s: %s\n" % (argparser.prog, message)
+            s = "%s: %s\n" % (argparser.prog, message)
         else:
             s = warnings.formatwarning(message, category, 
                                        filename, lineno, line)
