@@ -187,7 +187,7 @@ def check(args):
     with Archive().open(args.archive) as archive:
         metadata = { Path(md) for md in archive.manifest.metadata }
         FileInfo.Checksums = archive.manifest.checksums
-        file_iter = FileInfo.iterpaths(files)
+        file_iter = FileInfo.iterpaths(files, set())
         skip = None
         while True:
             try:
