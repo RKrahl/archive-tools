@@ -6,7 +6,7 @@ from tempfile import TemporaryFile
 import pytest
 from archive import Archive
 from archive.exception import ArchiveCreateError
-from conftest import archive_name, setup_testdata
+from conftest import setup_testdata
 
 
 # Setup a directory with some test data to be put into an archive.
@@ -35,15 +35,16 @@ def test_create_empty(test_dir, archive_name, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     with pytest.raises(ArchiveCreateError):
-        Archive().create(archive_name, "", [], basedir="base")
+        Archive().create(Path(archive_name), "", [], basedir=Path("base"))
 
 def test_create_abs_basedir(test_dir, archive_name, monkeypatch):
     """Base dir must be a a relative path.
     """
     monkeypatch.chdir(str(test_dir))
+    paths = [Path("base")]
     basedir = test_dir / "base"
     with pytest.raises(ArchiveCreateError):
-        Archive().create(archive_name, "", ["base"], basedir=basedir)
+        Archive().create(Path(archive_name), "", paths, basedir=basedir)
 
 def test_create_mixing_abs_rel(test_dir, archive_name, monkeypatch):
     """Mixing absolute and relative paths is not allowed.
@@ -51,7 +52,7 @@ def test_create_mixing_abs_rel(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     paths = [ Path("base", "msg.txt"), test_dir / "base" / "data" ]
     with pytest.raises(ArchiveCreateError):
-        Archive().create(archive_name, "", paths, basedir="base")
+        Archive().create(Path(archive_name), "", paths, basedir=Path("base"))
 
 def test_create_rel_not_in_base(test_dir, archive_name, monkeypatch):
     """Relative paths must be in the base directory.
@@ -59,15 +60,15 @@ def test_create_rel_not_in_base(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     paths = [ Path("other", "rnd.dat") ]
     with pytest.raises(ArchiveCreateError):
-        Archive().create(archive_name, "", paths, basedir="base")
+        Archive().create(Path(archive_name), "", paths, basedir=Path("base"))
 
 def test_create_norm_path(test_dir, archive_name, monkeypatch):
     """Items in paths must be normalized.  (Issue #6)
     """
     monkeypatch.chdir(str(test_dir))
-    paths = [ "base", "base/../../../etc/passwd" ]
+    paths = [ Path("base"), Path("base/../../../etc/passwd") ]
     with pytest.raises(ArchiveCreateError):
-        Archive().create(archive_name, "", paths, basedir="base")
+        Archive().create(Path(archive_name), "", paths, basedir=Path("base"))
 
 def test_create_rel_check_basedir(test_dir, archive_name, monkeypatch):
     """Base directory must be a directory.  (Issue #9)
@@ -75,7 +76,7 @@ def test_create_rel_check_basedir(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     p = Path("msg.txt")
     with pytest.raises(ArchiveCreateError):
-        Archive().create(archive_name, "", [p], basedir=p)
+        Archive().create(Path(archive_name), "", [p], basedir=p)
 
 def test_create_rel_no_manifest_file(test_dir, archive_name, monkeypatch):
     """The filename .manifest.yaml is reserved by archive-tools.
@@ -95,7 +96,7 @@ def test_create_rel_no_manifest_file(test_dir, archive_name, monkeypatch):
         print("This is not a YAML file!", file=f)
     try:
         with pytest.raises(ArchiveCreateError):
-            Archive().create(archive_name, "", [base])
+            Archive().create(Path(archive_name), "", [base])
     finally:
         manifest.unlink()
 
@@ -111,7 +112,7 @@ def test_create_duplicate_metadata(test_dir, archive_name, monkeypatch):
         tmpf.seek(0)
         with pytest.raises(ArchiveCreateError) as err:
             archive.add_metadata(".manifest.yaml", tmpf)
-            archive.create(archive_name, "", [p])
+            archive.create(Path(archive_name), "", [p])
         assert "duplicate metadata" in str(err.value)
 
 def test_create_metadata_vs_content(test_dir, archive_name, monkeypatch):
@@ -126,5 +127,5 @@ def test_create_metadata_vs_content(test_dir, archive_name, monkeypatch):
         tmpf.seek(0)
         with pytest.raises(ArchiveCreateError) as err:
             archive.add_metadata("msg.txt", tmpf)
-            archive.create(archive_name, "", [p])
+            archive.create(Path(archive_name), "", [p])
         assert "filename is reserved" in str(err.value)

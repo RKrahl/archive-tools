@@ -69,7 +69,7 @@ def test_cli_create(test_dir, monkeypatch, testcase):
     basedir = "base"
     args = ["create", "--deduplicate", dedup.value, archive_path, basedir]
     callscript("archive-tool.py", args)
-    with Archive().open(archive_path) as archive:
+    with Archive().open(Path(archive_path)) as archive:
         assert str(archive.basedir) == basedir
         check_manifest(archive.manifest, **testdata)
 

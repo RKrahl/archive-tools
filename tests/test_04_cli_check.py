@@ -33,7 +33,7 @@ all_test_files = {
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
     setup_testdata(tmpdir, **testdata)
-    Archive().create("archive.tar", "", ["base"], workdir=tmpdir)
+    Archive().create(Path("archive.tar"), "", [Path("base")], workdir=tmpdir)
     return tmpdir
 
 @pytest.fixture(scope="function")
@@ -217,7 +217,7 @@ def test_check_extract_archive_custom_metadata(test_dir, request, monkeypatch):
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)
         archive.add_metadata(".msg.txt", tmpf)
-        archive.create(archive_path, "", ["base"], workdir=test_dir)
+        archive.create(archive_path, "", [Path("base")], workdir=test_dir)
     check_dir = test_dir / request.function.__name__
     check_dir.mkdir()
     monkeypatch.chdir(str(check_dir))

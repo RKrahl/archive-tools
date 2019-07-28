@@ -24,11 +24,7 @@ _mode_ft = {
 }
 
 # map file type to stat mode value
-_ft_mode = {
-    "l": stat.S_IFLNK,
-    "f": stat.S_IFREG,
-    "d": stat.S_IFDIR,
-}
+_ft_mode = { t:m for m,t in _mode_ft.items() }
 
 
 class FileInfo:
