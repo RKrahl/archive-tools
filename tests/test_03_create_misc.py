@@ -43,7 +43,7 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
     """Check the default basedir with absolute paths.  (Issue #8)
     """
     monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-abs.tar"
+    archive_path = Path("archive-abs.tar")
     p = test_dir / Path("base", "data")
     Archive().create(archive_path, "", [p])
     with Archive().open(archive_path) as archive:
@@ -55,7 +55,7 @@ def test_create_sorted(test_dir, monkeypatch):
     """The entries in the manifest should be sorted.  (Issue #11)
     """
     monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-sort.tar"
+    archive_path = Path("archive-sort.tar")
     files = [ Path("base", fn) for fn in ("c", "a", "d", "b") ]
     for p in files:
         with p.open("wt") as f:
@@ -73,7 +73,7 @@ def test_create_custom_metadata(test_dir, monkeypatch):
     """Add additional custom metadata to the archive.
     """
     monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-custom-md.tar"
+    archive_path = Path("archive-custom-md.tar")
     p = Path("base", "data")
     with TemporaryFile(dir=str(test_dir)) as tmpf:
         archive = Archive()

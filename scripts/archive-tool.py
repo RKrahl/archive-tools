@@ -66,7 +66,7 @@ create_parser = subparsers.add_parser('create', help="create the archive")
 create_parser.add_argument('--compression',
                            choices=['none', 'gz', 'bz2', 'xz'],
                            help=("compression mode"))
-create_parser.add_argument('--basedir',
+create_parser.add_argument('--basedir', type=Path,
                            help=("common base directory in the archive"))
 create_parser.add_argument('--deduplicate',
                            choices=[d.value for d in DedupMode], default='link',

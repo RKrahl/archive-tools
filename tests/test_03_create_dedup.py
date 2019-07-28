@@ -68,8 +68,8 @@ def dep_testcase(request, testcase):
 def test_create(test_dir, monkeypatch, testcase):
     dedup = testcase
     monkeypatch.chdir(str(test_dir))
-    archive_path = archive_name(dedup)
-    paths = ["base"]
+    archive_path = Path(archive_name(dedup))
+    paths = [Path("base")]
     Archive().create(archive_path, '', paths, dedup=dedup)
 
 @pytest.mark.dependency()

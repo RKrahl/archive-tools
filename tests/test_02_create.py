@@ -68,13 +68,13 @@ def test_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
     require_compression(compression)
     monkeypatch.chdir(str(test_dir))
-    archive_path = archive_name(compression, abspath)
+    archive_path = Path(archive_name(compression, abspath))
     if abspath:
         paths = [test_dir / "base"]
-        basedir = "archive"
+        basedir = Path("archive")
     else:
-        paths = ["base"]
-        basedir = "base"
+        paths = [Path("base")]
+        basedir = Path("base")
     Archive().create(archive_path, compression, paths, basedir=basedir)
 
 @pytest.mark.dependency()

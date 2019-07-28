@@ -5,22 +5,28 @@ dev (not yet released)
     New features
       + #35: class FileInfo calculates checksums lazily.
       + #34: files of unsupported type are ignored when creating an
-	archive.  A warning is emitted instead of raising an error.
+        archive.  A warning is emitted instead of raising an error.
+
+    Incompatible changes
+      + #36: Drop support for strings in the file name arguments
+        `path`, `paths`, `basedir`, and `workdir` of the methods
+        :meth:`Archive.create` and :meth:`Archive.open`.  These
+        arguments require :class:`Path` objects now.
 
 0.2 (2019-07-14)
     New features
       + #28: support deduplication.
       + #26 and #30: add support for custom metadata:
-	  - Add methods :meth:`Archive.add_metadata` and
+          - Add methods :meth:`Archive.add_metadata` and
             :meth:`Archive.get_metadata` to add and to retrieve custom
             metadata to and from archives.
-	  - Add a list of metadata items in the header of the
+          - Add a list of metadata items in the header of the
             manifest.
-	  - Bump manifest version to 1.1.
+          - Bump manifest version to 1.1.
       + #4, #32: Add :class:`MailArchive` implementing a special
         flavour of an :class:`Archive` for storing mails.
       + #27: Add command line flags `--prefix <dir>` and `--stdin` to
-	`archive-tool check`.
+        `archive-tool check`.
 
     Incompatible changes
       + #23 and #26: review the API of :class:`Archive`:
