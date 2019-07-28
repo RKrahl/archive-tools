@@ -6,7 +6,7 @@ from tempfile import TemporaryFile
 import pytest
 from archive import Archive
 from archive.exception import ArchiveCreateError
-from conftest import archive_name, setup_testdata
+from conftest import setup_testdata
 
 
 # Setup a directory with some test data to be put into an archive.
