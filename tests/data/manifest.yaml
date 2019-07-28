@@ -1,0 +1,65 @@
+%YAML 1.1
+---
+Checksums:
+- sha256
+Date: Sun, 28 Jul 2019 19:05:05 +0200
+Generator: archive-tools 0.2
+Metadata:
+- base/.manifest.yaml
+Version: '1.1'
+---
+- gid: 100
+  gname: users
+  mode: 493
+  mtime: 1564333266.9231408
+  path: base
+  type: d
+  uid: 1000
+  uname: rolf
+- gid: 100
+  gname: users
+  mode: 488
+  mtime: 1564333266.9231408
+  path: base/data
+  type: d
+  uid: 1000
+  uname: rolf
+- checksum:
+    sha256: 21bad91c29230c3b1da568d4f2ccc77f6d79c0ea91ac6a40d37b2b15a2932bea
+  gid: 100
+  gname: users
+  mode: 384
+  mtime: 1564333266.9231408
+  path: base/data/rnd.dat
+  size: 385
+  type: f
+  uid: 1000
+  uname: rolf
+- gid: 100
+  gname: users
+  mode: 493
+  mtime: 1564333266.9231408
+  path: base/empty
+  type: d
+  uid: 1000
+  uname: rolf
+- checksum:
+    sha256: b22b009134622b6508d756f1062455d71a7026594eacb0badf81f4f677929ebe
+  gid: 100
+  gname: users
+  mode: 420
+  mtime: 1564333266.9231408
+  path: base/msg.txt
+  size: 7
+  type: f
+  uid: 1000
+  uname: rolf
+- gid: 100
+  gname: users
+  mode: 511
+  mtime: 1564333266.9231408
+  path: base/s.dat
+  target: data/rnd.dat
+  type: l
+  uid: 1000
+  uname: rolf
