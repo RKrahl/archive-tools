@@ -2,6 +2,7 @@
 """
 
 from enum import Enum
+import itertools
 from pathlib import Path
 import stat
 import sys
@@ -59,7 +60,8 @@ class Archive:
         self._metadata = []
 
     def create(self, path, compression, paths, 
-               basedir=None, workdir=None, dedup=DedupMode.LINK):
+               basedir=None, workdir=None, excludes=None, 
+               dedup=DedupMode.LINK):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
             # in Python 3.5.
@@ -68,14 +70,16 @@ class Archive:
             mode = 'x:' + compression
         if workdir:
             with tmp_chdir(workdir):
-                self._create(workdir / path, mode, paths, basedir, dedup)
+                self._create(workdir / path, mode, paths, 
+                             basedir, excludes, dedup)
         else:
-            self._create(path, mode, paths, basedir, dedup)
+            self._create(path, mode, paths, basedir, excludes, dedup)
         return self
 
-    def _create(self, path, mode, paths, basedir, dedup):
+    def _create(self, path, mode, paths, basedir, excludes, dedup):
         self.path = path
-        self.manifest = Manifest(paths=self._check_paths(paths, basedir))
+        self._check_paths(paths, basedir, excludes)
+        self.manifest = Manifest(paths=paths, excludes=excludes)
         self.manifest.add_metadata(self.basedir / ".manifest.yaml")
         for md in self._metadata:
             md.set_path(self.basedir)
@@ -109,7 +113,7 @@ class Archive:
                 else:
                     tarf.add(str(p), arcname=name, recursive=False)
 
-    def _check_paths(self, paths, basedir):
+    def _check_paths(self, paths, basedir, excludes):
         """Check the paths to be added to an archive for several error
         conditions.  Accept a list of either strings or path-like
         objects.  Convert them to a list of Path objects.  Also sets
@@ -130,9 +134,11 @@ class Archive:
         # We allow two different cases: either
         # - all paths are absolute, or
         # - all paths are relative and start with basedir.
+        # The same rules for paths also apply to excludes, if
+        # provided.  So we may just iterate over the chain of both
+        # lists.
         abspath = None
-        _paths = []
-        for p in paths:
+        for p in itertools.chain(paths, excludes or ()):
             if not _is_normalized(p):
                 raise ArchiveCreateError("invalid path %s: must be normalized" 
                                          % p)
@@ -149,11 +155,9 @@ class Archive:
                     p.relative_to(self.basedir)
                 except ValueError as e:
                     raise ArchiveCreateError(str(e))
-            _paths.append(p)
         if not abspath:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")
-        return _paths
 
     def _add_metadata_files(self, tarf):
         """Add the metadata files to the tar file.
