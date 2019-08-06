@@ -102,6 +102,28 @@ def setup_testdata(main_dir, dirs=[], files=[], symlinks=[]):
         p = main_dir / f
         p.symlink_to(t)
 
+def sub_testdata(data, exclude, include=None):
+    """Compile a subset of the testdata with some items removed.
+    """
+    def _startswith(p, o):
+        try:
+            p.relative_to(o)
+            return True
+        except ValueError:
+            return False
+    sd = {}
+    for k in data.keys():
+        items = []
+        for i in data[k]:
+            if _startswith(i[0], exclude):
+                if include and _startswith(i[0], include):
+                    pass
+                else:
+                    continue
+            items.append(i)
+        sd[k] = items
+    return sd
+
 def get_testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
     items = []
     for p, m in dirs:

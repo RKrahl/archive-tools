@@ -128,7 +128,7 @@ class FileInfo:
         return "%s  %s  %s  %s  %s" % (m, ug, s, d, p)
 
     @classmethod
-    def iterpaths(cls, paths):
+    def iterpaths(cls, paths, excludes):
         """Iterate over paths, descending directories.
         Yield a FileInfo object for each path.
 
@@ -138,6 +138,8 @@ class FileInfo:
         will have no effect.
         """
         for p in paths:
+            if p in excludes:
+                continue
             try:
                 info = cls(path=p)
             except ArchiveInvalidTypeError as e:
@@ -146,14 +148,14 @@ class FileInfo:
             if (yield info):
                 continue
             if info.is_dir():
-                yield from cls.iterpaths(p.iterdir())
+                yield from cls.iterpaths(p.iterdir(), excludes)
 
 
 class Manifest(Sequence):
 
     Version = "1.1"
 
-    def __init__(self, fileobj=None, paths=None):
+    def __init__(self, fileobj=None, paths=None, excludes=None):
         if fileobj is not None:
             docs = yaml.safe_load_all(fileobj)
             self.head = next(docs)
@@ -168,7 +170,7 @@ class Manifest(Sequence):
                 "Metadata": [],
                 "Version": self.Version,
             }
-            fileinfos = FileInfo.iterpaths(paths)
+            fileinfos = FileInfo.iterpaths(paths, set(excludes or ()))
             self.fileinfos = sorted(fileinfos, key=lambda fi: fi.path)
         else:
             raise TypeError("Either fileobj or paths must be provided")
