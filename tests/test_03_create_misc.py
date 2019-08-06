@@ -5,7 +5,6 @@ import copy
 from pathlib import Path
 from tempfile import TemporaryFile
 import pytest
-import archive
 from archive import Archive
 from conftest import setup_testdata, check_manifest
 
@@ -95,7 +94,6 @@ def test_create_custom_metadata(test_dir, monkeypatch):
         check_manifest(archive.manifest, **testdata)
         archive.verify()
 
-@pytest.mark.xfail(raises=archive.ArchiveCreateError, reason="Issue #37")
 def test_create_add_symlink(test_dir, monkeypatch):
     """Check adding explicitly adding a symbolic link.  (Issue #37)
     """
