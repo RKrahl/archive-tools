@@ -3,7 +3,8 @@ History of changes to archive-tools
 
 dev (not yet released)
     New features
-      + #35: class FileInfo calculates checksums lazily.
+      + #33: `archive-tool create` should have an option to exclude files.
+      + #35: :class:`FileInfo` calculates checksums lazily.
       + #34: files of unsupported type are ignored when creating an
         archive.  A warning is emitted instead of raising an error.
 
