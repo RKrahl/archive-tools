@@ -13,14 +13,18 @@ testdata = {
     "dirs": [
         (Path("base"), 0o755),
         (Path("base", "data"), 0o750),
+        (Path("base", "data", "sub"), 0o750),
         (Path("base", "empty"), 0o755),
     ],
     "files": [
         (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
+        (Path("base", "rnd.dat"), 0o600),
+        (Path("base", "data", "rnd1.dat"), 0o600),
+        (Path("base", "data", "rnd2.dat"), 0o600),
+        (Path("base", "data", "sub", "rnd3.dat"), 0o600),
     ],
     "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
+        (Path("base", "s.dat"), Path("data", "rnd1.dat")),
     ]
 }
 
@@ -74,7 +78,7 @@ def test_create_exclude_explicit_include(test_dir, archive_name, monkeypatch):
     directory.
     """
     monkeypatch.chdir(str(test_dir))
-    paths = [Path("base"), Path("base", "data", "rnd.dat")]
+    paths = [Path("base"), Path("base", "data", "rnd1.dat")]
     excludes = [Path("base", "data")]
     data = sub_testdata(testdata, excludes[0], paths[1])
     Archive().create(Path(archive_name), "", paths, excludes=excludes)
