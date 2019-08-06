@@ -1,12 +1,11 @@
 """Test class archive.manifest.Manifest.
 """
 
-import copy
 import datetime
 from pathlib import Path
 import pytest
 from archive.manifest import FileInfo, Manifest
-from conftest import gettestdata, setup_testdata, check_manifest
+from conftest import gettestdata, setup_testdata, sub_testdata, check_manifest
 
 
 # Setup a directory with some test data to be put into an archive.
@@ -71,7 +70,8 @@ def test_manifest_exclude_nonexistent(test_dir, monkeypatch):
     paths = [Path("base")]
     excludes = [Path("base", "non-existent.dat")]
     manifest = Manifest(paths=paths, excludes=excludes)
-    check_manifest(manifest, **testdata)
+    data = sub_testdata(testdata, excludes[0])
+    check_manifest(manifest, **data)
 
 
 def test_manifest_exclude_file(test_dir, monkeypatch):
@@ -81,8 +81,7 @@ def test_manifest_exclude_file(test_dir, monkeypatch):
     paths = [Path("base")]
     excludes = [Path("base", "msg.txt")]
     manifest = Manifest(paths=paths, excludes=excludes)
-    data = copy.deepcopy(testdata)
-    del data["files"][0]
+    data = sub_testdata(testdata, excludes[0])
     check_manifest(manifest, **data)
 
 
@@ -93,9 +92,7 @@ def test_manifest_exclude_subdir(test_dir, monkeypatch):
     paths = [Path("base")]
     excludes = [Path("base", "data")]
     manifest = Manifest(paths=paths, excludes=excludes)
-    data = copy.deepcopy(testdata)
-    del data["dirs"][1]
-    del data["files"][1]
+    data = sub_testdata(testdata, excludes[0])
     check_manifest(manifest, **data)
 
 
@@ -104,9 +101,9 @@ def test_manifest_exclude_samelevel(test_dir, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     paths = [Path("base", "data"), Path("base", "empty")]
-    excludes = [Path("base", "empty")]
+    excludes = [paths[1]]
     manifest = Manifest(paths=paths, excludes=excludes)
-    data = { "dirs": [testdata["dirs"][1]], "files": [testdata["files"][1]] }
+    data = sub_testdata(testdata, Path("base"), paths[0])
     check_manifest(manifest, **data)
 
 
@@ -118,6 +115,5 @@ def test_manifest_exclude_explicit_include(test_dir, monkeypatch):
     paths = [Path("base"), Path("base", "data", "rnd.dat")]
     excludes = [Path("base", "data")]
     manifest = Manifest(paths=paths, excludes=excludes)
-    data = copy.deepcopy(testdata)
-    del data["dirs"][1]
+    data = sub_testdata(testdata, excludes[0], paths[1])
     check_manifest(manifest, **data)
