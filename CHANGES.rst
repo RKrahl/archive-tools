@@ -1,7 +1,7 @@
 History of changes to archive-tools
 ===================================
 
-dev (not yet released)
+0.3 (2019-08-06)
     New features
       + #33: `archive-tool create` should have an option to exclude files.
       + #35: :class:`FileInfo` calculates checksums lazily.
