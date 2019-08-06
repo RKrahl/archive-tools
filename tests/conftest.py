@@ -124,7 +124,7 @@ def sub_testdata(data, exclude, include=None):
         sd[k] = items
     return sd
 
-def testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
+def get_testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
     items = []
     for p, m in dirs:
         if prefix_dir:
@@ -145,7 +145,7 @@ def testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
     return items
 
 def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
-    items = testdata_items(prefix_dir, dirs, files, symlinks)
+    items = get_testdata_items(prefix_dir, dirs, files, symlinks)
     assert len(manifest) == len(items)
     for entry, fileinfo in zip(items, manifest):
         assert fileinfo.type == entry["Type"]

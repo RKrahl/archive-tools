@@ -47,7 +47,6 @@ def test_cli_create_exclude_dir(test_dir, archive_name, monkeypatch):
         check_manifest(archive.manifest, **data)
 
 
-@pytest.mark.xfail(reason="Issue #37")
 def test_cli_create_exclude_mult(test_dir, archive_name, monkeypatch):
     """Exclude multiple items.
     """

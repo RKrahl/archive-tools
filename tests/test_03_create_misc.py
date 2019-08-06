@@ -1,6 +1,7 @@
 """Misc issues around creating an archive.
 """
 
+import copy
 from pathlib import Path
 from tempfile import TemporaryFile
 import pytest
@@ -19,6 +20,9 @@ testdata = {
     "files": [
         (Path("base", "data", "misc", "rnd.dat"), 0o644),
     ],
+    "symlinks": [
+        (Path("base", "data", "s.dat"), Path("misc", "rnd.dat")),
+    ]
 }
 
 @pytest.fixture(scope="module")
@@ -88,4 +92,17 @@ def test_create_custom_metadata(test_dir, monkeypatch):
         assert md.path == archive.basedir / ".msg.txt"
         assert md.fileobj.read() == "Hello world!\n".encode("ascii")
         check_manifest(archive.manifest, **testdata)
+        archive.verify()
+
+def test_create_add_symlink(test_dir, monkeypatch):
+    """Check adding explicitly adding a symbolic link.  (Issue #37)
+    """
+    monkeypatch.chdir(str(test_dir))
+    archive_path = "archive-symlink.tar"
+    paths = [Path("base", "data", "misc"), Path("base", "data", "s.dat")]
+    data = copy.deepcopy(testdata)
+    data["dirs"] = data["dirs"][1:2]
+    Archive().create(archive_path, "", paths)
+    with Archive().open(archive_path) as archive:
+        check_manifest(archive.manifest, **data)
         archive.verify()

@@ -19,7 +19,7 @@ def _is_normalized(p):
     if p.resolve() == p:
         return True
     if p.is_symlink():
-        return p.resolve().parent == p.parent
+        return p.parent.resolve() == p.parent
     else:
         return False
 
