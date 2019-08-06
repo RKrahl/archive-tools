@@ -59,7 +59,7 @@ def create(args):
     if args.compression == 'none':
         args.compression = ''
     archive = Archive().create(args.archive, args.compression, args.files, 
-                               basedir=args.basedir, 
+                               basedir=args.basedir, excludes=args.exclude, 
                                dedup=DedupMode(args.deduplicate))
 
 create_parser = subparsers.add_parser('create', help="create the archive")
@@ -68,6 +68,8 @@ create_parser.add_argument('--compression',
                            help=("compression mode"))
 create_parser.add_argument('--basedir', type=Path,
                            help=("common base directory in the archive"))
+create_parser.add_argument('--exclude', type=Path, action='append',
+                           help=("exclude this path"))
 create_parser.add_argument('--deduplicate',
                            choices=[d.value for d in DedupMode], default='link',
                            help=("when to use hard links to duplicate files"))
