@@ -8,7 +8,7 @@ from tempfile import TemporaryFile
 import pytest
 from pytest_dependency import depends
 from archive import Archive
-from conftest import (require_compression, setup_testdata, testdata_items, 
+from conftest import (require_compression, setup_testdata, get_testdata_items, 
                       check_manifest, callscript)
 
 
@@ -93,7 +93,7 @@ def test_cli_ls(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
     prefix_dir = test_dir if abspath else None
-    entries = testdata_items(prefix_dir=prefix_dir, **testdata)
+    entries = get_testdata_items(prefix_dir=prefix_dir, **testdata)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
@@ -135,7 +135,7 @@ def test_cli_info(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
     prefix_dir = test_dir if abspath else None
-    entries = testdata_items(prefix_dir=prefix_dir, **testdata)
+    entries = get_testdata_items(prefix_dir=prefix_dir, **testdata)
     # Need to test each type only once.
     types_done = set()
     for entry in entries:
