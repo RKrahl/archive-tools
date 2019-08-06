@@ -13,6 +13,10 @@ dev (not yet released)
         :meth:`Archive.create` and :meth:`Archive.open`.  These
         arguments require :class:`Path` objects now.
 
+    Bug fixes and minor changes
+      + #37: `archive-tool create` throws an error when trying to
+	explicitly add a symlink.
+
 0.2 (2019-07-14)
     New features
       + #28: support deduplication.
