@@ -19,6 +19,9 @@ class _BaseException(Exception):
         if hasattr(self, '__cause__'):
             self.__cause__ = None
 
+class ArgError(_BaseException):
+    pass
+
 class ArchiveError(_BaseException):
     pass
 

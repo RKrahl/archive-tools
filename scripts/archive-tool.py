@@ -22,9 +22,6 @@ suffix_map = {
 }
 """Map path suffix to compression mode."""
 
-class ArgError(Exception):
-    pass
-
 
 def showwarning(message, category, filename, lineno, file=None, line=None):
     """Display ArchiveWarning in a somewhat more user friendly manner.
