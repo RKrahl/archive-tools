@@ -118,7 +118,7 @@ setup(
     url = "https://github.com/RKrahl/archive-tools",
     license = "Apache-2.0",
     requires = ["PyYAML"],
-    packages = ["archive"],
+    packages = ["archive", "archive.cli"],
     scripts = ["scripts/archive-tool.py", "scripts/imap-to-archive.py"],
     classifiers = [
         "Development Status :: 3 - Alpha",
