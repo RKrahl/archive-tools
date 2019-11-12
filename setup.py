@@ -43,7 +43,7 @@ try:
     version = setuptools_scm.get_version()
     with open(".version", "wt") as f:
         f.write(version)
-except ImportError:
+except (ImportError, LookupError):
     try:
         with open(".version", "rt") as f:
             version = f.read()
@@ -67,7 +67,7 @@ from archive.exception import *
 '''
 
     def initialize_options(self):
-        self.package = None
+        self.packages = None
         self.package_dir = None
 
     def finalize_options(self):
