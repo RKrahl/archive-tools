@@ -1,7 +1,7 @@
 |travis| |pypi|
 
-.. |travis| image:: https://img.shields.io/travis/RKrahl/archive-tools/master.svg
-   :target: https://travis-ci.org/RKrahl/archive-tools
+.. |travis| image:: https://img.shields.io/travis/com/RKrahl/archive-tools/master.svg
+   :target: https://travis-ci.com/RKrahl/archive-tools
    :alt: travis build status
 
 .. |pypi| image:: https://img.shields.io/pypi/v/archive-tools.svg
