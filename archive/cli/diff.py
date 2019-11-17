@@ -37,8 +37,7 @@ def diff(args):
     algorithm = _common_checksum(archive1.manifest, archive2.manifest)
     # In principle, we might rely on the fact that the manifest of an
     # archive is always sorted at creation time.  On the other hand,
-    # as we need to rely on this, we sort them again to be on the safe
-    # side.
+    # as we depend on this, we sort them again to be on the safe side.
     archive1.manifest.sort()
     archive2.manifest.sort()
     it1 = iter(archive1.manifest)
