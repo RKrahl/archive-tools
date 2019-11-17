@@ -41,7 +41,7 @@ def archive_tool():
     if not hasattr(args, "func"):
         argparser.error("subcommand is required")
     try:
-        args.func(args)
+        sys.exit(args.func(args))
     except ArgError as e:
         argparser.error(str(e))
     except ArchiveError as e:

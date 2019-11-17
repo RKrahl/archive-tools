@@ -8,6 +8,7 @@ from archive.archive import Archive
 def verify(args):
     with Archive().open(args.archive) as archive:
         archive.verify()
+    return 0
 
 def add_parser(subparsers):
     parser = subparsers.add_parser('verify',

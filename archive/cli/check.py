@@ -50,6 +50,7 @@ def check(args):
                     print(str(fi.path))
                 if fi.is_dir():
                     skip = True
+    return 0
 
 def add_parser(subparsers):
     parser = subparsers.add_parser('check',

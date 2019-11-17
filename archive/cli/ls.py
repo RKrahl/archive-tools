@@ -39,6 +39,7 @@ def ls(args):
             ls_checksum_format(archive, args.checksum)
         else:
             raise ValueError("invalid format '%s'" % args.format)
+    return 0
 
 def add_parser(subparsers):
     parser = subparsers.add_parser('ls', help="list files in the archive")
