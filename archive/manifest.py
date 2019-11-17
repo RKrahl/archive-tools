@@ -214,3 +214,8 @@ class Manifest(Sequence):
         yaml.dump([ fi.as_dict() for fi in self ],
                   stream=fileobj, encoding="ascii",
                   default_flow_style=False, explicit_start=True)
+
+    def sort(self, *, key=None, reverse=False):
+        if key is None:
+            key = lambda fi: fi.path
+        self.fileinfos.sort(key=key, reverse=reverse)

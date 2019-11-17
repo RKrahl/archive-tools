@@ -117,3 +117,35 @@ def test_manifest_exclude_explicit_include(test_dir, monkeypatch):
     manifest = Manifest(paths=paths, excludes=excludes)
     data = sub_testdata(testdata, excludes[0], paths[1])
     check_manifest(manifest, **data)
+
+def test_mnifest_sort(test_dir, monkeypatch):
+    """Test the Manifest.sort() method.
+    """
+    monkeypatch.chdir(str(test_dir))
+    manifest = Manifest(paths=[Path("base")])
+    check_manifest(manifest, **testdata)
+    fileinfos = set(manifest)
+    manifest.sort(key = lambda fi: getattr(fi, "size", 0), reverse=True)
+    assert set(manifest) == fileinfos
+    prev = None
+    for fi in manifest:
+        k = getattr(fi, "size", 0)
+        if prev is not None:
+            assert k <= prev
+        prev = k
+    manifest.sort(key = lambda fi: (fi.type, fi.path))
+    assert set(manifest) == fileinfos
+    prev = None
+    for fi in manifest:
+        if prev is not None:
+            assert fi.type >= prev.type
+            if fi.type == prev.type:
+                assert fi.path >= prev.path
+        prev = fi
+    manifest.sort()
+    assert set(manifest) == fileinfos
+    prev = None
+    for fi in manifest:
+        if prev is not None:
+            assert fi.path >= prev.path
+        prev = fi

@@ -1,6 +1,10 @@
 History of changes to archive-tools
 ===================================
 
+0.4 (not yet released)
+    Bug fixes and minor changes
+      + Add a :meth:`Manifest.sort` method.
+
 0.3 (2019-08-06)
     New features
       + #33: `archive-tool create` should have an option to exclude files.
