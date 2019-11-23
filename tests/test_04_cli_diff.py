@@ -61,25 +61,6 @@ def test_diff_equal(test_dir, copy_data, archive_name, monkeypatch):
         f.seek(0)
         assert get_output(f) == []
 
-def test_diff_wrong_type(test_dir, copy_data, archive_name, monkeypatch):
-    """Diff two archives with one entry having a wrong type.
-    """
-    monkeypatch.chdir(str(copy_data))
-    p = Path("base", "rnd.dat")
-    p.unlink()
-    p.symlink_to(Path("data", "rnd.dat"))
-    archive_ref_path = test_dir / "archive.tar"
-    archive_path = test_dir / (archive_name + ".bz2")
-    Archive().create(archive_path, "bz2", [Path("base")])
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["diff", str(archive_ref_path), str(archive_path)]
-        callscript("archive-tool.py", args, returncode=102, stdout=f)
-        f.seek(0)
-        out = get_output(f)
-        assert len(out) == 1
-        assert out[0] == ("Entries %s:%s and %s:%s have different type"
-                          % (archive_ref_path, p, archive_path, p))
-
 def test_diff_modified_file(test_dir, copy_data, archive_name, monkeypatch):
     """Diff two archives having one file's content modified.
     """
@@ -117,6 +98,25 @@ def test_diff_symlink_target(test_dir, copy_data, archive_name, monkeypatch):
         assert out[0] == ("Symbol links %s:%s and %s:%s have different target"
                           % (archive_ref_path, p, archive_path, p))
 
+def test_diff_wrong_type(test_dir, copy_data, archive_name, monkeypatch):
+    """Diff two archives with one entry having a wrong type.
+    """
+    monkeypatch.chdir(str(copy_data))
+    p = Path("base", "rnd.dat")
+    p.unlink()
+    p.symlink_to(Path("data", "rnd.dat"))
+    archive_ref_path = test_dir / "archive.tar"
+    archive_path = test_dir / (archive_name + ".bz2")
+    Archive().create(archive_path, "bz2", [Path("base")])
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["diff", str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = get_output(f)
+        assert len(out) == 1
+        assert out[0] == ("Entries %s:%s and %s:%s have different type"
+                          % (archive_ref_path, p, archive_path, p))
+
 def test_diff_missing_files(test_dir, copy_data, archive_name, monkeypatch):
     """Diff two archives having one file's name changed.
     """
@@ -135,3 +135,19 @@ def test_diff_missing_files(test_dir, copy_data, archive_name, monkeypatch):
         assert len(out) == 2
         assert out[0] == "Only in %s: %s" % (archive_path, p2)
         assert out[1] == "Only in %s: %s" % (archive_ref_path, p1)
+
+def test_diff_metadata(test_dir, copy_data, archive_name, monkeypatch):
+    """Diff two archives having one file's file system metadata modified.
+    This difference should be ignored by default.
+    """
+    monkeypatch.chdir(str(copy_data))
+    p = Path("base", "rnd.dat")
+    p.chmod(0o0444)
+    archive_ref_path = test_dir / "archive.tar"
+    archive_path = test_dir / (archive_name + ".bz2")
+    Archive().create(archive_path, "bz2", [Path("base")])
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["diff", str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_output(f) == []
