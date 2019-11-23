@@ -158,7 +158,8 @@ def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
         elif entry["Type"] == "l":
             assert fileinfo.target == entry["Target"]
 
-def callscript(scriptname, args, stdin=None, stdout=None, stderr=None):
+def callscript(scriptname, args, returncode=0,
+               stdin=None, stdout=None, stderr=None):
     try:
         script_dir = os.environ['BUILD_SCRIPTS_DIR']
     except KeyError:
@@ -166,4 +167,5 @@ def callscript(scriptname, args, stdin=None, stdout=None, stderr=None):
     script = Path(script_dir, scriptname)
     cmd = [sys.executable, str(script)] + args
     print("\n>", *cmd)
-    subprocess.check_call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
+    retcode = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
+    assert retcode == returncode

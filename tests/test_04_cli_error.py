@@ -46,9 +46,7 @@ def test_cli_missing_command(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = []
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 2
+        callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
         assert line.startswith("usage: archive-tool.py ")
@@ -62,9 +60,7 @@ def test_cli_bogus_command(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["bogus_cmd"]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 2
+        callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
         assert line.startswith("usage: archive-tool.py ")
@@ -78,9 +74,7 @@ def test_cli_create_bogus_compression(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["create", "--compression=bogus_comp", archive_name, "base"]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 2
+        callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
         assert line.startswith("usage: archive-tool.py ")
@@ -96,9 +90,7 @@ def test_cli_ls_bogus_format(test_dir, archive_name, monkeypatch):
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", "--format=bogus_fmt", archive_name]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 2
+        callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
         assert line.startswith("usage: archive-tool.py ")
@@ -112,9 +104,7 @@ def test_cli_create_normalized_path(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["create", archive_name, "base/empty/.."]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 1
+        callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "invalid path base/empty/..: must be normalized" in line
@@ -123,9 +113,7 @@ def test_cli_create_rel_start_basedir(test_dir, archive_name, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["create", "--basedir=base/data", archive_name, "base/msg.txt"]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 1
+        callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "'base/msg.txt' does not start with 'base/data'" in line
@@ -134,9 +122,7 @@ def test_cli_ls_archive_not_found(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", "bogus.tar"]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 1
+        callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "No such file or directory: 'bogus.tar'" in line
@@ -147,9 +133,7 @@ def test_cli_ls_checksum_invalid_hash(test_dir, archive_name, monkeypatch):
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", "--format=checksum", "--checksum=bogus", archive_name]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 1
+        callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "'bogus' hashes not available" in line
@@ -160,9 +144,7 @@ def test_cli_info_missing_entry(test_dir, archive_name, monkeypatch):
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["info", archive_name, "base/data/not-present"]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 1
+        callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "base/data/not-present: not found in archive" in line
@@ -173,9 +155,7 @@ def test_cli_integrity_no_manifest(test_dir, archive_name, monkeypatch):
         tarf.add("base", recursive=True)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", archive_name]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 3
+        callscript("archive-tool.py", args, returncode=3, stderr=f)
         f.seek(0)
         line = f.readline()
         assert ".manifest.yaml not found" in line
@@ -201,9 +181,7 @@ def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
         tarf.add("base")
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["verify", archive_name]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 3
+        callscript("archive-tool.py", args, returncode=3, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "%s:%s: missing" % (archive_name, missing) in line
@@ -214,9 +192,7 @@ def test_cli_check_missing_files(test_dir, archive_name, monkeypatch):
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["check", archive_name]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 2
+        callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
         assert line.startswith("usage: archive-tool.py ")
@@ -232,9 +208,7 @@ def test_cli_check_stdin_and_files(test_dir, archive_name, monkeypatch):
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["check", "--stdin", archive_name, "base"]
-        with pytest.raises(subprocess.CalledProcessError) as exc_info:
-            callscript("archive-tool.py", args, stderr=f)
-        assert exc_info.value.returncode == 2
+        callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
         assert line.startswith("usage: archive-tool.py ")
