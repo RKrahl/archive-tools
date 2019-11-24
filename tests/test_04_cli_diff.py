@@ -136,6 +136,29 @@ def test_diff_missing_files(test_dir, copy_data, archive_name, monkeypatch):
         assert out[0] == "Only in %s: %s" % (archive_path, p2)
         assert out[1] == "Only in %s: %s" % (archive_ref_path, p1)
 
+def test_diff_mult(test_dir, copy_data, archive_name, monkeypatch):
+    """Diff two archives having multiple differences.
+    """
+    monkeypatch.chdir(str(copy_data))
+    pm = Path("base", "data", "rnd.dat")
+    shutil.copy(str(gettestdata("rnd2.dat")), str(pm))
+    p1 = Path("base", "msg.txt")
+    p2 = Path("base", "o.txt")
+    p1.rename(p2)
+    archive_ref_path = test_dir / "archive.tar"
+    archive_path = test_dir / (archive_name + ".bz2")
+    Archive().create(archive_path, "bz2", [Path("base")])
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["diff", str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = get_output(f)
+        assert len(out) == 3
+        assert out[0] == ("Files %s:%s and %s:%s differ"
+                          % (archive_ref_path, pm, archive_path, pm))
+        assert out[1] == "Only in %s: %s" % (archive_ref_path, p1)
+        assert out[2] == "Only in %s: %s" % (archive_path, p2)
+
 def test_diff_metadata(test_dir, copy_data, archive_name, monkeypatch):
     """Diff two archives having one file's file system metadata modified.
     This difference should be ignored by default.
@@ -160,3 +183,41 @@ def test_diff_metadata(test_dir, copy_data, archive_name, monkeypatch):
         assert len(out) == 1
         assert out[0] == ("File system metadata for %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, p))
+
+def test_diff_basedir_equal(test_dir, copy_data, archive_name, monkeypatch):
+    """Diff two archives with different base directories having equal content.
+    """
+    monkeypatch.chdir(str(copy_data))
+    newbase = Path("newbase")
+    Path("base").rename(newbase)
+    archive_ref_path = test_dir / "archive.tar"
+    archive_path = test_dir / (archive_name + ".bz2")
+    Archive().create(archive_path, "bz2", [newbase])
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["diff", str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert get_output(f) == []
+
+def test_diff_basedir_mod_file(test_dir, copy_data, archive_name, monkeypatch):
+    """Diff two archives with different base directories having one file's
+    content modified.
+    """
+    monkeypatch.chdir(str(copy_data))
+    base = Path("base")
+    newbase = Path("newbase")
+    base.rename(newbase)
+    p = base / "rnd.dat"
+    pn = newbase / "rnd.dat"
+    shutil.copy(str(gettestdata("rnd2.dat")), str(pn))
+    archive_ref_path = test_dir / "archive.tar"
+    archive_path = test_dir / (archive_name + ".bz2")
+    Archive().create(archive_path, "bz2", [newbase])
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["diff", str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, returncode=101, stdout=f)
+        f.seek(0)
+        out = get_output(f)
+        assert len(out) == 1
+        assert out[0] == ("Files %s:%s and %s:%s differ"
+                          % (archive_ref_path, p, archive_path, pn))
