@@ -70,6 +70,9 @@ def diff(args):
                           % (archive1.path, fi1.path, archive2.path, fi2.path))
                     status = max(status, 101)
             elif fi1.type == "f":
+                # Note: we don't need to compare the size, because if
+                # the size differs, it's mostly certain that also the
+                # checksums do.
                 if fi1.checksum[algorithm] != fi2.checksum[algorithm]:
                     print("Files %s:%s and %s:%s differ"
                           % (archive1.path, fi1.path, archive2.path, fi2.path))
