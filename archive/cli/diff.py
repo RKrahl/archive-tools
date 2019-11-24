@@ -74,6 +74,15 @@ def diff(args):
                     print("Files %s:%s and %s:%s differ"
                           % (archive1.path, fi1.path, archive2.path, fi2.path))
                     status = max(status, 101)
+                elif args.report_meta and (fi1.uid != fi2.uid or
+                                           fi1.uname != fi2.uname or
+                                           fi1.gid != fi2.gid or
+                                           fi1.gname != fi2.gname or
+                                           fi1.mode != fi2.mode or
+                                           int(fi1.mtime) != int(fi2.mtime)):
+                    print("File system metadata for %s:%s and %s:%s differ"
+                          % (archive1.path, fi1.path, archive2.path, fi2.path))
+                    status = max(status, 100)
             fi1 = _next(it1)
             fi2 = _next(it2)
     return status
@@ -82,6 +91,8 @@ def add_parser(subparsers):
     parser = subparsers.add_parser('diff',
                                    help=("show the differences between "
                                          "two archives"))
+    parser.add_argument('--report-meta', action='store_true',
+                        help=("also show differences in file system metadata"))
     parser.add_argument('archive1', type=Path,
                         help=("first archive to compare"))
     parser.add_argument('archive2', type=Path,

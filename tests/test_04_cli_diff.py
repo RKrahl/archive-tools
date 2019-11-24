@@ -151,3 +151,12 @@ def test_diff_metadata(test_dir, copy_data, archive_name, monkeypatch):
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         assert get_output(f) == []
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["diff", "--report-meta",
+                str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, returncode=100, stdout=f)
+        f.seek(0)
+        out = get_output(f)
+        assert len(out) == 1
+        assert out[0] == ("File system metadata for %s:%s and %s:%s differ"
+                          % (archive_ref_path, p, archive_path, p))
