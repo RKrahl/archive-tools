@@ -298,3 +298,24 @@ class Archive:
                              itemname, "wrong link target")
         else:
             raise ArchiveIntegrityError("%s: invalid type" % (itemname))
+
+    def extract(self, targetdir, inclmeta=False):
+        # We extract the directories last in reverse order.  This way,
+        # the directory attributes, in particular the file modification
+        # time, is set correctly after the file content is written into
+        # the directory.
+        dirstack = []
+        if inclmeta:
+            for mi in self.manifest.metadata:
+                self._file.extract(mi, path=str(targetdir))
+        for fi in self.manifest:
+            if fi.is_dir():
+                dirstack.append(fi.path)
+            else:
+                self._file.extract(self._arcname(fi.path), path=str(targetdir))
+        while True:
+            try:
+                p = dirstack.pop()
+            except IndexError:
+                break
+            self._file.extract(self._arcname(p), path=str(targetdir))

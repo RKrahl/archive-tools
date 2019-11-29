@@ -2,7 +2,8 @@ History of changes to archive-tools
 ===================================
 
 0.4 (not yet released)
-    Bug fixes and minor changes
+    New features
+      + #41: Add a :meth:`Archive.extract` method.
       + Add a :meth:`Manifest.sort` method.
 
 0.3 (2019-08-06)

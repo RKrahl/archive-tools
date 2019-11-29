@@ -95,7 +95,8 @@ def test_check_manifest(test_dir, dep_testcase):
         check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)
 
 @pytest.mark.dependency()
-def test_check_content(test_dir, dep_testcase):
+@pytest.mark.parametrize("inclmeta", [False, True])
+def test_check_content(test_dir, dep_testcase, inclmeta):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
     outdir = test_dir / "out"
@@ -105,8 +106,11 @@ def test_check_content(test_dir, dep_testcase):
         cwd = outdir / "archive" / test_dir.relative_to(test_dir.anchor)
     else:
         cwd = outdir
-    with tarfile.open(str(archive_path), "r") as tarf:
-        tarf.extractall(path=str(outdir))
+    with Archive().open(archive_path) as archive:
+        archive.extract(outdir, inclmeta=inclmeta)
+        metadata = archive.manifest.metadata
+    for f in metadata:
+        assert (outdir / f).is_file() == inclmeta
     try:
         sha256 = subprocess.Popen([sha256sum, "--check"], 
                                   cwd=str(cwd), stdin=subprocess.PIPE)
