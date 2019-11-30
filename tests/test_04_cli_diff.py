@@ -278,3 +278,36 @@ def test_diff_basedir_mod_file(test_data, request, monkeypatch):
         assert len(out) == 1
         assert out[0] == ("Files %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, pn))
+
+@pytest.mark.parametrize("abspath", [False, True])
+@pytest.mark.xfail(reason="--skip-dir-content flag not yet implemented")
+def test_diff_dircontent(test_data, request, monkeypatch, abspath):
+    """Diff two archives with one subdirectory missing.
+    """
+    monkeypatch.chdir(str(test_data))
+    if abspath:
+        archive_ref_path = Path("archive-abs.tar")
+        base_dir = test_data / "base"
+    else:
+        archive_ref_path = Path("archive-rel.tar")
+        base_dir = Path("base")
+    pd = base_dir / "data"
+    shutil.rmtree(str(pd))
+    archive_path = archive_name(request, abspath)
+    Archive().create(archive_path, "bz2", [base_dir])
+    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+        args = ["diff", str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = get_output(f)
+        assert len(out) == 2
+        assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
+        assert out[1] == "Only in %s: %s" % (archive_ref_path, pd / "rnd.dat")
+    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+        args = ["diff", "--skip-dir-content",
+                str(archive_ref_path), str(archive_path)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = get_output(f)
+        assert len(out) == 1
+        assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
