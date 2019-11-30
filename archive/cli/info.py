@@ -27,6 +27,7 @@ def info(args):
         if fi.is_symlink():
             infolines.append("Target: %s" % fi.target)
         print(*infolines, sep="\n")
+    return 0
 
 def add_parser(subparsers):
     parser = subparsers.add_parser('info',

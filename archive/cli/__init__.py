@@ -7,7 +7,7 @@ import sys
 import warnings
 from archive.exception import *
 
-subcmds = [ "create", "verify", "ls", "info", "check", ]
+subcmds = [ "create", "verify", "ls", "info", "check", "diff", ]
 
 def showwarning(message, category, filename, lineno, file=None, line=None):
     """Display ArchiveWarning in a somewhat more user friendly manner.
@@ -41,7 +41,7 @@ def archive_tool():
     if not hasattr(args, "func"):
         argparser.error("subcommand is required")
     try:
-        args.func(args)
+        sys.exit(args.func(args))
     except ArgError as e:
         argparser.error(str(e))
     except ArchiveError as e:

@@ -25,6 +25,7 @@ def create(args):
     archive = Archive().create(args.archive, args.compression, args.files, 
                                basedir=args.basedir, excludes=args.exclude, 
                                dedup=DedupMode(args.deduplicate))
+    return 0
 
 def add_parser(subparsers):
     parser = subparsers.add_parser('create', help="create the archive")
