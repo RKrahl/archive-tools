@@ -280,7 +280,6 @@ def test_diff_basedir_mod_file(test_data, request, monkeypatch):
                           % (archive_ref_path, p, archive_path, pn))
 
 @pytest.mark.parametrize("abspath", [False, True])
-@pytest.mark.xfail(reason="--skip-dir-content flag not yet implemented")
 def test_diff_dircontent(test_data, request, monkeypatch, abspath):
     """Diff two archives with one subdirectory missing.
     """

@@ -14,9 +14,18 @@ def _common_checksum(manifest1, manifest2):
         raise ArchiveReadError("No common checksum algorithm, "
                                "cannot compare archive content.")
 
-def _next(it):
+def _next(it, skip=None):
     try:
-        return next(it)
+        while True:
+            fi = next(it)
+            if skip:
+                try:
+                    fi.path.relative_to(skip)
+                except ValueError:
+                    pass
+                else:
+                    continue
+            return fi
     except StopIteration:
         return None
 
@@ -52,11 +61,17 @@ def diff(args):
             break
         elif path1 is None or path1 > path2:
             print("Only in %s: %s" % (archive2.path, fi2.path))
-            fi2 = _next(it2)
+            if args.skip_dir_content and fi2.is_dir():
+                fi2 = _next(it2, skip=fi2.path)
+            else:
+                fi2 = _next(it2)
             status = max(status, 102)
         elif path2 is None or path2 > path1:
             print("Only in %s: %s" % (archive1.path, fi1.path))
-            fi1 = _next(it1)
+            if args.skip_dir_content and fi1.is_dir():
+                fi1 = _next(it1, skip=fi1.path)
+            else:
+                fi1 = _next(it1)
             status = max(status, 102)
         else:
             assert path1 == path2
@@ -96,6 +111,10 @@ def add_parser(subparsers):
                                          "two archives"))
     parser.add_argument('--report-meta', action='store_true',
                         help=("also show differences in file system metadata"))
+    parser.add_argument('--skip-dir-content', action='store_true',
+                        help=("in the case of a subdirectory missing from "
+                              "one archive, only report the directory, but "
+                              "skip its content"))
     parser.add_argument('archive1', type=Path,
                         help=("first archive to compare"))
     parser.add_argument('archive2', type=Path,
