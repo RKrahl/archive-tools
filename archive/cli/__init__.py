@@ -7,7 +7,7 @@ import sys
 import warnings
 from archive.exception import *
 
-subcmds = [ "create", "verify", "ls", "info", "check", "diff", ]
+subcmds = [ "create", "verify", "ls", "info", "check", "diff", "find", ]
 
 def showwarning(message, category, filename, lineno, file=None, line=None):
     """Display ArchiveWarning in a somewhat more user friendly manner.
