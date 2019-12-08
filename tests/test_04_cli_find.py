@@ -75,7 +75,7 @@ def test_find_all(test_dir, abspath):
     """
     archives = archive_paths(test_dir, abspath)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["find"] + archives
+        args = ["find"] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         expected_out = []
