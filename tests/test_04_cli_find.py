@@ -65,7 +65,7 @@ def test_dir(tmpdir):
             setup_testdata(tmpdir, **data)
             Archive().create(rel_paths[i], "bz2", [base])
             Archive().create(abs_paths[i], "bz2", [tmpdir / base])
-            shutil.rmtree(base)
+            shutil.rmtree(str(base))
     return tmpdir
 
 @pytest.mark.parametrize("abspath", [False, True])
