@@ -17,9 +17,8 @@ def find(args):
     searchfilter = SearchFilter(args)
     for path in args.archives:
         with Archive().open(path) as archive:
-            for fi in archive.manifest:
-                if searchfilter(fi):
-                    print("%s:%s" % (path, fi.path))
+            for fi in filter(searchfilter, archive.manifest):
+                print("%s:%s" % (path, fi.path))
 
 def add_parser(subparsers):
     parser = subparsers.add_parser('find',
