@@ -5,29 +5,24 @@ import datetime
 from pathlib import Path
 import pytest
 from archive.manifest import FileInfo, Manifest
-from conftest import gettestdata, setup_testdata, sub_testdata, check_manifest
+from conftest import (gettestdata, setup_testdata, sub_testdata, check_manifest,
+                      TestDataDir, TestDataFile, TestDataSymLink)
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    TestDataDir(Path("base"), 0o755),
+    TestDataDir(Path("base", "data"), 0o750),
+    TestDataDir(Path("base", "empty"), 0o755),
+    TestDataFile(Path("base", "msg.txt"), 0o644),
+    TestDataFile(Path("base", "data", "rnd.dat"), 0o600),
+    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 
@@ -43,7 +38,7 @@ def test_manifest_from_paths(test_dir, monkeypatch):
     assert manifest.version == Manifest.Version
     assert isinstance(manifest.date, datetime.datetime)
     assert manifest.checksums == tuple(FileInfo.Checksums)
-    check_manifest(manifest, **testdata)
+    check_manifest(manifest, testdata)
 
 
 def test_manifest_from_fileobj():
@@ -58,7 +53,7 @@ def test_manifest_from_fileobj():
     assert manifest.version == "1.1"
     assert isinstance(manifest.date, datetime.datetime)
     assert manifest.checksums == ("sha256",)
-    check_manifest(manifest, **testdata)
+    check_manifest(manifest, testdata)
 
 
 def test_manifest_exclude_nonexistent(test_dir, monkeypatch):
@@ -71,7 +66,7 @@ def test_manifest_exclude_nonexistent(test_dir, monkeypatch):
     excludes = [Path("base", "non-existent.dat")]
     manifest = Manifest(paths=paths, excludes=excludes)
     data = sub_testdata(testdata, excludes[0])
-    check_manifest(manifest, **data)
+    check_manifest(manifest, data)
 
 
 def test_manifest_exclude_file(test_dir, monkeypatch):
@@ -82,7 +77,7 @@ def test_manifest_exclude_file(test_dir, monkeypatch):
     excludes = [Path("base", "msg.txt")]
     manifest = Manifest(paths=paths, excludes=excludes)
     data = sub_testdata(testdata, excludes[0])
-    check_manifest(manifest, **data)
+    check_manifest(manifest, data)
 
 
 def test_manifest_exclude_subdir(test_dir, monkeypatch):
@@ -93,7 +88,7 @@ def test_manifest_exclude_subdir(test_dir, monkeypatch):
     excludes = [Path("base", "data")]
     manifest = Manifest(paths=paths, excludes=excludes)
     data = sub_testdata(testdata, excludes[0])
-    check_manifest(manifest, **data)
+    check_manifest(manifest, data)
 
 
 def test_manifest_exclude_samelevel(test_dir, monkeypatch):
@@ -104,7 +99,7 @@ def test_manifest_exclude_samelevel(test_dir, monkeypatch):
     excludes = [paths[1]]
     manifest = Manifest(paths=paths, excludes=excludes)
     data = sub_testdata(testdata, Path("base"), paths[0])
-    check_manifest(manifest, **data)
+    check_manifest(manifest, data)
 
 
 def test_manifest_exclude_explicit_include(test_dir, monkeypatch):
@@ -116,14 +111,14 @@ def test_manifest_exclude_explicit_include(test_dir, monkeypatch):
     excludes = [Path("base", "data")]
     manifest = Manifest(paths=paths, excludes=excludes)
     data = sub_testdata(testdata, excludes[0], paths[1])
-    check_manifest(manifest, **data)
+    check_manifest(manifest, data)
 
 def test_mnifest_sort(test_dir, monkeypatch):
     """Test the Manifest.sort() method.
     """
     monkeypatch.chdir(str(test_dir))
     manifest = Manifest(paths=[Path("base")])
-    check_manifest(manifest, **testdata)
+    check_manifest(manifest, testdata)
     fileinfos = set(manifest)
     manifest.sort(key = lambda fi: getattr(fi, "size", 0), reverse=True)
     assert set(manifest) == fileinfos

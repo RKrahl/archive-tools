@@ -4,33 +4,28 @@
 from pathlib import Path
 import pytest
 from archive import Archive
-from conftest import setup_testdata, sub_testdata, check_manifest, callscript
+from conftest import (setup_testdata, sub_testdata, check_manifest, callscript,
+                      TestDataDir, TestDataFile, TestDataSymLink)
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "data", "sub"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "rnd.dat"), 0o600),
-        (Path("base", "data", "rnd1.dat"), 0o600),
-        (Path("base", "data", "rnd2.dat"), 0o600),
-        (Path("base", "data", "sub", "rnd3.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd1.dat")),
-    ]
-}
+testdata = [
+    TestDataDir(Path("base"), 0o755),
+    TestDataDir(Path("base", "data"), 0o750),
+    TestDataDir(Path("base", "data", "sub"), 0o750),
+    TestDataDir(Path("base", "empty"), 0o755),
+    TestDataFile(Path("base", "msg.txt"), 0o644),
+    TestDataFile(Path("base", "rnd.dat"), 0o600),
+    TestDataFile(Path("base", "data", "rnd1.dat"), 0o600),
+    TestDataFile(Path("base", "data", "rnd2.dat"), 0o600),
+    TestDataFile(Path("base", "data", "sub", "rnd3.dat"), 0o600),
+    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd1.dat")),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 
@@ -44,7 +39,7 @@ def test_cli_create_exclude_dir(test_dir, archive_name, monkeypatch):
     args = ["create", "--exclude", str(exclude), archive_name, paths]
     callscript("archive-tool.py", args)
     with Archive().open(Path(archive_name)) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)
 
 
 def test_cli_create_exclude_mult(test_dir, archive_name, monkeypatch):
@@ -65,7 +60,7 @@ def test_cli_create_exclude_mult(test_dir, archive_name, monkeypatch):
     args = ["create"] + excl_args + [archive_name, paths]
     callscript("archive-tool.py", args)
     with Archive().open(Path(archive_name)) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)
 
 
 def test_cli_create_exclude_include(test_dir, archive_name, monkeypatch):
@@ -80,4 +75,4 @@ def test_cli_create_exclude_include(test_dir, archive_name, monkeypatch):
     args = ["create", "--exclude", str(exclude), archive_name] + paths
     callscript("archive-tool.py", args)
     with Archive().open(Path(archive_name)) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)

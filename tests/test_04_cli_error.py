@@ -9,28 +9,23 @@ import tarfile
 from tempfile import TemporaryFile
 from archive.manifest import Manifest
 import pytest
-from conftest import setup_testdata, callscript
+from conftest import (setup_testdata, callscript,
+                      TestDataDir, TestDataFile, TestDataSymLink)
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    TestDataDir(Path("base"), 0o755),
+    TestDataDir(Path("base", "data"), 0o750),
+    TestDataDir(Path("base", "empty"), 0o755),
+    TestDataFile(Path("base", "msg.txt"), 0o644),
+    TestDataFile(Path("base", "data", "rnd.dat"), 0o600),
+    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 def test_cli_helpmessage(test_dir, monkeypatch):

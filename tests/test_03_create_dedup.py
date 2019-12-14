@@ -10,7 +10,8 @@ import pytest
 from pytest_dependency import depends
 from archive.archive import Archive, DedupMode
 from archive.manifest import Manifest
-from conftest import checksums, setup_testdata, check_manifest
+from conftest import (checksums, setup_testdata, check_manifest,
+                      TestDataDir, TestDataFile, TestDataSymLink)
 
 
 # Setup a directory with some test data to be put into an archive.
@@ -19,30 +20,24 @@ src = Path("base", "data", "rnd.dat")
 src_mode = 0o600
 dest_lnk = src.with_name("rnd_lnk.dat")
 dest_cp = src.with_name("rnd_cp.dat")
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (src, src_mode),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    TestDataDir(Path("base"), 0o755),
+    TestDataDir(Path("base", "data"), 0o750),
+    TestDataDir(Path("base", "empty"), 0o755),
+    TestDataFile(Path("base", "msg.txt"), 0o644),
+    TestDataFile(src, src_mode),
+    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+]
 sha256sum = "sha256sum"
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     os.link(str(tmpdir / src), str(tmpdir / dest_lnk))
-    testdata["files"].append((dest_lnk, src_mode))
+    testdata.append(TestDataFile(dest_lnk, src_mode))
     checksums[dest_lnk.name] = checksums[src.name]
     shutil.copy(str(tmpdir / src), str(tmpdir / dest_cp))
-    testdata["files"].append((dest_cp, src_mode))
+    testdata.append(TestDataFile(dest_cp, src_mode))
     checksums[dest_cp.name] = checksums[src.name]
     return tmpdir
 
@@ -77,7 +72,7 @@ def test_check_manifest(test_dir, dep_testcase):
     dedup = dep_testcase
     archive_path = test_dir / archive_name(dedup)
     with Archive().open(archive_path) as archive:
-        check_manifest(archive.manifest, **testdata)
+        check_manifest(archive.manifest, testdata)
 
 @pytest.mark.dependency()
 def test_check_content(test_dir, dep_testcase):
@@ -93,9 +88,10 @@ def test_check_content(test_dir, dep_testcase):
                                   cwd=str(outdir), stdin=subprocess.PIPE)
     except FileNotFoundError:
         pytest.skip("%s program not found" % sha256sum)
-    for f, _ in testdata["files"]:
-        l = "%s  %s\n" % (checksums[f.name], f)
-        sha256.stdin.write(l.encode('ascii'))
+    for f in testdata:
+        if f.type == 'f':
+            l = "%s  %s\n" % (checksums[f.path.name], f.path)
+            sha256.stdin.write(l.encode('ascii'))
     sha256.stdin.close()
     sha256.wait()
     assert sha256.returncode == 0

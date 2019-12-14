@@ -5,22 +5,16 @@ import datetime
 from pathlib import Path
 import pytest
 from archive import Archive
-from conftest import gettestdata
+from conftest import gettestdata, TestDataDir, TestDataFile, TestDataSymLink
 
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    TestDataDir(Path("base"), 0o755),
+    TestDataDir(Path("base", "data"), 0o750),
+    TestDataDir(Path("base", "empty"), 0o755),
+    TestDataFile(Path("base", "msg.txt"), 0o644),
+    TestDataFile(Path("base", "data", "rnd.dat"), 0o600),
+    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+]
 
 @pytest.fixture(scope="module")
 def legacy_1_0_archive():

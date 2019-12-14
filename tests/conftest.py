@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import pytest
+from archive.tools import ft_mode
 
 
 _cleanup = True
@@ -89,20 +90,81 @@ def tmpdir(request):
 def archive_name(request):
     return "archive-%s.tar" % request.function.__name__
 
-def setup_testdata(main_dir, dirs=[], files=[], symlinks=[]):
-    for d, m in dirs:
-        p = main_dir / d
-        p.mkdir(parents=True)
-        p.chmod(m)
-    for f, m in files:
-        p = main_dir / f
-        shutil.copy(str(gettestdata(f.name)), str(p))
-        p.chmod(m)
-    for f, t in symlinks:
-        p = main_dir / f
-        p.symlink_to(t)
+class TestDataItem:
 
-def sub_testdata(data, exclude, include=None):
+    def __init__(self, path):
+        self.path = path
+
+    @property
+    def type(self):
+        raise NotImplementedError
+
+    @property
+    def mode(self):
+        raise NotImplementedError
+
+    @property
+    def st_mode(self):
+        return ft_mode[self.type] | self.mode
+
+    def create(self, main_dir):
+        raise NotImplementedError
+
+class TestDataFileOrDir(TestDataItem):
+
+    def __init__(self, path, mode):
+        super().__init__(path)
+        self._mode = mode
+
+    @property
+    def mode(self):
+        return self._mode
+
+class TestDataDir(TestDataFileOrDir):
+
+    @property
+    def type(self):
+        return 'd'
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        path.mkdir(parents=True)
+        path.chmod(self.mode)
+
+class TestDataFile(TestDataFileOrDir):
+
+    @property
+    def type(self):
+        return 'f'
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        shutil.copy(str(gettestdata(self.path.name)), str(path))
+        path.chmod(self.mode)
+
+class TestDataSymLink(TestDataItem):
+
+    def __init__(self, path, target):
+        super().__init__(path)
+        self.target = target
+
+    @property
+    def type(self):
+        return 'l'
+
+    @property
+    def mode(self):
+        return 0o777
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        path.symlink_to(self.target)
+
+def setup_testdata(main_dir, items):
+    for item in sorted(items, key=lambda i: i.path):
+        item.create(main_dir)
+
+def sub_testdata(items, exclude, include=None):
     """Compile a subset of the testdata with some items removed.
     """
     def _startswith(p, o):
@@ -111,52 +173,27 @@ def sub_testdata(data, exclude, include=None):
             return True
         except ValueError:
             return False
-    sd = {}
-    for k in data.keys():
-        items = []
-        for i in data[k]:
-            if _startswith(i[0], exclude):
-                if include and _startswith(i[0], include):
-                    pass
-                else:
-                    continue
-            items.append(i)
-        sd[k] = items
-    return sd
+    for item in items:
+        if _startswith(item.path, exclude):
+            if include and _startswith(item.path, include):
+                pass
+            else:
+                continue
+        yield item
 
-def get_testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
-    items = []
-    for p, m in dirs:
-        if prefix_dir:
-            p = prefix_dir / p
-        items.append({"Path": p, "Type": "d", "Mode": m, 
-                      "st_Mode": (stat.S_IFDIR | m)})
-    for p, m in files:
-        if prefix_dir:
-            p = prefix_dir / p
-        items.append({"Path": p, "Type": "f", "Mode": m, 
-                      "st_Mode": (stat.S_IFREG | m)})
-    for p, t in symlinks:
-        if prefix_dir:
-            p = prefix_dir / p
-        items.append({"Path": p, "Type": "l", "Mode": 0o777, 
-                      "st_Mode": (stat.S_IFLNK | 0o777), "Target": t})
-    items.sort(key=lambda e: e["Path"])
-    return items
-
-def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
-    items = get_testdata_items(prefix_dir, dirs, files, symlinks)
+def check_manifest(manifest, items, prefix_dir=Path(".")):
+    items = sorted(items, key=lambda i: i.path)
     assert len(manifest) == len(items)
     for entry, fileinfo in zip(items, manifest):
-        assert fileinfo.type == entry["Type"]
-        assert fileinfo.path == entry["Path"]
-        if entry["Type"] == "d":
-            assert fileinfo.mode == entry["Mode"]
-        elif entry["Type"] == "f":
-            assert fileinfo.mode == entry["Mode"]
-            assert fileinfo.checksum['sha256'] == checksums[entry["Path"].name]
-        elif entry["Type"] == "l":
-            assert fileinfo.target == entry["Target"]
+        assert fileinfo.type == entry.type
+        assert fileinfo.path == prefix_dir / entry.path
+        if entry.type == "d":
+            assert fileinfo.mode == entry.mode
+        elif entry.type == "f":
+            assert fileinfo.mode == entry.mode
+            assert fileinfo.checksum['sha256'] == checksums[entry.path.name]
+        elif entry.type == "l":
+            assert fileinfo.target == entry.target
 
 def callscript(scriptname, args, returncode=0,
                stdin=None, stdout=None, stderr=None):

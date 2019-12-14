@@ -8,31 +8,24 @@ import tarfile
 from tempfile import TemporaryFile
 from archive import Archive
 import pytest
-from conftest import setup_testdata, callscript
+from conftest import (setup_testdata, callscript,
+                      TestDataDir, TestDataFile, TestDataSymLink)
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
-all_test_files = {
-    str(f[0]) for f in testdata["files"] + testdata["symlinks"]
-} 
+testdata = [
+    TestDataDir(Path("base"), 0o755),
+    TestDataDir(Path("base", "data"), 0o750),
+    TestDataDir(Path("base", "empty"), 0o755),
+    TestDataFile(Path("base", "msg.txt"), 0o644),
+    TestDataFile(Path("base", "data", "rnd.dat"), 0o600),
+    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+]
+all_test_files = { str(f.path) for f in testdata if f.type in {'f', 'l'} }
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     Archive().create(Path("archive.tar"), "", [Path("base")], workdir=tmpdir)
     return tmpdir
 
@@ -304,8 +297,8 @@ def test_check_prefix_present_extract(test_dir, extract_archive, monkeypatch):
     prefix = Path("base")
     monkeypatch.chdir(str(extract_archive / prefix))
     all_files = {
-        str(f[0].relative_to(prefix)) 
-        for f in testdata["files"] + testdata["symlinks"]
+        str(f.path.relative_to(prefix))
+        for f in testdata if f.type in {'f', 'l'}
     } | { '.manifest.yaml' }
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["check", "--prefix", str(prefix), "--present", 
