@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import archive.manifest
 import archive.tools
-from conftest import checksums, setup_testdata, TestDataDir, TestDataFile
+from conftest import setup_testdata, TestDataDir, TestDataFile
 
 
 # Setup a directory with some test data.
@@ -33,9 +33,9 @@ def test_fileinfo_lazy_checksum(test_dir, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     checksum_count = ChecksumCounter()
-    p = next(filter(lambda i: i.type == 'f', testdata)).path
+    entry = next(filter(lambda i: i.type == 'f', testdata))
     monkeypatch.setattr(archive.manifest, "checksum", checksum_count.checksum)
-    fi = archive.manifest.FileInfo(path=p)
+    fi = archive.manifest.FileInfo(path=entry.path)
     assert checksum_count.counter == 0
-    assert fi.checksum['sha256'] == checksums[p.name]
+    assert fi.checksum['sha256'] == entry.checksum
     assert checksum_count.counter == 1

@@ -10,8 +10,7 @@ import pytest
 from pytest_dependency import depends
 from archive import Archive
 from archive.manifest import FileInfo, Manifest
-from conftest import (checksums, require_compression,
-                      setup_testdata, check_manifest,
+from conftest import (require_compression, setup_testdata, check_manifest,
                       TestDataDir, TestDataFile, TestDataSymLink)
 
 
@@ -113,7 +112,7 @@ def test_check_content(test_dir, dep_testcase, inclmeta):
         pytest.skip("%s program not found" % sha256sum)
     for f in testdata:
         if f.type == 'f':
-            l = "%s  %s\n" % (checksums[f.path.name], f.path)
+            l = "%s  %s\n" % (f.checksum, f.path)
             sha256.stdin.write(l.encode('ascii'))
     sha256.stdin.close()
     sha256.wait()

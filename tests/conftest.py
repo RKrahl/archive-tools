@@ -28,20 +28,6 @@ def gettestdata(fname):
     assert path.is_file()
     return path
 
-def _get_checksums():
-    checksums_file = testdir / "data" / ".sha256"
-    checksums = dict()
-    with checksums_file.open("rt") as f:
-        while True:
-            l = f.readline()
-            if not l:
-                break
-            cs, fp = l.split()
-            checksums[fp] = cs
-    return checksums
-
-checksums = _get_checksums()
-
 def require_compression(compression):
     """Check if the library module needed for compression is available.
     Skip if this is not the case.
@@ -131,11 +117,33 @@ class TestDataDir(TestDataFileOrDir):
         path.mkdir(parents=True)
         path.chmod(self.mode)
 
+def _get_checksums():
+    checksums_file = testdir / "data" / ".sha256"
+    checksums = dict()
+    with checksums_file.open("rt") as f:
+        while True:
+            l = f.readline()
+            if not l:
+                break
+            cs, fp = l.split()
+            checksums[fp] = cs
+    return checksums
+
 class TestDataFile(TestDataFileOrDir):
+
+    Checksums = _get_checksums()
+
+    def __init__(self, path, mode, checksum=None):
+        super().__init__(path, mode)
+        self._checksum = checksum
 
     @property
     def type(self):
         return 'f'
+
+    @property
+    def checksum(self):
+        return self._checksum or self.Checksums[self.path.name]
 
     def create(self, main_dir):
         path = main_dir / self.path
@@ -191,7 +199,7 @@ def check_manifest(manifest, items, prefix_dir=Path(".")):
             assert fileinfo.mode == entry.mode
         elif entry.type == "f":
             assert fileinfo.mode == entry.mode
-            assert fileinfo.checksum['sha256'] == checksums[entry.path.name]
+            assert fileinfo.checksum['sha256'] == entry.checksum
         elif entry.type == "l":
             assert fileinfo.target == entry.target
 

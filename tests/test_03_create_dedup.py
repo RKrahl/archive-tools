@@ -10,14 +10,13 @@ import pytest
 from pytest_dependency import depends
 from archive.archive import Archive, DedupMode
 from archive.manifest import Manifest
-from conftest import (checksums, setup_testdata, check_manifest,
+from conftest import (setup_testdata, check_manifest,
                       TestDataDir, TestDataFile, TestDataSymLink)
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
 src = Path("base", "data", "rnd.dat")
-src_mode = 0o600
 dest_lnk = src.with_name("rnd_lnk.dat")
 dest_cp = src.with_name("rnd_cp.dat")
 testdata = [
@@ -25,7 +24,7 @@ testdata = [
     TestDataDir(Path("base", "data"), 0o750),
     TestDataDir(Path("base", "empty"), 0o755),
     TestDataFile(Path("base", "msg.txt"), 0o644),
-    TestDataFile(src, src_mode),
+    TestDataFile(src, 0o600),
     TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
 ]
 sha256sum = "sha256sum"
@@ -33,12 +32,11 @@ sha256sum = "sha256sum"
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
     setup_testdata(tmpdir, testdata)
+    sf = next(filter(lambda f: f.path == src, testdata))
     os.link(str(tmpdir / src), str(tmpdir / dest_lnk))
-    testdata.append(TestDataFile(dest_lnk, src_mode))
-    checksums[dest_lnk.name] = checksums[src.name]
+    testdata.append(TestDataFile(dest_lnk, sf.mode, checksum=sf.checksum))
     shutil.copy(str(tmpdir / src), str(tmpdir / dest_cp))
-    testdata.append(TestDataFile(dest_cp, src_mode))
-    checksums[dest_cp.name] = checksums[src.name]
+    testdata.append(TestDataFile(dest_cp, sf.mode, checksum=sf.checksum))
     return tmpdir
 
 dedupmodes = list(DedupMode)
@@ -90,7 +88,7 @@ def test_check_content(test_dir, dep_testcase):
         pytest.skip("%s program not found" % sha256sum)
     for f in testdata:
         if f.type == 'f':
-            l = "%s  %s\n" % (checksums[f.path.name], f.path)
+            l = "%s  %s\n" % (f.checksum, f.path)
             sha256.stdin.write(l.encode('ascii'))
     sha256.stdin.close()
     sha256.wait()
