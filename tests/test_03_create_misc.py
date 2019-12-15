@@ -1,33 +1,26 @@
 """Misc issues around creating an archive.
 """
 
-import copy
 from pathlib import Path
 from tempfile import TemporaryFile
 import pytest
 from archive import Archive
-from conftest import setup_testdata, check_manifest
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base", "data"), 0o755),
-        (Path("base", "data", "misc"), 0o755),
-        (Path("base", "data", "other"), 0o755),
-    ],
-    "files": [
-        (Path("base", "data", "misc", "rnd.dat"), 0o644),
-    ],
-    "symlinks": [
-        (Path("base", "data", "s.dat"), Path("misc", "rnd.dat")),
-    ]
-}
+testdata = [
+    DataDir(Path("base", "data"), 0o755),
+    DataDir(Path("base", "data", "misc"), 0o755),
+    DataDir(Path("base", "data", "other"), 0o755),
+    DataFile(Path("base", "data", "misc", "rnd.dat"), 0o644),
+    DataSymLink(Path("base", "data", "s.dat"), Path("misc", "rnd.dat")),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 
@@ -40,7 +33,7 @@ def test_create_default_basedir_rel(test_dir, monkeypatch):
     Archive().create(archive_path, "", [p])
     with Archive().open(archive_path) as archive:
         assert archive.basedir == Path("base")
-        check_manifest(archive.manifest, **testdata)
+        check_manifest(archive.manifest, testdata)
         archive.verify()
 
 def test_create_default_basedir_abs(test_dir, monkeypatch):
@@ -52,7 +45,7 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
     Archive().create(archive_path, "", [p])
     with Archive().open(archive_path) as archive:
         assert archive.basedir == Path("archive-abs")
-        check_manifest(archive.manifest, prefix_dir=test_dir, **testdata)
+        check_manifest(archive.manifest, testdata, prefix_dir=test_dir)
         archive.verify()
 
 def test_create_sorted(test_dir, monkeypatch):
@@ -91,7 +84,7 @@ def test_create_custom_metadata(test_dir, monkeypatch):
         md = archive.get_metadata(".msg.txt")
         assert md.path == archive.basedir / ".msg.txt"
         assert md.fileobj.read() == "Hello world!\n".encode("ascii")
-        check_manifest(archive.manifest, **testdata)
+        check_manifest(archive.manifest, testdata)
         archive.verify()
 
 def test_create_add_symlink(test_dir, monkeypatch):
@@ -100,9 +93,8 @@ def test_create_add_symlink(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     archive_path = "archive-symlink.tar"
     paths = [Path("base", "data", "misc"), Path("base", "data", "s.dat")]
-    data = copy.deepcopy(testdata)
-    data["dirs"] = data["dirs"][1:2]
+    data = [ testdata[i] for i in (1,3,4) ]
     Archive().create(archive_path, "", paths)
     with Archive().open(archive_path) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)
         archive.verify()

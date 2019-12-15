@@ -4,33 +4,27 @@
 from pathlib import Path
 import pytest
 from archive import Archive
-from conftest import setup_testdata, sub_testdata, check_manifest
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "data", "sub"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "rnd.dat"), 0o600),
-        (Path("base", "data", "rnd1.dat"), 0o600),
-        (Path("base", "data", "rnd2.dat"), 0o600),
-        (Path("base", "data", "sub", "rnd3.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd1.dat")),
-    ]
-}
+testdata = [
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "data"), 0o750),
+    DataDir(Path("base", "data", "sub"), 0o750),
+    DataDir(Path("base", "empty"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(Path("base", "rnd.dat"), 0o600),
+    DataRandomFile(Path("base", "data", "rnd1.dat"), 0o600, size=732),
+    DataRandomFile(Path("base", "data", "rnd2.dat"), 0o600, size=487),
+    DataRandomFile(Path("base", "data", "sub", "rnd3.dat"), 0o600, size=42),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd1.dat")),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 
@@ -43,7 +37,7 @@ def test_create_exclude_file(test_dir, archive_name, monkeypatch):
     data = sub_testdata(testdata, excludes[0])
     Archive().create(Path(archive_name), "", paths, excludes=excludes)
     with Archive().open(Path(archive_name)) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)
         archive.verify()
 
 
@@ -56,7 +50,7 @@ def test_create_exclude_subdir(test_dir, archive_name, monkeypatch):
     data = sub_testdata(testdata, excludes[0])
     Archive().create(Path(archive_name), "", paths, excludes=excludes)
     with Archive().open(Path(archive_name)) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)
         archive.verify()
 
 
@@ -69,7 +63,7 @@ def test_create_exclude_samelevel(test_dir, archive_name, monkeypatch):
     data = sub_testdata(testdata, Path("base"), paths[0])
     Archive().create(Path(archive_name), "", paths, excludes=excludes)
     with Archive().open(Path(archive_name)) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)
         archive.verify()
 
 
@@ -83,5 +77,5 @@ def test_create_exclude_explicit_include(test_dir, archive_name, monkeypatch):
     data = sub_testdata(testdata, excludes[0], paths[1])
     Archive().create(Path(archive_name), "", paths, excludes=excludes)
     with Archive().open(Path(archive_name)) as archive:
-        check_manifest(archive.manifest, **data)
+        check_manifest(archive.manifest, data)
         archive.verify()

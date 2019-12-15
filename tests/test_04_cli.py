@@ -8,31 +8,25 @@ from tempfile import TemporaryFile
 import pytest
 from pytest_dependency import depends
 from archive import Archive
-from conftest import (require_compression, setup_testdata, get_testdata_items, 
-                      check_manifest, callscript)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    DataDir(Path("base"), 0o755, mtime=1565100853),
+    DataDir(Path("base", "data"), 0o750, mtime=1555271302),
+    DataDir(Path("base", "empty"), 0o755, mtime=1547911753),
+    DataFile(Path("base", "msg.txt"), 0o644, mtime=1547911753),
+    DataFile(Path("base", "data", "rnd.dat"), 0o600, mtime=1563112510),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat"),
+                mtime=1565100853),
+]
 sha256sum = "sha256sum"
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 # Consider compression modes supported by tarfile and relative as well
@@ -78,8 +72,8 @@ def test_cli_create(test_dir, monkeypatch, testcase):
     callscript("archive-tool.py", args)
     with Archive().open(archive_path) as archive:
         assert str(archive.basedir) == basedir
-        prefix_dir = test_dir if abspath else None
-        check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)
+        prefix_dir = test_dir if abspath else Path(".")
+        check_manifest(archive.manifest, testdata, prefix_dir=prefix_dir)
 
 @pytest.mark.dependency()
 def test_cli_verify(test_dir, dep_testcase):
@@ -92,20 +86,19 @@ def test_cli_verify(test_dir, dep_testcase):
 def test_cli_ls(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
-    prefix_dir = test_dir if abspath else None
-    entries = get_testdata_items(prefix_dir=prefix_dir, **testdata)
+    prefix_dir = test_dir if abspath else Path(".")
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        for entry in entries:
+        for entry in sorted(testdata, key=lambda e: e.path):
             line = f.readline()
             fields = line.split()
-            assert fields[0] == stat.filemode(entry["st_Mode"])
-            assert fields[5] == str(entry["Path"])
-            if entry["Type"] == "l":
+            assert fields[0] == stat.filemode(entry.st_mode)
+            assert fields[5] == str(prefix_dir / entry.path)
+            if entry.type == "l":
                 assert len(fields) == 8
-                assert fields[7] == str(entry["Target"])
+                assert fields[7] == str(entry.target)
             else:
                 assert len(fields) == 6
         assert not f.readline()
@@ -134,28 +127,27 @@ def test_cli_checksums(test_dir, dep_testcase):
 def test_cli_info(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     archive_path = test_dir / archive_name(compression, abspath)
-    prefix_dir = test_dir if abspath else None
-    entries = get_testdata_items(prefix_dir=prefix_dir, **testdata)
+    prefix_dir = test_dir if abspath else Path(".")
     # Need to test each type only once.
     types_done = set()
-    for entry in entries:
-        if entry["Type"] in types_done:
+    for entry in testdata:
+        if entry.type in types_done:
             continue
         with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-            args = ["info", str(archive_path), str(entry["Path"])]
+            args = ["info", str(archive_path), str(prefix_dir / entry.path)]
             callscript("archive-tool.py", args, stdout=f)
             f.seek(0)
             info = {}
             for line in f:
                 k, v = line.split(':', maxsplit=1)
                 info[k] = v.strip()
-            assert info["Path"] == str(entry["Path"])
-            assert info["Mode"] == stat.filemode(entry["st_Mode"])
-            if entry["Type"] == "d":
+            assert info["Path"] == str(prefix_dir / entry.path)
+            assert info["Mode"] == stat.filemode(entry.st_mode)
+            if entry.type == "d":
                 assert info["Type"] == "directory"
-            elif entry["Type"] == "f":
+            elif entry.type == "f":
                 assert info["Type"] == "file"
-            if entry["Type"] == "l":
+            if entry.type == "l":
                 assert info["Type"] == "symbolic link"
-                assert info["Target"] == str(entry["Target"])
-        types_done.add(entry["Type"])
+                assert info["Target"] == str(entry.target)
+        types_done.add(entry.type)

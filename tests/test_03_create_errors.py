@@ -6,28 +6,24 @@ from tempfile import TemporaryFile
 import pytest
 from archive import Archive
 from archive.exception import ArchiveCreateError
-from conftest import setup_testdata
+from conftest import setup_testdata, DataDir, DataFile
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "empty"), 0o755),
-        (Path("base", "data"), 0o755),
-        (Path("other"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("other", "rnd.dat"), 0o600),
-        (Path("msg.txt"), 0o644),
-    ],
-}
+testdata = [
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "empty"), 0o755),
+    DataDir(Path("base", "data"), 0o755),
+    DataDir(Path("other"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(Path("other", "rnd.dat"), 0o600),
+    DataFile(Path("msg.txt"), 0o644),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 def test_create_empty(test_dir, archive_name, monkeypatch):

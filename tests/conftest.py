@@ -1,15 +1,24 @@
 """pytest configuration.
 """
 
+import hashlib
 import os
 from pathlib import Path
+from random import getrandbits
 import shutil
 import stat
 import subprocess
 import sys
 import tempfile
 import pytest
+from archive.tools import ft_mode
 
+
+__all__ = [
+    'DataDir', 'DataFile', 'DataRandomFile', 'DataSymLink',
+    'callscript',  'check_manifest', 'gettestdata', 'require_compression',
+    'setup_testdata', 'sub_testdata',
+]
 
 _cleanup = True
 testdir = Path(__file__).parent
@@ -21,25 +30,6 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     global _cleanup
     _cleanup = not config.getoption("--no-cleanup")
-
-def gettestdata(fname):
-    path = testdir / "data" / fname
-    assert path.is_file()
-    return path
-
-def _get_checksums():
-    checksums_file = testdir / "data" / ".sha256"
-    checksums = dict()
-    with checksums_file.open("rt") as f:
-        while True:
-            l = f.readline()
-            if not l:
-                break
-            cs, fp = l.split()
-            checksums[fp] = cs
-    return checksums
-
-checksums = _get_checksums()
 
 def require_compression(compression):
     """Check if the library module needed for compression is available.
@@ -89,20 +79,150 @@ def tmpdir(request):
 def archive_name(request):
     return "archive-%s.tar" % request.function.__name__
 
-def setup_testdata(main_dir, dirs=[], files=[], symlinks=[]):
-    for d, m in dirs:
-        p = main_dir / d
-        p.mkdir(parents=True)
-        p.chmod(m)
-    for f, m in files:
-        p = main_dir / f
-        shutil.copy(str(gettestdata(f.name)), str(p))
-        p.chmod(m)
-    for f, t in symlinks:
-        p = main_dir / f
-        p.symlink_to(t)
+def gettestdata(fname):
+    path = testdir / "data" / fname
+    assert path.is_file()
+    return path
 
-def sub_testdata(data, exclude, include=None):
+def _get_checksums():
+    checksums_file = testdir / "data" / ".sha256"
+    checksums = dict()
+    with checksums_file.open("rt") as f:
+        while True:
+            l = f.readline()
+            if not l:
+                break
+            cs, fp = l.split()
+            checksums[fp] = cs
+    return checksums
+
+def _mk_dir(path):
+    # path.mkdir(parents=True, exist_ok=True) requires Python 3.5.
+    try:
+        path.mkdir(parents=True)
+    except FileExistsError:
+        pass
+
+def _set_fs_attrs(path, mode, mtime):
+    if mode is not None:
+        path.chmod(mode)
+    if mtime is not None:
+        os.utime(str(path), (mtime, mtime), follow_symlinks=False)
+
+class DataItem:
+
+    def __init__(self, path, mtime):
+        self.path = path
+        self.mtime = mtime
+
+    @property
+    def type(self):
+        raise NotImplementedError
+
+    @property
+    def mode(self):
+        raise NotImplementedError
+
+    @property
+    def st_mode(self):
+        return ft_mode[self.type] | self.mode
+
+    def create(self, main_dir):
+        raise NotImplementedError
+
+class DataFileOrDir(DataItem):
+
+    def __init__(self, path, mode, *, mtime=None):
+        super().__init__(path, mtime)
+        self._mode = mode
+
+    @property
+    def mode(self):
+        return self._mode
+
+class DataDir(DataFileOrDir):
+
+    @property
+    def type(self):
+        return 'd'
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        _mk_dir(path)
+        _set_fs_attrs(path, self.mode, self.mtime)
+
+class DataFile(DataFileOrDir):
+
+    Checksums = _get_checksums()
+
+    def __init__(self, path, mode, *, mtime=None, checksum=None):
+        super().__init__(path, mode, mtime=mtime)
+        self._checksum = checksum
+
+    @property
+    def type(self):
+        return 'f'
+
+    @property
+    def checksum(self):
+        return self._checksum or self.Checksums[self.path.name]
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        _mk_dir(path.parent)
+        shutil.copy(str(gettestdata(self.path.name)), str(path))
+        _set_fs_attrs(path, self.mode, self.mtime)
+
+class DataRandomFile(DataFileOrDir):
+
+    def __init__(self, path, mode, *, mtime=None, size=1024):
+        super().__init__(path, mode, mtime=mtime)
+        self._size = size
+
+    @property
+    def type(self):
+        return 'f'
+
+    @property
+    def checksum(self):
+        return self._checksum
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        h = hashlib.new("sha256")
+        data = bytearray(getrandbits(8) for _ in range(self._size))
+        h.update(data)
+        self._checksum = h.hexdigest()
+        _mk_dir(path.parent)
+        with path.open("wb") as f:
+            f.write(data)
+        _set_fs_attrs(path, self.mode, self.mtime)
+
+class DataSymLink(DataItem):
+
+    def __init__(self, path, target, *, mtime=None):
+        super().__init__(path, mtime)
+        self.target = target
+
+    @property
+    def type(self):
+        return 'l'
+
+    @property
+    def mode(self):
+        return 0o777
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        _mk_dir(path.parent)
+        path.symlink_to(self.target)
+        _set_fs_attrs(path, None, self.mtime)
+
+def setup_testdata(main_dir, items):
+    for item in sorted(items, key=lambda i: i.path, reverse=True):
+        item.create(main_dir)
+
+def sub_testdata(items, exclude, include=None):
     """Compile a subset of the testdata with some items removed.
     """
     def _startswith(p, o):
@@ -111,52 +231,31 @@ def sub_testdata(data, exclude, include=None):
             return True
         except ValueError:
             return False
-    sd = {}
-    for k in data.keys():
-        items = []
-        for i in data[k]:
-            if _startswith(i[0], exclude):
-                if include and _startswith(i[0], include):
-                    pass
-                else:
-                    continue
-            items.append(i)
-        sd[k] = items
-    return sd
+    for item in items:
+        if _startswith(item.path, exclude):
+            if include and _startswith(item.path, include):
+                pass
+            else:
+                continue
+        yield item
 
-def get_testdata_items(prefix_dir=None, dirs=[], files=[], symlinks=[]):
-    items = []
-    for p, m in dirs:
-        if prefix_dir:
-            p = prefix_dir / p
-        items.append({"Path": p, "Type": "d", "Mode": m, 
-                      "st_Mode": (stat.S_IFDIR | m)})
-    for p, m in files:
-        if prefix_dir:
-            p = prefix_dir / p
-        items.append({"Path": p, "Type": "f", "Mode": m, 
-                      "st_Mode": (stat.S_IFREG | m)})
-    for p, t in symlinks:
-        if prefix_dir:
-            p = prefix_dir / p
-        items.append({"Path": p, "Type": "l", "Mode": 0o777, 
-                      "st_Mode": (stat.S_IFLNK | 0o777), "Target": t})
-    items.sort(key=lambda e: e["Path"])
-    return items
-
-def check_manifest(manifest, prefix_dir=None, dirs=[], files=[], symlinks=[]):
-    items = get_testdata_items(prefix_dir, dirs, files, symlinks)
+def check_manifest(manifest, items, prefix_dir=Path(".")):
+    items = sorted(items, key=lambda i: i.path)
     assert len(manifest) == len(items)
     for entry, fileinfo in zip(items, manifest):
-        assert fileinfo.type == entry["Type"]
-        assert fileinfo.path == entry["Path"]
-        if entry["Type"] == "d":
-            assert fileinfo.mode == entry["Mode"]
-        elif entry["Type"] == "f":
-            assert fileinfo.mode == entry["Mode"]
-            assert fileinfo.checksum['sha256'] == checksums[entry["Path"].name]
-        elif entry["Type"] == "l":
-            assert fileinfo.target == entry["Target"]
+        assert fileinfo.type == entry.type
+        assert fileinfo.path == prefix_dir / entry.path
+        if entry.type == "d":
+            assert fileinfo.mode == entry.mode
+            if entry.mtime is not None:
+                assert int(fileinfo.mtime) == int(entry.mtime)
+        elif entry.type == "f":
+            assert fileinfo.mode == entry.mode
+            if entry.mtime is not None:
+                assert int(fileinfo.mtime) == int(entry.mtime)
+            assert fileinfo.checksum['sha256'] == entry.checksum
+        elif entry.type == "l":
+            assert fileinfo.target == entry.target
 
 def callscript(scriptname, args, returncode=0,
                stdin=None, stdout=None, stderr=None):

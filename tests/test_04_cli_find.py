@@ -9,41 +9,29 @@ from tempfile import TemporaryFile
 from archive import Archive
 from archive.tools import tmp_chdir
 import pytest
-from conftest import setup_testdata, callscript
+from conftest import *
 
 testdata = [
-    {
-        "dirs": [
-            (Path("base"), 0o755),
-            (Path("base", "data"), 0o750),
-            (Path("base", "empty"), 0o755),
-        ],
-        "files": [
-            (Path("base", "msg.txt"), 0o644),
-            (Path("base", "data", "rnd.dat"), 0o640),
-            (Path("base", "rnd.dat"), 0o600),
-        ],
-        "symlinks": [
-            (Path("base", "s.dat"), Path("data", "rnd.dat")),
-        ]
-    },
-    {
-        "dirs": [
-            (Path("base"), 0o755),
-            (Path("base", "data"), 0o750),
-        ],
-        "files": [
-            (Path("base", "msg.txt"), 0o644),
-            (Path("base", "data", "bernd.dat"), 0o640),
-            (Path("base", "data", "rnd1.dat"), 0o640),
-            (Path("base", "data", "rnd2.dat"), 0o640),
-            (Path("base", "empty"), 0o644),
-            (Path("base", "rnd.dat"), 0o600),
-        ],
-        "symlinks": [
-            (Path("base", "s.dat"), Path("rnd.dat")),
-        ]
-    },
+    [
+        DataDir(Path("base"), 0o755),
+        DataDir(Path("base", "data"), 0o750),
+        DataDir(Path("base", "empty"), 0o755),
+        DataFile(Path("base", "msg.txt"), 0o644),
+        DataFile(Path("base", "data", "rnd.dat"), 0o640),
+        DataFile(Path("base", "rnd.dat"), 0o600),
+        DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+    ],
+    [
+        DataDir(Path("base"), 0o755),
+        DataDir(Path("base", "data"), 0o750),
+        DataFile(Path("base", "msg.txt"), 0o644),
+        DataRandomFile(Path("base", "data", "bernd.dat"), 0o640, size=385),
+        DataRandomFile(Path("base", "data", "rnd1.dat"), 0o640, size=732),
+        DataRandomFile(Path("base", "data", "rnd2.dat"), 0o640, size=487),
+        DataRandomFile(Path("base", "empty"), 0o644, size=0),
+        DataFile(Path("base", "rnd.dat"), 0o600),
+        DataSymLink(Path("base", "s.dat"), Path("rnd.dat")),
+    ],
 ]
 
 def archive_paths(root, abspath):
@@ -66,8 +54,8 @@ def test_dir(tmpdir):
         rel_paths = archive_paths(Path(""), False)
         abs_paths = archive_paths(Path(""), True)
         for i, data in enumerate(testdata):
-            base = data["dirs"][0][0]
-            setup_testdata(tmpdir, **data)
+            base = next(filter(lambda e: e.type == 'd', data)).path
+            setup_testdata(tmpdir, data)
             Archive().create(rel_paths[i], "bz2", [base])
             Archive().create(abs_paths[i], "bz2", [tmpdir / base])
             shutil.rmtree(str(base))
@@ -85,11 +73,10 @@ def test_find_all(test_dir, abspath):
         f.seek(0)
         expected_out = []
         for arch, data in zip(archives, testdata):
-            data_entries = itertools.chain.from_iterable(data.values())
             if abspath:
-                paths = sorted(test_dir / e[0] for e in data_entries)
+                paths = sorted(test_dir / e.path for e in data)
             else:
-                paths = sorted(e[0] for e in data_entries)
+                paths = sorted(e.path for e in data)
             expected_out.extend("%s:%s" % (arch, p) for p in paths)
         for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
             assert l == ex_l
@@ -105,15 +92,14 @@ def test_find_byname_exact(test_dir, abspath):
         f.seek(0)
         expected_out = []
         for arch, data in zip(archives, testdata):
-            data_entries = itertools.chain.from_iterable(data.values())
             if abspath:
-                paths = sorted(test_dir / e[0]
-                               for e in data_entries
-                               if e[0].name == "rnd.dat")
+                paths = sorted(test_dir / e.path
+                               for e in data
+                               if e.path.name == "rnd.dat")
             else:
-                paths = sorted(e[0]
-                               for e in data_entries
-                               if e[0].name == "rnd.dat")
+                paths = sorted(e.path
+                               for e in data
+                               if e.path.name == "rnd.dat")
             expected_out.extend("%s:%s" % (arch, p) for p in paths)
         for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
             assert l == ex_l
@@ -130,15 +116,14 @@ def test_find_byname_wildcard(test_dir, pattern, abspath):
         f.seek(0)
         expected_out = []
         for arch, data in zip(archives, testdata):
-            data_entries = itertools.chain.from_iterable(data.values())
             if abspath:
-                paths = sorted(test_dir / e[0]
-                               for e in data_entries
-                               if fnmatch.fnmatch(e[0].name, pattern))
+                paths = sorted(test_dir / e.path
+                               for e in data
+                               if fnmatch.fnmatch(e.path.name, pattern))
             else:
-                paths = sorted(e[0]
-                               for e in data_entries
-                               if fnmatch.fnmatch(e[0].name, pattern))
+                paths = sorted(e.path
+                               for e in data
+                               if fnmatch.fnmatch(e.path.name, pattern))
             expected_out.extend("%s:%s" % (arch, p) for p in paths)
         for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
             assert l == ex_l

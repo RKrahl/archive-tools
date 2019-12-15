@@ -7,29 +7,24 @@ from tempfile import TemporaryFile
 from archive import Archive
 from archive.tools import tmp_chdir
 import pytest
-from conftest import gettestdata, setup_testdata, callscript
+from conftest import *
+
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o640),
-        (Path("base", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "data"), 0o750),
+    DataDir(Path("base", "empty"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(Path("base", "data", "rnd.dat"), 0o600),
+    DataFile(Path("base", "rnd.dat"), 0o600),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     with tmp_chdir(tmpdir):
         Archive().create(Path("archive-rel.tar"), "", [Path("base")])
         Archive().create(Path("archive-abs.tar"), "", [tmpdir / "base"])
