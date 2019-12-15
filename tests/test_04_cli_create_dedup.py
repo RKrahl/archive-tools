@@ -7,8 +7,7 @@ import shutil
 import pytest
 from pytest_dependency import depends
 from archive.archive import Archive, DedupMode
-from conftest import (setup_testdata, check_manifest, callscript,
-                      TestDataDir, TestDataFile, TestDataSymLink)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.

@@ -14,6 +14,12 @@ import pytest
 from archive.tools import ft_mode
 
 
+__all__ = [
+    'TestDataDir', 'TestDataFile', 'TestDataRandomFile', 'TestDataSymLink',
+    'callscript',  'check_manifest', 'gettestdata', 'require_compression',
+    'setup_testdata', 'sub_testdata',
+]
+
 _cleanup = True
 testdir = Path(__file__).parent
 

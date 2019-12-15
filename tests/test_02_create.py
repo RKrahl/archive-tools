@@ -10,8 +10,7 @@ import pytest
 from pytest_dependency import depends
 from archive import Archive
 from archive.manifest import FileInfo, Manifest
-from conftest import (require_compression, setup_testdata, check_manifest,
-                      TestDataDir, TestDataFile, TestDataSymLink)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.

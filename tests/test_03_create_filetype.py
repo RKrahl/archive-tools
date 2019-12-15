@@ -7,8 +7,7 @@ import socket
 import pytest
 from archive import Archive
 from archive.exception import ArchiveWarning
-from conftest import (setup_testdata, check_manifest,
-                      TestDataDir, TestDataFile, TestDataSymLink)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.

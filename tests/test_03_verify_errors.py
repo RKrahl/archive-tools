@@ -12,7 +12,7 @@ import pytest
 from archive import Archive
 from archive.exception import ArchiveIntegrityError
 from archive.manifest import Manifest
-from conftest import setup_testdata, TestDataDir, TestDataFile, TestDataSymLink
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.

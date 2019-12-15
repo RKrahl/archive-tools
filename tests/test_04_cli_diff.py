@@ -7,8 +7,8 @@ from tempfile import TemporaryFile
 from archive import Archive
 from archive.tools import tmp_chdir
 import pytest
-from conftest import (gettestdata, setup_testdata, callscript,
-                      TestDataDir, TestDataFile, TestDataSymLink)
+from conftest import *
+
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.

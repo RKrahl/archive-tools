@@ -8,8 +8,7 @@ from tempfile import TemporaryFile
 import pytest
 from pytest_dependency import depends
 from archive import Archive
-from conftest import (require_compression, setup_testdata, check_manifest,
-                      callscript, TestDataDir, TestDataFile, TestDataSymLink)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.

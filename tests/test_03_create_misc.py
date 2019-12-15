@@ -5,8 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryFile
 import pytest
 from archive import Archive
-from conftest import (setup_testdata, check_manifest,
-                      TestDataDir, TestDataFile, TestDataSymLink)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.

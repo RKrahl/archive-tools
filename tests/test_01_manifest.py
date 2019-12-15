@@ -5,8 +5,7 @@ import datetime
 from pathlib import Path
 import pytest
 from archive.manifest import FileInfo, Manifest
-from conftest import (gettestdata, setup_testdata, sub_testdata, check_manifest,
-                      TestDataDir, TestDataFile, TestDataSymLink)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.

@@ -5,7 +5,8 @@ import datetime
 from pathlib import Path
 import pytest
 from archive import Archive
-from conftest import gettestdata, TestDataDir, TestDataFile, TestDataSymLink
+from conftest import *
+
 
 testdata = [
     TestDataDir(Path("base"), 0o755),
