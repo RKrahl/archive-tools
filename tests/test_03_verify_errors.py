@@ -12,31 +12,25 @@ import pytest
 from archive import Archive
 from archive.exception import ArchiveIntegrityError
 from archive.manifest import Manifest
-from conftest import setup_testdata
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "data"), 0o750),
+    DataDir(Path("base", "empty"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(Path("base", "data", "rnd.dat"), 0o600),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+]
 
 @pytest.fixture(scope="function")
 def test_data(tmpdir, monkeypatch):
     monkeypatch.chdir(str(tmpdir))
     shutil.rmtree("base", ignore_errors=True)
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     manifest = Manifest(paths=[Path("base")])
     manifest.add_metadata(Path("base", ".manifest.yaml"))
     with open("manifest.yaml", "wb") as f:

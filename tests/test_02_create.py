@@ -10,31 +10,25 @@ import pytest
 from pytest_dependency import depends
 from archive import Archive
 from archive.manifest import FileInfo, Manifest
-from conftest import (checksums, require_compression,
-                      setup_testdata, check_manifest)
+from conftest import *
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
-testdata = {
-    "dirs": [
-        (Path("base"), 0o755),
-        (Path("base", "data"), 0o750),
-        (Path("base", "empty"), 0o755),
-    ],
-    "files": [
-        (Path("base", "msg.txt"), 0o644),
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-    "symlinks": [
-        (Path("base", "s.dat"), Path("data", "rnd.dat")),
-    ]
-}
+testdata = [
+    DataDir(Path("base"), 0o755, mtime=1565100853),
+    DataDir(Path("base", "data"), 0o750, mtime=1555271302),
+    DataDir(Path("base", "empty"), 0o755, mtime=1547911753),
+    DataFile(Path("base", "msg.txt"), 0o644, mtime=1547911753),
+    DataFile(Path("base", "data", "rnd.dat"), 0o600, mtime=1563112510),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat"),
+                mtime=1565100853),
+]
 sha256sum = "sha256sum"
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 # Consider compression modes supported by tarfile and relative as well
@@ -91,8 +85,8 @@ def test_check_manifest(test_dir, dep_testcase):
         assert archive.manifest.checksums == tuple(FileInfo.Checksums)
         manifest_path = archive.basedir / ".manifest.yaml"
         assert archive.manifest.metadata == (str(manifest_path),)
-        prefix_dir = test_dir if abspath else None
-        check_manifest(archive.manifest, prefix_dir=prefix_dir, **testdata)
+        prefix_dir = test_dir if abspath else Path(".")
+        check_manifest(archive.manifest, testdata, prefix_dir=prefix_dir)
 
 @pytest.mark.dependency()
 @pytest.mark.parametrize("inclmeta", [False, True])
@@ -116,9 +110,10 @@ def test_check_content(test_dir, dep_testcase, inclmeta):
                                   cwd=str(cwd), stdin=subprocess.PIPE)
     except FileNotFoundError:
         pytest.skip("%s program not found" % sha256sum)
-    for f, _ in testdata["files"]:
-        l = "%s  %s\n" % (checksums[f.name], f)
-        sha256.stdin.write(l.encode('ascii'))
+    for f in testdata:
+        if f.type == 'f':
+            l = "%s  %s\n" % (f.checksum, f.path)
+            sha256.stdin.write(l.encode('ascii'))
     sha256.stdin.close()
     sha256.wait()
     assert sha256.returncode == 0

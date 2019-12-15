@@ -13,18 +13,7 @@ import warnings
 import yaml
 import archive
 from archive.exception import ArchiveInvalidTypeError, ArchiveWarning
-from archive.tools import now_str, parse_date, checksum
-
-
-# map stat mode value to file type
-_mode_ft = {
-    stat.S_IFLNK: "l",
-    stat.S_IFREG: "f",
-    stat.S_IFDIR: "d",
-}
-
-# map file type to stat mode value
-_ft_mode = { t:m for m,t in _mode_ft.items() }
+from archive.tools import now_str, parse_date, checksum, mode_ft, ft_mode
 
 
 class FileInfo:
@@ -38,7 +27,7 @@ class FileInfo:
             self.uname = data['uname']
             self.gid = data['gid']
             self.gname = data['gname']
-            self.st_mode = _ft_mode[data['type']] | data['mode']
+            self.st_mode = ft_mode[data['type']] | data['mode']
             self.mtime = data['mtime']
             if self.is_file():
                 self.size = data['size']
@@ -75,7 +64,7 @@ class FileInfo:
 
     @property
     def type(self):
-        return _mode_ft[stat.S_IFMT(self.st_mode)]
+        return mode_ft[stat.S_IFMT(self.st_mode)]
 
     @property
     def mode(self):

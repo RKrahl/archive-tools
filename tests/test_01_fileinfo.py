@@ -5,18 +5,14 @@ from pathlib import Path
 import pytest
 import archive.manifest
 import archive.tools
-from conftest import checksums, setup_testdata
+from conftest import setup_testdata, DataDir, DataFile
 
 
 # Setup a directory with some test data.
-testdata = {
-    "dirs": [
-        (Path("base", "data"), 0o750),
-    ],
-    "files": [
-        (Path("base", "data", "rnd.dat"), 0o600),
-    ],
-}
+testdata = [
+    DataDir(Path("base", "data"), 0o750),
+    DataFile(Path("base", "data", "rnd.dat"), 0o600),
+]
 
 class ChecksumCounter():
     """Call archive.tools.checksum(), counting the number of calls.
@@ -29,7 +25,7 @@ class ChecksumCounter():
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
-    setup_testdata(tmpdir, **testdata)
+    setup_testdata(tmpdir, testdata)
     return tmpdir
 
 def test_fileinfo_lazy_checksum(test_dir, monkeypatch):
@@ -37,9 +33,9 @@ def test_fileinfo_lazy_checksum(test_dir, monkeypatch):
     """
     monkeypatch.chdir(str(test_dir))
     checksum_count = ChecksumCounter()
-    p = testdata["files"][0][0]
+    entry = next(filter(lambda i: i.type == 'f', testdata))
     monkeypatch.setattr(archive.manifest, "checksum", checksum_count.checksum)
-    fi = archive.manifest.FileInfo(path=p)
+    fi = archive.manifest.FileInfo(path=entry.path)
     assert checksum_count.counter == 0
-    assert fi.checksum['sha256'] == checksums[p.name]
+    assert fi.checksum['sha256'] == entry.checksum
     assert checksum_count.counter == 1

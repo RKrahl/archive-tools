@@ -97,3 +97,14 @@ def checksum(fileobj, hashalg):
         for h in hashalg:
             m[h].update(chunk)
     return { h: m[h].hexdigest() for h in hashalg }
+
+
+mode_ft = {
+    stat.S_IFLNK: "l",
+    stat.S_IFREG: "f",
+    stat.S_IFDIR: "d",
+}
+"""map stat mode value to file type"""
+
+ft_mode = { t:m for m,t in mode_ft.items() }
+"""map file type to stat mode value"""
