@@ -31,11 +31,6 @@ def pytest_configure(config):
     global _cleanup
     _cleanup = not config.getoption("--no-cleanup")
 
-def gettestdata(fname):
-    path = testdir / "data" / fname
-    assert path.is_file()
-    return path
-
 def require_compression(compression):
     """Check if the library module needed for compression is available.
     Skip if this is not the case.
@@ -84,6 +79,23 @@ def tmpdir(request):
 def archive_name(request):
     return "archive-%s.tar" % request.function.__name__
 
+def gettestdata(fname):
+    path = testdir / "data" / fname
+    assert path.is_file()
+    return path
+
+def _get_checksums():
+    checksums_file = testdir / "data" / ".sha256"
+    checksums = dict()
+    with checksums_file.open("rt") as f:
+        while True:
+            l = f.readline()
+            if not l:
+                break
+            cs, fp = l.split()
+            checksums[fp] = cs
+    return checksums
+
 class TestDataItem:
 
     def __init__(self, path):
@@ -124,18 +136,6 @@ class TestDataDir(TestDataFileOrDir):
         path = main_dir / self.path
         path.mkdir(parents=True)
         path.chmod(self.mode)
-
-def _get_checksums():
-    checksums_file = testdir / "data" / ".sha256"
-    checksums = dict()
-    with checksums_file.open("rt") as f:
-        while True:
-            l = f.readline()
-            if not l:
-                break
-            cs, fp = l.split()
-            checksums[fp] = cs
-    return checksums
 
 class TestDataFile(TestDataFileOrDir):
 
