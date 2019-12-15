@@ -16,9 +16,9 @@ testdata = [
     TestDataDir(Path("base", "empty"), 0o755),
     TestDataFile(Path("base", "msg.txt"), 0o644),
     TestDataFile(Path("base", "rnd.dat"), 0o600),
-    TestDataRandomFile(Path("base", "data", "rnd1.dat"), 0o600, 732),
-    TestDataRandomFile(Path("base", "data", "rnd2.dat"), 0o600, 487),
-    TestDataRandomFile(Path("base", "data", "sub", "rnd3.dat"), 0o600, 42),
+    TestDataRandomFile(Path("base", "data", "rnd1.dat"), 0o600, size=732),
+    TestDataRandomFile(Path("base", "data", "rnd2.dat"), 0o600, size=487),
+    TestDataRandomFile(Path("base", "data", "sub", "rnd3.dat"), 0o600, size=42),
     TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd1.dat")),
 ]
 

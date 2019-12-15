@@ -96,10 +96,24 @@ def _get_checksums():
             checksums[fp] = cs
     return checksums
 
+def _mk_dir(path):
+    # path.mkdir(parents=True, exist_ok=True) requires Python 3.5.
+    try:
+        path.mkdir(parents=True)
+    except FileExistsError:
+        pass
+
+def _set_fs_attrs(path, mode, mtime):
+    if mode is not None:
+        path.chmod(mode)
+    if mtime is not None:
+        os.utime(str(path), (mtime, mtime), follow_symlinks=False)
+
 class TestDataItem:
 
-    def __init__(self, path):
+    def __init__(self, path, mtime):
         self.path = path
+        self.mtime = mtime
 
     @property
     def type(self):
@@ -118,8 +132,8 @@ class TestDataItem:
 
 class TestDataFileOrDir(TestDataItem):
 
-    def __init__(self, path, mode):
-        super().__init__(path)
+    def __init__(self, path, mode, *, mtime=None):
+        super().__init__(path, mtime)
         self._mode = mode
 
     @property
@@ -134,15 +148,15 @@ class TestDataDir(TestDataFileOrDir):
 
     def create(self, main_dir):
         path = main_dir / self.path
-        path.mkdir(parents=True)
-        path.chmod(self.mode)
+        _mk_dir(path)
+        _set_fs_attrs(path, self.mode, self.mtime)
 
 class TestDataFile(TestDataFileOrDir):
 
     Checksums = _get_checksums()
 
-    def __init__(self, path, mode, checksum=None):
-        super().__init__(path, mode)
+    def __init__(self, path, mode, *, mtime=None, checksum=None):
+        super().__init__(path, mode, mtime=mtime)
         self._checksum = checksum
 
     @property
@@ -155,13 +169,14 @@ class TestDataFile(TestDataFileOrDir):
 
     def create(self, main_dir):
         path = main_dir / self.path
+        _mk_dir(path.parent)
         shutil.copy(str(gettestdata(self.path.name)), str(path))
-        path.chmod(self.mode)
+        _set_fs_attrs(path, self.mode, self.mtime)
 
 class TestDataRandomFile(TestDataFileOrDir):
 
-    def __init__(self, path, mode, size=1024):
-        super().__init__(path, mode)
+    def __init__(self, path, mode, *, mtime=None, size=1024):
+        super().__init__(path, mode, mtime=mtime)
         self._size = size
 
     @property
@@ -178,14 +193,15 @@ class TestDataRandomFile(TestDataFileOrDir):
         data = bytearray(getrandbits(8) for _ in range(self._size))
         h.update(data)
         self._checksum = h.hexdigest()
+        _mk_dir(path.parent)
         with path.open("wb") as f:
             f.write(data)
-        path.chmod(self.mode)
+        _set_fs_attrs(path, self.mode, self.mtime)
 
 class TestDataSymLink(TestDataItem):
 
-    def __init__(self, path, target):
-        super().__init__(path)
+    def __init__(self, path, target, *, mtime=None):
+        super().__init__(path, mtime)
         self.target = target
 
     @property
@@ -198,10 +214,12 @@ class TestDataSymLink(TestDataItem):
 
     def create(self, main_dir):
         path = main_dir / self.path
+        _mk_dir(path.parent)
         path.symlink_to(self.target)
+        _set_fs_attrs(path, None, self.mtime)
 
 def setup_testdata(main_dir, items):
-    for item in sorted(items, key=lambda i: i.path):
+    for item in sorted(items, key=lambda i: i.path, reverse=True):
         item.create(main_dir)
 
 def sub_testdata(items, exclude, include=None):
@@ -229,8 +247,12 @@ def check_manifest(manifest, items, prefix_dir=Path(".")):
         assert fileinfo.path == prefix_dir / entry.path
         if entry.type == "d":
             assert fileinfo.mode == entry.mode
+            if entry.mtime is not None:
+                assert int(fileinfo.mtime) == int(entry.mtime)
         elif entry.type == "f":
             assert fileinfo.mode == entry.mode
+            if entry.mtime is not None:
+                assert int(fileinfo.mtime) == int(entry.mtime)
             assert fileinfo.checksum['sha256'] == entry.checksum
         elif entry.type == "l":
             assert fileinfo.target == entry.target
