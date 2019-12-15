@@ -1,8 +1,10 @@
 """pytest configuration.
 """
 
+import hashlib
 import os
 from pathlib import Path
+from random import getrandbits
 import shutil
 import stat
 import subprocess
@@ -148,6 +150,30 @@ class TestDataFile(TestDataFileOrDir):
     def create(self, main_dir):
         path = main_dir / self.path
         shutil.copy(str(gettestdata(self.path.name)), str(path))
+        path.chmod(self.mode)
+
+class TestDataRandomFile(TestDataFileOrDir):
+
+    def __init__(self, path, mode, size=1024):
+        super().__init__(path, mode)
+        self._size = size
+
+    @property
+    def type(self):
+        return 'f'
+
+    @property
+    def checksum(self):
+        return self._checksum
+
+    def create(self, main_dir):
+        path = main_dir / self.path
+        h = hashlib.new("sha256")
+        data = bytearray(getrandbits(8) for _ in range(self._size))
+        h.update(data)
+        self._checksum = h.hexdigest()
+        with path.open("wb") as f:
+            f.write(data)
         path.chmod(self.mode)
 
 class TestDataSymLink(TestDataItem):

@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 from archive import Archive
 from conftest import (setup_testdata, sub_testdata, check_manifest,
-                      TestDataDir, TestDataFile, TestDataSymLink)
+                      TestDataDir, TestDataFile, TestDataRandomFile,
+                      TestDataSymLink)
 
 
 # Setup a directory with some test data to be put into an archive.
@@ -17,9 +18,9 @@ testdata = [
     TestDataDir(Path("base", "empty"), 0o755),
     TestDataFile(Path("base", "msg.txt"), 0o644),
     TestDataFile(Path("base", "rnd.dat"), 0o600),
-    TestDataFile(Path("base", "data", "rnd1.dat"), 0o600),
-    TestDataFile(Path("base", "data", "rnd2.dat"), 0o600),
-    TestDataFile(Path("base", "data", "sub", "rnd3.dat"), 0o600),
+    TestDataRandomFile(Path("base", "data", "rnd1.dat"), 0o600, 732),
+    TestDataRandomFile(Path("base", "data", "rnd2.dat"), 0o600, 487),
+    TestDataRandomFile(Path("base", "data", "sub", "rnd3.dat"), 0o600, 42),
     TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd1.dat")),
 ]
 
