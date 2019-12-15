@@ -11,11 +11,11 @@ from conftest import *
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
 testdata = [
-    TestDataDir(Path("base", "data"), 0o755),
-    TestDataDir(Path("base", "data", "misc"), 0o755),
-    TestDataDir(Path("base", "data", "other"), 0o755),
-    TestDataFile(Path("base", "data", "misc", "rnd.dat"), 0o644),
-    TestDataSymLink(Path("base", "data", "s.dat"), Path("misc", "rnd.dat")),
+    DataDir(Path("base", "data"), 0o755),
+    DataDir(Path("base", "data", "misc"), 0o755),
+    DataDir(Path("base", "data", "other"), 0o755),
+    DataFile(Path("base", "data", "misc", "rnd.dat"), 0o644),
+    DataSymLink(Path("base", "data", "s.dat"), Path("misc", "rnd.dat")),
 ]
 
 @pytest.fixture(scope="module")

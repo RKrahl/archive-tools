@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 import archive.manifest
 import archive.tools
-from conftest import setup_testdata, TestDataDir, TestDataFile
+from conftest import setup_testdata, DataDir, DataFile
 
 
 # Setup a directory with some test data.
 testdata = [
-    TestDataDir(Path("base", "data"), 0o750),
-    TestDataFile(Path("base", "data", "rnd.dat"), 0o600),
+    DataDir(Path("base", "data"), 0o750),
+    DataFile(Path("base", "data", "rnd.dat"), 0o600),
 ]
 
 class ChecksumCounter():

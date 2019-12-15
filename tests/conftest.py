@@ -15,7 +15,7 @@ from archive.tools import ft_mode
 
 
 __all__ = [
-    'TestDataDir', 'TestDataFile', 'TestDataRandomFile', 'TestDataSymLink',
+    'DataDir', 'DataFile', 'DataRandomFile', 'DataSymLink',
     'callscript',  'check_manifest', 'gettestdata', 'require_compression',
     'setup_testdata', 'sub_testdata',
 ]
@@ -109,7 +109,7 @@ def _set_fs_attrs(path, mode, mtime):
     if mtime is not None:
         os.utime(str(path), (mtime, mtime), follow_symlinks=False)
 
-class TestDataItem:
+class DataItem:
 
     def __init__(self, path, mtime):
         self.path = path
@@ -130,7 +130,7 @@ class TestDataItem:
     def create(self, main_dir):
         raise NotImplementedError
 
-class TestDataFileOrDir(TestDataItem):
+class DataFileOrDir(DataItem):
 
     def __init__(self, path, mode, *, mtime=None):
         super().__init__(path, mtime)
@@ -140,7 +140,7 @@ class TestDataFileOrDir(TestDataItem):
     def mode(self):
         return self._mode
 
-class TestDataDir(TestDataFileOrDir):
+class DataDir(DataFileOrDir):
 
     @property
     def type(self):
@@ -151,7 +151,7 @@ class TestDataDir(TestDataFileOrDir):
         _mk_dir(path)
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class TestDataFile(TestDataFileOrDir):
+class DataFile(DataFileOrDir):
 
     Checksums = _get_checksums()
 
@@ -173,7 +173,7 @@ class TestDataFile(TestDataFileOrDir):
         shutil.copy(str(gettestdata(self.path.name)), str(path))
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class TestDataRandomFile(TestDataFileOrDir):
+class DataRandomFile(DataFileOrDir):
 
     def __init__(self, path, mode, *, mtime=None, size=1024):
         super().__init__(path, mode, mtime=mtime)
@@ -198,7 +198,7 @@ class TestDataRandomFile(TestDataFileOrDir):
             f.write(data)
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class TestDataSymLink(TestDataItem):
+class DataSymLink(DataItem):
 
     def __init__(self, path, target, *, mtime=None):
         super().__init__(path, mtime)

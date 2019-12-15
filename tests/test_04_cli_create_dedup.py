@@ -16,12 +16,12 @@ src = Path("base", "data", "rnd.dat")
 dest_lnk = src.with_name("rnd_lnk.dat")
 dest_cp = src.with_name("rnd_cp.dat")
 testdata = [
-    TestDataDir(Path("base"), 0o755),
-    TestDataDir(Path("base", "data"), 0o750),
-    TestDataDir(Path("base", "empty"), 0o755),
-    TestDataFile(Path("base", "msg.txt"), 0o644),
-    TestDataFile(src, 0o600),
-    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "data"), 0o750),
+    DataDir(Path("base", "empty"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(src, 0o600),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
 ]
 sha256sum = "sha256sum"
 
@@ -30,9 +30,9 @@ def test_dir(tmpdir):
     setup_testdata(tmpdir, testdata)
     sf = next(filter(lambda f: f.path == src, testdata))
     os.link(str(tmpdir / src), str(tmpdir / dest_lnk))
-    testdata.append(TestDataFile(dest_lnk, sf.mode, checksum=sf.checksum))
+    testdata.append(DataFile(dest_lnk, sf.mode, checksum=sf.checksum))
     shutil.copy(str(tmpdir / src), str(tmpdir / dest_cp))
-    testdata.append(TestDataFile(dest_cp, sf.mode, checksum=sf.checksum))
+    testdata.append(DataFile(dest_cp, sf.mode, checksum=sf.checksum))
     return tmpdir
 
 dedupmodes = list(DedupMode)

@@ -6,19 +6,19 @@ from tempfile import TemporaryFile
 import pytest
 from archive import Archive
 from archive.exception import ArchiveCreateError
-from conftest import setup_testdata, TestDataDir, TestDataFile
+from conftest import setup_testdata, DataDir, DataFile
 
 
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
 testdata = [
-    TestDataDir(Path("base"), 0o755),
-    TestDataDir(Path("base", "empty"), 0o755),
-    TestDataDir(Path("base", "data"), 0o755),
-    TestDataDir(Path("other"), 0o755),
-    TestDataFile(Path("base", "msg.txt"), 0o644),
-    TestDataFile(Path("other", "rnd.dat"), 0o600),
-    TestDataFile(Path("msg.txt"), 0o644),
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "empty"), 0o755),
+    DataDir(Path("base", "data"), 0o755),
+    DataDir(Path("other"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(Path("other", "rnd.dat"), 0o600),
+    DataFile(Path("msg.txt"), 0o644),
 ]
 
 @pytest.fixture(scope="module")

@@ -9,12 +9,12 @@ from conftest import *
 
 
 testdata = [
-    TestDataDir(Path("base"), 0o755),
-    TestDataDir(Path("base", "data"), 0o750),
-    TestDataDir(Path("base", "empty"), 0o755),
-    TestDataFile(Path("base", "msg.txt"), 0o644),
-    TestDataFile(Path("base", "data", "rnd.dat"), 0o600),
-    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "data"), 0o750),
+    DataDir(Path("base", "empty"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(Path("base", "data", "rnd.dat"), 0o600),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
 ]
 
 @pytest.fixture(scope="module")

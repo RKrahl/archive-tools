@@ -10,16 +10,16 @@ from conftest import *
 # Setup a directory with some test data to be put into an archive.
 # Make sure that we have all kind of different things in there.
 testdata = [
-    TestDataDir(Path("base"), 0o755),
-    TestDataDir(Path("base", "data"), 0o750),
-    TestDataDir(Path("base", "data", "sub"), 0o750),
-    TestDataDir(Path("base", "empty"), 0o755),
-    TestDataFile(Path("base", "msg.txt"), 0o644),
-    TestDataFile(Path("base", "rnd.dat"), 0o600),
-    TestDataRandomFile(Path("base", "data", "rnd1.dat"), 0o600, size=732),
-    TestDataRandomFile(Path("base", "data", "rnd2.dat"), 0o600, size=487),
-    TestDataRandomFile(Path("base", "data", "sub", "rnd3.dat"), 0o600, size=42),
-    TestDataSymLink(Path("base", "s.dat"), Path("data", "rnd1.dat")),
+    DataDir(Path("base"), 0o755),
+    DataDir(Path("base", "data"), 0o750),
+    DataDir(Path("base", "data", "sub"), 0o750),
+    DataDir(Path("base", "empty"), 0o755),
+    DataFile(Path("base", "msg.txt"), 0o644),
+    DataFile(Path("base", "rnd.dat"), 0o600),
+    DataRandomFile(Path("base", "data", "rnd1.dat"), 0o600, size=732),
+    DataRandomFile(Path("base", "data", "rnd2.dat"), 0o600, size=487),
+    DataRandomFile(Path("base", "data", "sub", "rnd3.dat"), 0o600, size=42),
+    DataSymLink(Path("base", "s.dat"), Path("data", "rnd1.dat")),
 ]
 
 @pytest.fixture(scope="module")
