@@ -175,3 +175,40 @@ def test_find_bymtime_rel(test_dir, mtime, delta, abspath):
             expected_out.extend("%s:%s" % (arch, p) for p in paths)
         for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
             assert l == ex_l
+
+@pytest.mark.parametrize(("mtime", "dt"), [
+    ("<2019-04-01", datetime.datetime(2019, 4, 1)),
+    (">2019-04-01", datetime.datetime(2019, 4, 1)),
+    ("< 2019-04-14 21:45:12", datetime.datetime(2019, 4, 14, 21, 45, 12)),
+    ("> 2019-04-14 21:45:12", datetime.datetime(2019, 4, 14, 21, 45, 12)),
+    ("< 2019-04-14T21:49:12", datetime.datetime(2019, 4, 14, 21, 49, 12)),
+    ("> 2019-04-14T21:49:12", datetime.datetime(2019, 4, 14, 21, 49, 12)),
+])
+@pytest.mark.parametrize("abspath", [False, True])
+def test_find_bymtime_abs(test_dir, mtime, dt, abspath):
+    """Call archive-tool to find entries by absolute modification time.
+    """
+    def matches(direct, timestamp, entry):
+        if direct == '<':
+            return entry.mtime is not None and entry.mtime < timestamp
+        elif direct == '>':
+            return entry.mtime is None or entry.mtime > timestamp
+    archives = archive_paths(test_dir, abspath)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["find", "--mtime=%s" % mtime] + [str(p) for p in archives]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        expected_out = []
+        timestamp = dt.timestamp()
+        for arch, data in zip(archives, testdata):
+            if abspath:
+                paths = sorted(test_dir / e.path
+                               for e in data
+                               if matches(mtime[0], timestamp, e))
+            else:
+                paths = sorted(e.path
+                               for e in data
+                               if matches(mtime[0], timestamp, e))
+            expected_out.extend("%s:%s" % (arch, p) for p in paths)
+        for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
+            assert l == ex_l
