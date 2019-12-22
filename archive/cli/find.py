@@ -1,17 +1,53 @@
 """Implement the find subcommand.
 """
 
+import datetime
 import fnmatch
 from pathlib import Path
+import re
 from archive.archive import Archive
+
+
+class timeinterval:
+    """Represent a half-bounded time interval, e.g. all points in time
+    earlier or later then a given moment.
+    """
+
+    @staticmethod
+    def _parse_string(s):
+        rel_string_re = re.compile(r"^([+-])(\d+(?:\.\d+)?)(d|h|m)?$")
+        m = rel_string_re.match(s)
+        if m:
+            (sign, num, unit) = m.groups()
+            if unit is None:
+                unit = 'd'
+            direct = '<' if sign == '+' else '>'
+            now = datetime.datetime.now()
+            td_argmap = {'d': 'days', 'h': 'hours', 'm': 'minutes'}
+            td_arg = {td_argmap[unit]: float(num)}
+            point = now - datetime.timedelta(**td_arg)
+            return (direct, point.timestamp())
+        raise ValueError("Invalid intervall string '%s'" % s)
+
+    def __init__(self, s):
+        self.direct, self.point = self._parse_string(s)
+
+    def match(self, timestamp):
+        if self.direct == '<':
+            return timestamp < self.point
+        elif self.direct == '>':
+            return timestamp > self.point
 
 class SearchFilter:
 
     def __init__(self, args):
         self.name = args.name
+        self.mtime = args.mtime
 
     def __call__(self, fileinfo):
         if self.name and not fnmatch.fnmatch(fileinfo.path.name, self.name):
+            return False
+        if self.mtime and not self.mtime.match(fileinfo.mtime):
             return False
         return True
 
@@ -29,5 +65,8 @@ def add_parser(subparsers):
     parser.add_argument('--name', metavar="pattern",
                         help=("find entries whose file name (with leading "
                               "directories removed) matches pattern"))
+    parser.add_argument('--mtime', metavar="time",
+                        help="find entries by modification time",
+                        type=timeinterval)
     parser.add_argument('archives', metavar="archive", type=Path, nargs='+')
     parser.set_defaults(func=find)
