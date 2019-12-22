@@ -148,7 +148,8 @@ def test_find_byname_wildcard(test_dir, pattern, abspath):
 ])
 @pytest.mark.parametrize("abspath", [False, True])
 def test_find_bymtime_rel(test_dir, mtime, delta, abspath):
-    """Call archive-tool to find entries with matching name.
+    """Call archive-tool to find entries by relative modification time,
+    e.g. age.
     """
     def matches(direct, timestamp, entry):
         if direct == '+':
