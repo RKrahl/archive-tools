@@ -61,10 +61,13 @@ class SearchFilter:
 
     def __init__(self, args):
         self.name = args.name
+        self.type = args.type
         self.mtime = args.mtime
 
     def __call__(self, fileinfo):
         if self.name and not fnmatch.fnmatch(fileinfo.path.name, self.name):
+            return False
+        if self.type and fileinfo.type != self.type:
             return False
         if self.mtime and not self.mtime.match(fileinfo.mtime):
             return False
@@ -81,6 +84,8 @@ def find(args):
 def add_parser(subparsers):
     parser = subparsers.add_parser('find',
                                    help=("search for files in archives"))
+    parser.add_argument('--type', choices=['f', 'd', 'l'],
+                        help="find entries by type")
     parser.add_argument('--name', metavar="pattern",
                         help=("find entries whose file name (with leading "
                               "directories removed) matches pattern"))

@@ -91,6 +91,30 @@ def test_find_all(test_dir, abspath):
         for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
             assert l == ex_l
 
+@pytest.mark.parametrize("type", ['f', 'd', 'l'])
+@pytest.mark.parametrize("abspath", [False, True])
+def test_find_bytype(test_dir, abspath, type):
+    """Call archive-tool to find entries by type.
+    """
+    archives = archive_paths(test_dir, abspath)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["find", "--type", type] + [str(p) for p in archives]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        expected_out = []
+        for arch, data in zip(archives, testdata):
+            if abspath:
+                paths = sorted(test_dir / e.path
+                               for e in data
+                               if e.type == type)
+            else:
+                paths = sorted(e.path
+                               for e in data
+                               if e.type == type)
+            expected_out.extend("%s:%s" % (arch, p) for p in paths)
+        for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
+            assert l == ex_l
+
 @pytest.mark.parametrize("abspath", [False, True])
 def test_find_byname_exact(test_dir, abspath):
     """Call archive-tool to find entries by exact name.
