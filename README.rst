@@ -62,7 +62,13 @@ Optional library packages:
 
 + `python-dateutil`_
 
-  Date strings will lack time zone indication if missing.
+  If the package is not available, some features will show slightly
+  reduced functionality:
+
+  - date strings will lack time zone indication.
+
+  - the date formats recognized in the `--mtime` argument to
+    `archive-tool.py find` are reduced.
 
 + `setuptools_scm`_
 
