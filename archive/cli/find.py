@@ -6,6 +6,7 @@ import fnmatch
 from pathlib import Path
 import re
 from archive.archive import Archive
+from archive.tools import parse_date
 
 
 class timeinterval:
@@ -40,6 +41,10 @@ class timeinterval:
             else:
                 point = datetime.datetime(int(day), int(month), int(year),
                                           int(hour), int(minute), int(sec))
+            return (direct, point.timestamp())
+        if s[0] in {'<', '>'}:
+            direct = s[0]
+            point = parse_date(s[1:].strip())
             return (direct, point.timestamp())
         raise ValueError("Invalid intervall string '%s'" % s)
 

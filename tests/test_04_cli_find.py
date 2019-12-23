@@ -16,6 +16,8 @@ now = datetime.datetime.now()
 twodays_old = now - datetime.timedelta(days=2)
 twohours_old = now - datetime.timedelta(hours=2)
 
+cest = datetime.timezone(datetime.timedelta(hours=2))
+
 testdata = [
     [
         DataDir(Path("base"), 0o755, mtime=1555271302),
@@ -181,6 +183,40 @@ def test_find_bymtime_rel(test_dir, mtime, delta):
 def test_find_bymtime_abs(test_dir, mtime, dt):
     """Call archive-tool to find entries by absolute modification time.
     """
+    def matches(direct, timestamp, entry):
+        if direct == '<':
+            return entry.mtime is not None and entry.mtime < timestamp
+        elif direct == '>':
+            return entry.mtime is None or entry.mtime > timestamp
+    archives = archive_paths(test_dir, False)
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["find", "--mtime=%s" % mtime] + [str(p) for p in archives]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        expected_out = []
+        timestamp = dt.timestamp()
+        for arch, data in zip(archives, testdata):
+            paths = sorted(e.path
+                           for e in data
+                           if matches(mtime[0], timestamp, e))
+            expected_out.extend("%s:%s" % (arch, p) for p in paths)
+        for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
+            assert l == ex_l
+
+@pytest.mark.parametrize(("mtime", "dt"), [
+    ("< 2019-04-14 21:45", datetime.datetime(2019, 4, 14, 21, 45)),
+    ("> 2019-04-14 21:45+02:00",
+     datetime.datetime(2019, 4, 14, 21, 45, tzinfo=cest)),
+    ("< Sun, 14 Apr 2019 21:45:12 +0200",
+     datetime.datetime(2019, 4, 14, 21, 45, 12, tzinfo=cest)),
+    ("> Sun, 14 Apr 2019 19:45:12 UTC",
+     datetime.datetime(2019, 4, 14, 19, 45, 12, tzinfo=datetime.timezone.utc)),
+])
+def test_find_bymtime_abs_datefmt(test_dir, mtime, dt):
+    """Call archive-tool to find entries by absolute modification time,
+    using different date formats.  This requires dateutil.parser.
+    """
+    pytest.importorskip("dateutil.parser")
     def matches(direct, timestamp, entry):
         if direct == '<':
             return entry.mtime is not None and entry.mtime < timestamp
