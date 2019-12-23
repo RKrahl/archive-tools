@@ -3,6 +3,7 @@ History of changes to archive-tools
 
 0.4 (not yet released)
     New features
+      + #15, #43: Add `archive-tool find` subcommand.
       + #38, #39: Add `archive-tool diff` subcommand.
       + #41: Add a :meth:`Archive.extract` method.
       + Add a :meth:`Manifest.sort` method.
