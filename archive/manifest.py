@@ -144,7 +144,7 @@ class Manifest(Sequence):
 
     Version = "1.1"
 
-    def __init__(self, fileobj=None, paths=None, excludes=None):
+    def __init__(self, fileobj=None, paths=None, excludes=None, tags=None):
         if fileobj is not None:
             docs = yaml.safe_load_all(fileobj)
             self.head = next(docs)
@@ -159,6 +159,8 @@ class Manifest(Sequence):
                 "Metadata": [],
                 "Version": self.Version,
             }
+            if tags is not None:
+                self.head["Tags"] = tags
             fileinfos = FileInfo.iterpaths(paths, set(excludes or ()))
             self.fileinfos = sorted(fileinfos, key=lambda fi: fi.path)
         else:
@@ -185,6 +187,10 @@ class Manifest(Sequence):
     @property
     def metadata(self):
         return tuple(self.head["Metadata"])
+
+    @property
+    def tags(self):
+        return tuple(self.head.get("Tags", ()))
 
     def add_metadata(self, path):
         self.head["Metadata"].append(str(path))
