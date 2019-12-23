@@ -5,6 +5,7 @@ History of changes to archive-tools
     New features
       + #15, #43: Add `archive-tool find` subcommand.
       + #38, #39: Add `archive-tool diff` subcommand.
+      + #40, #44: Add setting tags in the header of the manifest.
       + #41: Add a :meth:`Archive.extract` method.
       + Add a :meth:`Manifest.sort` method.
 

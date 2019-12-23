@@ -22,13 +22,16 @@ def create(args):
             args.compression = 'gz'
     if args.compression == 'none':
         args.compression = ''
-    archive = Archive().create(args.archive, args.compression, args.files, 
-                               basedir=args.basedir, excludes=args.exclude, 
-                               dedup=DedupMode(args.deduplicate))
+    archive = Archive().create(args.archive, args.compression, args.files,
+                               basedir=args.basedir, excludes=args.exclude,
+                               dedup=DedupMode(args.deduplicate),
+                               tags=args.tag)
     return 0
 
 def add_parser(subparsers):
     parser = subparsers.add_parser('create', help="create the archive")
+    parser.add_argument('--tag', action='append',
+                        help=("user defined tags to mark the archive"))
     parser.add_argument('--compression',
                         choices=['none', 'gz', 'bz2', 'xz'],
                         help=("compression mode"))

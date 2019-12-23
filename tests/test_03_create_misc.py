@@ -98,3 +98,21 @@ def test_create_add_symlink(test_dir, monkeypatch):
     with Archive().open(archive_path) as archive:
         check_manifest(archive.manifest, data)
         archive.verify()
+
+count = 0
+@pytest.mark.parametrize(("tags", "expected"), [
+    (None, ()),
+    ([], ()),
+    (["a"], ("a",)),
+    (["a", "b"], ("a", "b")),
+])
+def test_create_tags(test_dir, monkeypatch, tags, expected):
+    """Test setting tags.
+    """
+    global count
+    count += 1
+    monkeypatch.chdir(str(test_dir))
+    archive_path = "archive-tags-%d.tar" % count
+    Archive().create(archive_path, "", [Path("base")], tags=tags)
+    with Archive().open(archive_path) as archive:
+        assert archive.manifest.tags == expected

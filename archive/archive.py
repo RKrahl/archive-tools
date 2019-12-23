@@ -61,7 +61,7 @@ class Archive:
 
     def create(self, path, compression, paths, 
                basedir=None, workdir=None, excludes=None, 
-               dedup=DedupMode.LINK):
+               dedup=DedupMode.LINK, tags=None):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
             # in Python 3.5.
@@ -71,15 +71,15 @@ class Archive:
         if workdir:
             with tmp_chdir(workdir):
                 self._create(workdir / path, mode, paths, 
-                             basedir, excludes, dedup)
+                             basedir, excludes, dedup, tags)
         else:
-            self._create(path, mode, paths, basedir, excludes, dedup)
+            self._create(path, mode, paths, basedir, excludes, dedup, tags)
         return self
 
-    def _create(self, path, mode, paths, basedir, excludes, dedup):
+    def _create(self, path, mode, paths, basedir, excludes, dedup, tags):
         self.path = path
         self._check_paths(paths, basedir, excludes)
-        self.manifest = Manifest(paths=paths, excludes=excludes)
+        self.manifest = Manifest(paths=paths, excludes=excludes, tags=tags)
         self.manifest.add_metadata(self.basedir / ".manifest.yaml")
         for md in self._metadata:
             md.set_path(self.basedir)

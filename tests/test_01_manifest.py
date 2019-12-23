@@ -38,6 +38,7 @@ def test_manifest_from_paths(test_dir, monkeypatch):
     assert manifest.version == Manifest.Version
     assert isinstance(manifest.date, datetime.datetime)
     assert manifest.checksums == tuple(FileInfo.Checksums)
+    assert manifest.tags == ()
     check_manifest(manifest, testdata)
 
 
@@ -53,6 +54,7 @@ def test_manifest_from_fileobj():
     assert manifest.version == "1.1"
     assert isinstance(manifest.date, datetime.datetime)
     assert manifest.checksums == ("sha256",)
+    assert manifest.tags == ()
     check_manifest(manifest, testdata)
 
 
@@ -144,3 +146,17 @@ def test_mnifest_sort(test_dir, monkeypatch):
         if prev is not None:
             assert fi.path >= prev.path
         prev = fi
+
+
+@pytest.mark.parametrize(("tags", "expected"), [
+    (None, ()),
+    ([], ()),
+    (["a"], ("a",)),
+    (["a", "b"], ("a", "b")),
+])
+def test_manifest_tags(test_dir, monkeypatch, tags, expected):
+    """Set tags in a manifest reading the files in test_dir.
+    """
+    monkeypatch.chdir(str(test_dir))
+    manifest = Manifest(paths=[Path("base")], tags=tags)
+    assert manifest.tags == expected
