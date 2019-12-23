@@ -146,8 +146,7 @@ def test_find_byname_wildcard(test_dir, pattern, abspath):
     ("-5m", datetime.timedelta(minutes=5)),
     ("+5m", datetime.timedelta(minutes=5)),
 ])
-@pytest.mark.parametrize("abspath", [False, True])
-def test_find_bymtime_rel(test_dir, mtime, delta, abspath):
+def test_find_bymtime_rel(test_dir, mtime, delta):
     """Call archive-tool to find entries by relative modification time,
     e.g. age.
     """
@@ -156,7 +155,7 @@ def test_find_bymtime_rel(test_dir, mtime, delta, abspath):
             return entry.mtime is not None and entry.mtime < timestamp
         elif direct == '-':
             return entry.mtime is None or entry.mtime > timestamp
-    archives = archive_paths(test_dir, abspath)
+    archives = archive_paths(test_dir, False)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["find", "--mtime=%s" % mtime] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
@@ -164,14 +163,9 @@ def test_find_bymtime_rel(test_dir, mtime, delta, abspath):
         expected_out = []
         timestamp = (datetime.datetime.now() - delta).timestamp()
         for arch, data in zip(archives, testdata):
-            if abspath:
-                paths = sorted(test_dir / e.path
-                               for e in data
-                               if matches(mtime[0], timestamp, e))
-            else:
-                paths = sorted(e.path
-                               for e in data
-                               if matches(mtime[0], timestamp, e))
+            paths = sorted(e.path
+                           for e in data
+                           if matches(mtime[0], timestamp, e))
             expected_out.extend("%s:%s" % (arch, p) for p in paths)
         for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
             assert l == ex_l
@@ -184,8 +178,7 @@ def test_find_bymtime_rel(test_dir, mtime, delta, abspath):
     ("< 2019-04-14T21:49:12", datetime.datetime(2019, 4, 14, 21, 49, 12)),
     ("> 2019-04-14T21:49:12", datetime.datetime(2019, 4, 14, 21, 49, 12)),
 ])
-@pytest.mark.parametrize("abspath", [False, True])
-def test_find_bymtime_abs(test_dir, mtime, dt, abspath):
+def test_find_bymtime_abs(test_dir, mtime, dt):
     """Call archive-tool to find entries by absolute modification time.
     """
     def matches(direct, timestamp, entry):
@@ -193,7 +186,7 @@ def test_find_bymtime_abs(test_dir, mtime, dt, abspath):
             return entry.mtime is not None and entry.mtime < timestamp
         elif direct == '>':
             return entry.mtime is None or entry.mtime > timestamp
-    archives = archive_paths(test_dir, abspath)
+    archives = archive_paths(test_dir, False)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["find", "--mtime=%s" % mtime] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
@@ -201,14 +194,9 @@ def test_find_bymtime_abs(test_dir, mtime, dt, abspath):
         expected_out = []
         timestamp = dt.timestamp()
         for arch, data in zip(archives, testdata):
-            if abspath:
-                paths = sorted(test_dir / e.path
-                               for e in data
-                               if matches(mtime[0], timestamp, e))
-            else:
-                paths = sorted(e.path
-                               for e in data
-                               if matches(mtime[0], timestamp, e))
+            paths = sorted(e.path
+                           for e in data
+                           if matches(mtime[0], timestamp, e))
             expected_out.extend("%s:%s" % (arch, p) for p in paths)
         for l, ex_l in itertools.zip_longest(get_output(f), expected_out):
             assert l == ex_l
