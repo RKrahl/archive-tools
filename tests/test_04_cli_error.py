@@ -64,10 +64,11 @@ def test_cli_bogus_command(test_dir, monkeypatch):
                 break
         assert "invalid choice: 'bogus_cmd'" in line
 
-def test_cli_create_bogus_compression(test_dir, archive_name, monkeypatch):
+def test_cli_create_bogus_compression(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["create", "--compression=bogus_comp", archive_name, "base"]
+        args = ["create", "--compression=bogus_comp", name, "base"]
         callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
@@ -78,12 +79,13 @@ def test_cli_create_bogus_compression(test_dir, archive_name, monkeypatch):
                 break
         assert "--compression: invalid choice: 'bogus_comp'" in line
 
-def test_cli_ls_bogus_format(test_dir, archive_name, monkeypatch):
+def test_cli_ls_bogus_format(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
-    args = ["create", archive_name, "base"]
+    name = archive_name(tags=[testname])
+    args = ["create", name, "base"]
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["ls", "--format=bogus_fmt", archive_name]
+        args = ["ls", "--format=bogus_fmt", name]
         callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
@@ -94,19 +96,21 @@ def test_cli_ls_bogus_format(test_dir, archive_name, monkeypatch):
                 break
         assert "--format: invalid choice: 'bogus_fmt'" in line
 
-def test_cli_create_normalized_path(test_dir, archive_name, monkeypatch):
+def test_cli_create_normalized_path(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["create", archive_name, "base/empty/.."]
+        args = ["create", name, "base/empty/.."]
         callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "invalid path base/empty/..: must be normalized" in line
 
-def test_cli_create_rel_start_basedir(test_dir, archive_name, monkeypatch):
+def test_cli_create_rel_start_basedir(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["create", "--basedir=base/data", archive_name, "base/msg.txt"]
+        args = ["create", "--basedir=base/data", name, "base/msg.txt"]
         callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
@@ -121,41 +125,45 @@ def test_cli_ls_archive_not_found(test_dir, monkeypatch):
         line = f.readline()
         assert "No such file or directory: 'bogus.tar'" in line
 
-def test_cli_ls_checksum_invalid_hash(test_dir, archive_name, monkeypatch):
+def test_cli_ls_checksum_invalid_hash(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
-    args = ["create", archive_name, "base"]
+    name = archive_name(tags=[testname])
+    args = ["create", name, "base"]
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["ls", "--format=checksum", "--checksum=bogus", archive_name]
+        args = ["ls", "--format=checksum", "--checksum=bogus", name]
         callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "'bogus' hashes not available" in line
 
-def test_cli_info_missing_entry(test_dir, archive_name, monkeypatch):
+def test_cli_info_missing_entry(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
-    args = ["create", archive_name, "base"]
+    name = archive_name(tags=[testname])
+    args = ["create", name, "base"]
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["info", archive_name, "base/data/not-present"]
+        args = ["info", name, "base/data/not-present"]
         callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
         assert "base/data/not-present: not found in archive" in line
 
-def test_cli_integrity_no_manifest(test_dir, archive_name, monkeypatch):
+def test_cli_integrity_no_manifest(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
-    with tarfile.open(archive_name, "w") as tarf:
+    name = archive_name(tags=[testname])
+    with tarfile.open(name, "w") as tarf:
         tarf.add("base", recursive=True)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["ls", archive_name]
+        args = ["ls", name]
         callscript("archive-tool.py", args, returncode=3, stderr=f)
         f.seek(0)
         line = f.readline()
         assert ".manifest.yaml not found" in line
 
-def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
+def test_cli_integrity_missing_file(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     base = Path("base")
     missing = base / "data" / "not-present"
     with missing.open("wt") as f:
@@ -166,7 +174,7 @@ def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
     mtime_parent = os.stat(str(missing.parent)).st_mtime
     missing.unlink()
     os.utime(str(missing.parent), times=(mtime_parent, mtime_parent))
-    with tarfile.open(archive_name, "w") as tarf:
+    with tarfile.open(name, "w") as tarf:
         with open("manifest.yaml", "rb") as f:
             manifest_info = tarf.gettarinfo(arcname="base/.manifest.yaml", 
                                             fileobj=f)
@@ -174,18 +182,19 @@ def test_cli_integrity_missing_file(test_dir, archive_name, monkeypatch):
             tarf.addfile(manifest_info, f)
         tarf.add("base")
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["verify", archive_name]
+        args = ["verify", name]
         callscript("archive-tool.py", args, returncode=3, stderr=f)
         f.seek(0)
         line = f.readline()
-        assert "%s:%s: missing" % (archive_name, missing) in line
+        assert "%s:%s: missing" % (name, missing) in line
 
-def test_cli_check_missing_files(test_dir, archive_name, monkeypatch):
+def test_cli_check_missing_files(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
-    args = ["create", archive_name, "base"]
+    name = archive_name(tags=[testname])
+    args = ["create", name, "base"]
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["check", archive_name]
+        args = ["check", name]
         callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()
@@ -196,12 +205,13 @@ def test_cli_check_missing_files(test_dir, archive_name, monkeypatch):
                 break
         assert "either --stdin or the files argument is required" in line
 
-def test_cli_check_stdin_and_files(test_dir, archive_name, monkeypatch):
+def test_cli_check_stdin_and_files(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
-    args = ["create", archive_name, "base"]
+    name = archive_name(tags=[testname])
+    args = ["create", name, "base"]
     callscript("archive-tool.py", args)
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["check", "--stdin", archive_name, "base"]
+        args = ["check", "--stdin", name, "base"]
         callscript("archive-tool.py", args, returncode=2, stderr=f)
         f.seek(0)
         line = f.readline()

@@ -16,8 +16,8 @@ from archive.tools import ft_mode
 
 __all__ = [
     'DataDir', 'DataFile', 'DataRandomFile', 'DataSymLink',
-    'callscript',  'check_manifest', 'gettestdata', 'require_compression',
-    'setup_testdata', 'sub_testdata',
+    'absflag', 'archive_name', 'callscript',  'check_manifest',
+    'gettestdata', 'require_compression', 'setup_testdata', 'sub_testdata',
 ]
 
 _cleanup = True
@@ -76,8 +76,23 @@ def tmpdir(request):
         yield td
 
 @pytest.fixture(scope="function")
-def archive_name(request):
-    return "archive-%s.tar" % request.function.__name__
+def testname(request):
+    return request.function.__name__
+
+def absflag(a):
+    return "abs" if a else "rel"
+
+_counter = {}
+def archive_name(ext="", tags=(), counter=None):
+    l = ["archive"]
+    l.extend(tags)
+    if counter:
+        _counter.setdefault(counter, 0)
+        _counter[counter] += 1
+        l.append(str(_counter[counter]))
+    name = "-".join(l)
+    ext = ("tar.%s" % ext) if ext else "tar"
+    return ".".join((name, ext))
 
 def gettestdata(fname):
     path = testdir / "data" / fname

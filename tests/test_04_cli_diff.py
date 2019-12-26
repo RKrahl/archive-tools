@@ -37,11 +37,6 @@ def test_data(request, test_dir):
         archive.extract(test_dir)
     return test_dir
 
-def archive_name(request, abspath):
-    fname = request.function.__name__
-    absflag = "abs" if abspath else "rel"
-    return Path("archive-%s-%s.tar.bz2" % (fname, absflag))
-
 def get_output(fileobj):
     out = []
     while True:
@@ -52,7 +47,7 @@ def get_output(fileobj):
     return out
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_equal(test_data, request, monkeypatch, abspath):
+def test_diff_equal(test_data, testname, monkeypatch, abspath):
     """Diff two archives having equal content.
     """
     monkeypatch.chdir(str(test_data))
@@ -62,7 +57,8 @@ def test_diff_equal(test_data, request, monkeypatch, abspath):
     else:
         archive_ref_path = Path("archive-rel.tar")
         base_dir = Path("base")
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -71,7 +67,7 @@ def test_diff_equal(test_data, request, monkeypatch, abspath):
         assert get_output(f) == []
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_modified_file(test_data, request, monkeypatch, abspath):
+def test_diff_modified_file(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one file's content modified.
     """
     monkeypatch.chdir(str(test_data))
@@ -83,7 +79,8 @@ def test_diff_modified_file(test_data, request, monkeypatch, abspath):
         base_dir = Path("base")
     p = base_dir / "rnd.dat"
     shutil.copy(str(gettestdata("rnd2.dat")), str(p))
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -95,7 +92,7 @@ def test_diff_modified_file(test_data, request, monkeypatch, abspath):
                           % (archive_ref_path, p, archive_path, p))
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_symlink_target(test_data, request, monkeypatch, abspath):
+def test_diff_symlink_target(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one symlink's target modified.
     """
     monkeypatch.chdir(str(test_data))
@@ -108,7 +105,8 @@ def test_diff_symlink_target(test_data, request, monkeypatch, abspath):
     p = base_dir / "s.dat"
     p.unlink()
     p.symlink_to(Path("msg.txt"))
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -120,7 +118,7 @@ def test_diff_symlink_target(test_data, request, monkeypatch, abspath):
                           % (archive_ref_path, p, archive_path, p))
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_wrong_type(test_data, request, monkeypatch, abspath):
+def test_diff_wrong_type(test_data, testname, monkeypatch, abspath):
     """Diff two archives with one entry having a wrong type.
     """
     monkeypatch.chdir(str(test_data))
@@ -133,7 +131,8 @@ def test_diff_wrong_type(test_data, request, monkeypatch, abspath):
     p = base_dir / "rnd.dat"
     p.unlink()
     p.symlink_to(Path("data", "rnd.dat"))
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -145,7 +144,7 @@ def test_diff_wrong_type(test_data, request, monkeypatch, abspath):
                           % (archive_ref_path, p, archive_path, p))
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_missing_files(test_data, request, monkeypatch, abspath):
+def test_diff_missing_files(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one file's name changed.
     """
     monkeypatch.chdir(str(test_data))
@@ -158,7 +157,8 @@ def test_diff_missing_files(test_data, request, monkeypatch, abspath):
     p1 = base_dir / "rnd.dat"
     p2 = base_dir / "a.dat"
     p1.rename(p2)
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -170,7 +170,7 @@ def test_diff_missing_files(test_data, request, monkeypatch, abspath):
         assert out[1] == "Only in %s: %s" % (archive_ref_path, p1)
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_mult(test_data, request, monkeypatch, abspath):
+def test_diff_mult(test_data, testname, monkeypatch, abspath):
     """Diff two archives having multiple differences.
     """
     monkeypatch.chdir(str(test_data))
@@ -185,7 +185,8 @@ def test_diff_mult(test_data, request, monkeypatch, abspath):
     p1 = base_dir / "msg.txt"
     p2 = base_dir / "o.txt"
     p1.rename(p2)
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -199,7 +200,7 @@ def test_diff_mult(test_data, request, monkeypatch, abspath):
         assert out[2] == "Only in %s: %s" % (archive_path, p2)
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_metadata(test_data, request, monkeypatch, abspath):
+def test_diff_metadata(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one file's file system metadata modified.
     This difference should be ignored by default.
     """
@@ -212,7 +213,8 @@ def test_diff_metadata(test_data, request, monkeypatch, abspath):
         base_dir = Path("base")
     p = base_dir / "rnd.dat"
     p.chmod(0o0444)
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -229,7 +231,7 @@ def test_diff_metadata(test_data, request, monkeypatch, abspath):
         assert out[0] == ("File system metadata for %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, p))
 
-def test_diff_basedir_equal(test_data, request, monkeypatch):
+def test_diff_basedir_equal(test_data, testname, monkeypatch):
     """Diff two archives with different base directories having equal
     content.
 
@@ -240,7 +242,7 @@ def test_diff_basedir_equal(test_data, request, monkeypatch):
     shutil.rmtree(str(newbase), ignore_errors=True)
     Path("base").rename(newbase)
     archive_ref_path = Path("archive-rel.tar")
-    archive_path = archive_name(request, False)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, "rel"]))
     Archive().create(archive_path, "bz2", [newbase])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -248,7 +250,7 @@ def test_diff_basedir_equal(test_data, request, monkeypatch):
         f.seek(0)
         assert get_output(f) == []
 
-def test_diff_basedir_mod_file(test_data, request, monkeypatch):
+def test_diff_basedir_mod_file(test_data, testname, monkeypatch):
     """Diff two archives with different base directories having one file's
     content modified.
 
@@ -263,7 +265,7 @@ def test_diff_basedir_mod_file(test_data, request, monkeypatch):
     p = base / "rnd.dat"
     pn = newbase / "rnd.dat"
     shutil.copy(str(gettestdata("rnd2.dat")), str(pn))
-    archive_path = archive_name(request, False)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, "rel"]))
     Archive().create(archive_path, "bz2", [newbase])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
@@ -275,7 +277,7 @@ def test_diff_basedir_mod_file(test_data, request, monkeypatch):
                           % (archive_ref_path, p, archive_path, pn))
 
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_dircontent(test_data, request, monkeypatch, abspath):
+def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
     """Diff two archives with one subdirectory missing.
     """
     monkeypatch.chdir(str(test_data))
@@ -287,7 +289,8 @@ def test_diff_dircontent(test_data, request, monkeypatch, abspath):
         base_dir = Path("base")
     pd = base_dir / "data"
     shutil.rmtree(str(pd))
-    archive_path = archive_name(request, abspath)
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]

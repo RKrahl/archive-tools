@@ -50,30 +50,32 @@ class tmp_fifo():
     def __exit__(self, type, value, tb):
         self.path.unlink()
 
-def test_create_invalid_file_socket(test_dir, archive_name, monkeypatch):
+def test_create_invalid_file_socket(test_dir, testname, monkeypatch):
     """Create an archive from a directory containing a socket.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     p = Path("base")
     fp = p / "socket"
     with tmp_socket(fp):
         with pytest.warns(ArchiveWarning, match="%s: socket ignored" % fp):
-            Archive().create(archive_name, "", [p])
-    with Archive().open(archive_name) as archive:
+            Archive().create(name, "", [p])
+    with Archive().open(name) as archive:
         assert archive.basedir == Path("base")
         check_manifest(archive.manifest, testdata)
         archive.verify()
 
-def test_create_invalid_file_fifo(test_dir, archive_name, monkeypatch):
+def test_create_invalid_file_fifo(test_dir, testname, monkeypatch):
     """Create an archive from a directory containing a FIFO.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     p = Path("base")
     fp = p / "fifo"
     with tmp_fifo(fp):
         with pytest.warns(ArchiveWarning, match="%s: FIFO ignored" % fp):
-            Archive().create(archive_name, "", [p])
-    with Archive().open(archive_name) as archive:
+            Archive().create(name, "", [p])
+    with Archive().open(name) as archive:
         assert archive.basedir == Path("base")
         check_manifest(archive.manifest, testdata)
         archive.verify()

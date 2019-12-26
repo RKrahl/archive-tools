@@ -24,7 +24,6 @@ def test_dir(tmpdir):
     setup_testdata(tmpdir, testdata)
     return tmpdir
 
-count = 0
 @pytest.mark.parametrize(("tags", "expected"), [
     ([], ()),
     (["a"], ("a",)),
@@ -33,10 +32,8 @@ count = 0
 def test_cli_create_tags(test_dir, monkeypatch, tags, expected):
     """Set tags using the --tags argument.
     """
-    global count
-    count += 1
     monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-tags-%d.tar" % count
+    archive_path = archive_name(tags=["tags"], counter="cli_create_tags")
     args = ["create"]
     for t in tags:
         args += ("--tag", t)

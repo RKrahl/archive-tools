@@ -29,16 +29,16 @@ def test_dir(tmpdir):
     return tmpdir
 
 @pytest.fixture(scope="function")
-def copy_data(request, test_dir):
-    copy_dir = test_dir / request.function.__name__
+def copy_data(testname, test_dir):
+    copy_dir = test_dir / testname
     shutil.copytree(str(test_dir / "base"), str(copy_dir / "base"), 
                     symlinks=True)
     return copy_dir
 
 @pytest.fixture(scope="function")
-def extract_archive(request, test_dir):
+def extract_archive(testname, test_dir):
     archive_path = test_dir / "archive.tar"
-    check_dir = test_dir / request.function.__name__
+    check_dir = test_dir / testname
     check_dir.mkdir()
     with tarfile.open(str(archive_path), "r") as tarf:
         tarf.extractall(path=str(check_dir))
@@ -196,7 +196,7 @@ def test_check_extract_archive(test_dir, extract_archive, monkeypatch):
         f.seek(0)
         assert get_results(f) == set()
 
-def test_check_extract_archive_custom_metadata(test_dir, request, monkeypatch):
+def test_check_extract_archive_custom_metadata(test_dir, testname, monkeypatch):
     """When extracting an archive and checking the result, 
     check should not report any file to be missing in the archive.
 
@@ -210,7 +210,7 @@ def test_check_extract_archive_custom_metadata(test_dir, request, monkeypatch):
         tmpf.seek(0)
         archive.add_metadata(".msg.txt", tmpf)
         archive.create(archive_path, "", [Path("base")], workdir=test_dir)
-    check_dir = test_dir / request.function.__name__
+    check_dir = test_dir / testname
     check_dir.mkdir()
     monkeypatch.chdir(str(check_dir))
     with tarfile.open(str(archive_path), "r") as tarf:

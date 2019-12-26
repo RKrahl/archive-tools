@@ -41,12 +41,6 @@ def idfn(case):
     c, a = case
     return "%s-%s" % (c if c else "none", "abs" if a else "rel")
 
-def archive_name(compression, abspath):
-    name = "archive-%s.tar" % ("abs" if abspath else "rel")
-    if compression:
-        name += ".%s" % compression
-    return name
-
 @pytest.fixture(scope="module", params=testcases, ids=idfn)
 def testcase(request):
     param = request.param
@@ -62,7 +56,7 @@ def test_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
     require_compression(compression)
     monkeypatch.chdir(str(test_dir))
-    archive_path = Path(archive_name(compression, abspath))
+    archive_path = Path(archive_name(ext=compression, tags=[absflag(abspath)]))
     if abspath:
         paths = [test_dir / "base"]
         basedir = Path("archive")
@@ -74,7 +68,8 @@ def test_create(test_dir, monkeypatch, testcase):
 @pytest.mark.dependency()
 def test_check_manifest(test_dir, dep_testcase):
     compression, abspath = dep_testcase
-    archive_path = test_dir / archive_name(compression, abspath)
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     with Archive().open(archive_path) as archive:
         head = archive.manifest.head
         assert set(head.keys()) == {
@@ -92,7 +87,8 @@ def test_check_manifest(test_dir, dep_testcase):
 @pytest.mark.parametrize("inclmeta", [False, True])
 def test_check_content(test_dir, dep_testcase, inclmeta):
     compression, abspath = dep_testcase
-    archive_path = test_dir / archive_name(compression, abspath)
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     outdir = test_dir / "out"
     shutil.rmtree(str(outdir), ignore_errors=True)
     outdir.mkdir()
@@ -121,6 +117,7 @@ def test_check_content(test_dir, dep_testcase, inclmeta):
 @pytest.mark.dependency()
 def test_verify(test_dir, dep_testcase):
     compression, abspath = dep_testcase
-    archive_path = test_dir / archive_name(compression, abspath)
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     with Archive().open(archive_path) as archive:
         archive.verify()
