@@ -40,9 +40,6 @@ dedupmodes = list(DedupMode)
 def idfn(dedup):
     return dedup.value
 
-def archive_name(dedup):
-    return "archive-%s.tar" % dedup.value
-
 @pytest.fixture(scope="module", params=dedupmodes, ids=idfn)
 def testcase(request):
     param = request.param
@@ -57,7 +54,7 @@ def dep_testcase(request, testcase):
 def test_cli_create(test_dir, monkeypatch, testcase):
     dedup = testcase
     monkeypatch.chdir(str(test_dir))
-    archive_path = archive_name(dedup)
+    archive_path = archive_name(tags=[dedup.value])
     basedir = "base"
     args = ["create", "--deduplicate", dedup.value, archive_path, basedir]
     callscript("archive-tool.py", args)
@@ -68,7 +65,7 @@ def test_cli_create(test_dir, monkeypatch, testcase):
 @pytest.mark.dependency()
 def test_verify(test_dir, dep_testcase):
     dedup = dep_testcase
-    archive_path = test_dir / archive_name(dedup)
+    archive_path = test_dir / archive_name(tags=[dedup.value])
     with Archive().open(archive_path) as archive:
         ti_lnk = archive._file.getmember(str(dest_lnk))
         ti_cp = archive._file.getmember(str(dest_cp))

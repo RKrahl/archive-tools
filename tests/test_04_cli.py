@@ -31,19 +31,13 @@ def test_dir(tmpdir):
 
 # Consider compression modes supported by tarfile and relative as well
 # as absolute paths in the archive.
-compressions = ["none", "gz", "bz2", "xz"]
+compressions = [None, "gz", "bz2", "xz"]
 abspaths = [ True, False ]
 testcases = [ (c,a) for c in compressions for a in abspaths ]
 
 def idfn(case):
     c, a = case
-    return "%s-%s" % (c, "abs" if a else "rel")
-
-def archive_name(compression, abspath):
-    name = "archive-%s.tar" % ("abs" if abspath else "rel")
-    if compression != "none":
-        name += ".%s" % compression
-    return name
+    return "%s-%s" % (c if c else "none", "abs" if a else "rel")
 
 @pytest.fixture(scope="module", params=testcases, ids=idfn)
 def testcase(request):
@@ -60,13 +54,15 @@ def test_cli_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
     require_compression(compression)
     monkeypatch.chdir(str(test_dir))
-    archive_path = archive_name(compression, abspath)
+    archive_path = archive_name(ext=compression, tags=[absflag(abspath)])
     if abspath:
         paths = str(test_dir / "base")
         basedir = "archive"
     else:
         paths = "base"
         basedir = "base"
+    if compression is None:
+        compression = "none"
     args = ["create", "--compression", compression, "--basedir", basedir,
             archive_path, paths]
     callscript("archive-tool.py", args)
@@ -78,14 +74,16 @@ def test_cli_create(test_dir, monkeypatch, testcase):
 @pytest.mark.dependency()
 def test_cli_verify(test_dir, dep_testcase):
     compression, abspath = dep_testcase
-    archive_path = test_dir / archive_name(compression, abspath)
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     args = ["verify", str(archive_path)]
     callscript("archive-tool.py", args)
 
 @pytest.mark.dependency()
 def test_cli_ls(test_dir, dep_testcase):
     compression, abspath = dep_testcase
-    archive_path = test_dir / archive_name(compression, abspath)
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     prefix_dir = test_dir if abspath else Path(".")
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", str(archive_path)]
@@ -106,7 +104,8 @@ def test_cli_ls(test_dir, dep_testcase):
 @pytest.mark.dependency()
 def test_cli_checksums(test_dir, dep_testcase):
     compression, abspath = dep_testcase
-    archive_path = test_dir / archive_name(compression, abspath)
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["ls", "--format=checksum", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
@@ -126,7 +125,8 @@ def test_cli_checksums(test_dir, dep_testcase):
 @pytest.mark.dependency()
 def test_cli_info(test_dir, dep_testcase):
     compression, abspath = dep_testcase
-    archive_path = test_dir / archive_name(compression, abspath)
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     prefix_dir = test_dir if abspath else Path(".")
     # Need to test each type only once.
     types_done = set()

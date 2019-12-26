@@ -49,15 +49,6 @@ def archive_paths(root, abspath):
     return [root / ("archive-%s-%d.tar.bz2" % (absflag, i))
             for i in range(1, len(testdata)+1)]
 
-def get_output(fileobj):
-    while True:
-        line = fileobj.readline()
-        if not line:
-            break
-        line = line.strip()
-        print("< %s" % line)
-        yield line
-
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
     with tmp_chdir(tmpdir):

@@ -28,23 +28,25 @@ def test_dir(tmpdir):
     return tmpdir
 
 
-def test_cli_create_exclude_dir(test_dir, archive_name, monkeypatch):
+def test_cli_create_exclude_dir(test_dir, testname, monkeypatch):
     """Exclude a single directory.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     paths = "base"
     exclude = Path("base", "data")
     data = sub_testdata(testdata, exclude)
-    args = ["create", "--exclude", str(exclude), archive_name, paths]
+    args = ["create", "--exclude", str(exclude), name, paths]
     callscript("archive-tool.py", args)
-    with Archive().open(Path(archive_name)) as archive:
+    with Archive().open(Path(name)) as archive:
         check_manifest(archive.manifest, data)
 
 
-def test_cli_create_exclude_mult(test_dir, archive_name, monkeypatch):
+def test_cli_create_exclude_mult(test_dir, testname, monkeypatch):
     """Exclude multiple items.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     paths = "base"
     excludes = [
         Path("base", "data", "sub"),
@@ -56,22 +58,23 @@ def test_cli_create_exclude_mult(test_dir, archive_name, monkeypatch):
     for excl in excludes:
         data = sub_testdata(data, excl)
         excl_args += ("--exclude", str(excl))
-    args = ["create"] + excl_args + [archive_name, paths]
+    args = ["create"] + excl_args + [name, paths]
     callscript("archive-tool.py", args)
-    with Archive().open(Path(archive_name)) as archive:
+    with Archive().open(Path(name)) as archive:
         check_manifest(archive.manifest, data)
 
 
-def test_cli_create_exclude_include(test_dir, archive_name, monkeypatch):
+def test_cli_create_exclude_include(test_dir, testname, monkeypatch):
     """Exclude a directory, but explicitely include an item in that
     directory.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     exclude = Path("base", "data")
     include = Path("base", "data", "rnd1.dat")
     paths = ["base", str(include)]
     data = sub_testdata(testdata, exclude, include)
-    args = ["create", "--exclude", str(exclude), archive_name] + paths
+    args = ["create", "--exclude", str(exclude), name] + paths
     callscript("archive-tool.py", args)
-    with Archive().open(Path(archive_name)) as archive:
+    with Archive().open(Path(name)) as archive:
         check_manifest(archive.manifest, data)

@@ -43,9 +43,6 @@ dedupmodes = list(DedupMode)
 def idfn(dedup):
     return dedup.value
 
-def archive_name(dedup):
-    return "archive-%s.tar" % dedup.value
-
 @pytest.fixture(scope="module", params=dedupmodes, ids=idfn)
 def testcase(request):
     param = request.param
@@ -60,21 +57,21 @@ def dep_testcase(request, testcase):
 def test_create(test_dir, monkeypatch, testcase):
     dedup = testcase
     monkeypatch.chdir(str(test_dir))
-    archive_path = Path(archive_name(dedup))
+    archive_path = Path(archive_name(tags=[dedup.value]))
     paths = [Path("base")]
     Archive().create(archive_path, '', paths, dedup=dedup)
 
 @pytest.mark.dependency()
 def test_check_manifest(test_dir, dep_testcase):
     dedup = dep_testcase
-    archive_path = test_dir / archive_name(dedup)
+    archive_path = test_dir / archive_name(tags=[dedup.value])
     with Archive().open(archive_path) as archive:
         check_manifest(archive.manifest, testdata)
 
 @pytest.mark.dependency()
 def test_check_content(test_dir, dep_testcase):
     dedup = dep_testcase
-    archive_path = test_dir / archive_name(dedup)
+    archive_path = test_dir / archive_name(tags=[dedup.value])
     outdir = test_dir / "out"
     shutil.rmtree(str(outdir), ignore_errors=True)
     outdir.mkdir()
@@ -96,7 +93,7 @@ def test_check_content(test_dir, dep_testcase):
 @pytest.mark.dependency()
 def test_verify(test_dir, dep_testcase):
     dedup = dep_testcase
-    archive_path = test_dir / archive_name(dedup)
+    archive_path = test_dir / archive_name(tags=[dedup.value])
     with Archive().open(archive_path) as archive:
         ti_lnk = archive._file.getmember(str(dest_lnk))
         ti_cp = archive._file.getmember(str(dest_cp))

@@ -28,54 +28,58 @@ def test_dir(tmpdir):
     return tmpdir
 
 
-def test_create_exclude_file(test_dir, archive_name, monkeypatch):
+def test_create_exclude_file(test_dir, testname, monkeypatch):
     """Exclude one single file.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     paths = [Path("base")]
     excludes = [Path("base", "msg.txt")]
     data = sub_testdata(testdata, excludes[0])
-    Archive().create(Path(archive_name), "", paths, excludes=excludes)
-    with Archive().open(Path(archive_name)) as archive:
+    Archive().create(Path(name), "", paths, excludes=excludes)
+    with Archive().open(Path(name)) as archive:
         check_manifest(archive.manifest, data)
         archive.verify()
 
 
-def test_create_exclude_subdir(test_dir, archive_name, monkeypatch):
+def test_create_exclude_subdir(test_dir, testname, monkeypatch):
     """Exclude a subdirectory.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     paths = [Path("base")]
     excludes = [Path("base", "data")]
     data = sub_testdata(testdata, excludes[0])
-    Archive().create(Path(archive_name), "", paths, excludes=excludes)
-    with Archive().open(Path(archive_name)) as archive:
+    Archive().create(Path(name), "", paths, excludes=excludes)
+    with Archive().open(Path(name)) as archive:
         check_manifest(archive.manifest, data)
         archive.verify()
 
 
-def test_create_exclude_samelevel(test_dir, archive_name, monkeypatch):
+def test_create_exclude_samelevel(test_dir, testname, monkeypatch):
     """Exclude a directory explictely named in paths.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     paths = [Path("base", "data"), Path("base", "empty")]
     excludes = [paths[1]]
     data = sub_testdata(testdata, Path("base"), paths[0])
-    Archive().create(Path(archive_name), "", paths, excludes=excludes)
-    with Archive().open(Path(archive_name)) as archive:
+    Archive().create(Path(name), "", paths, excludes=excludes)
+    with Archive().open(Path(name)) as archive:
         check_manifest(archive.manifest, data)
         archive.verify()
 
 
-def test_create_exclude_explicit_include(test_dir, archive_name, monkeypatch):
+def test_create_exclude_explicit_include(test_dir, testname, monkeypatch):
     """Exclude a directory, but explicitely include an item in that
     directory.
     """
     monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
     paths = [Path("base"), Path("base", "data", "rnd1.dat")]
     excludes = [Path("base", "data")]
     data = sub_testdata(testdata, excludes[0], paths[1])
-    Archive().create(Path(archive_name), "", paths, excludes=excludes)
-    with Archive().open(Path(archive_name)) as archive:
+    Archive().create(Path(name), "", paths, excludes=excludes)
+    with Archive().open(Path(name)) as archive:
         check_manifest(archive.manifest, data)
         archive.verify()
