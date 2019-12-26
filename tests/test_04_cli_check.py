@@ -44,22 +44,13 @@ def extract_archive(testname, test_dir):
         tarf.extractall(path=str(check_dir))
     return check_dir
 
-def get_results(fileobj):
-    results = set()
-    while True:
-        line = fileobj.readline()
-        if not line:
-            break
-        results.add(line.strip())
-    return results
-
 def test_check_allmatch(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
     with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
         args = ["check", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == set()
+        assert set(get_output(f)) == set()
 
 def test_check_add_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -70,7 +61,7 @@ def test_check_add_file(test_dir, copy_data, monkeypatch):
         args = ["check", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == {str(fp)}
+        assert set(get_output(f)) == {str(fp)}
 
 def test_check_change_type(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -81,7 +72,7 @@ def test_check_change_type(test_dir, copy_data, monkeypatch):
         args = ["check", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == {str(fp)}
+        assert set(get_output(f)) == {str(fp)}
 
 def test_check_touch_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -91,7 +82,7 @@ def test_check_touch_file(test_dir, copy_data, monkeypatch):
         args = ["check", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == {str(fp)}
+        assert set(get_output(f)) == {str(fp)}
 
 def test_check_modify_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -104,7 +95,7 @@ def test_check_modify_file(test_dir, copy_data, monkeypatch):
         args = ["check", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == {str(fp)}
+        assert set(get_output(f)) == {str(fp)}
 
 def test_check_symlink_target(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -115,7 +106,7 @@ def test_check_symlink_target(test_dir, copy_data, monkeypatch):
         args = ["check", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == {str(fp)}
+        assert set(get_output(f)) == {str(fp)}
 
 def test_check_present_allmatch(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -123,7 +114,7 @@ def test_check_present_allmatch(test_dir, copy_data, monkeypatch):
         args = ["check", "--present", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_test_files
+        assert set(get_output(f)) == all_test_files
 
 def test_check_present_add_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -134,7 +125,7 @@ def test_check_present_add_file(test_dir, copy_data, monkeypatch):
         args = ["check", "--present", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_test_files - {str(fp)}
+        assert set(get_output(f)) == all_test_files - {str(fp)}
 
 def test_check_present_change_type(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -145,7 +136,7 @@ def test_check_present_change_type(test_dir, copy_data, monkeypatch):
         args = ["check", "--present", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_test_files - {str(fp)}
+        assert set(get_output(f)) == all_test_files - {str(fp)}
 
 def test_check_present_touch_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -155,7 +146,7 @@ def test_check_present_touch_file(test_dir, copy_data, monkeypatch):
         args = ["check", "--present", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_test_files - {str(fp)}
+        assert set(get_output(f)) == all_test_files - {str(fp)}
 
 def test_check_present_modify_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -168,7 +159,7 @@ def test_check_present_modify_file(test_dir, copy_data, monkeypatch):
         args = ["check", "--present", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_test_files - {str(fp)}
+        assert set(get_output(f)) == all_test_files - {str(fp)}
 
 def test_check_present_symlink_target(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -179,7 +170,7 @@ def test_check_present_symlink_target(test_dir, copy_data, monkeypatch):
         args = ["check", "--present", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_test_files - {str(fp)}
+        assert set(get_output(f)) == all_test_files - {str(fp)}
 
 def test_check_extract_archive(test_dir, extract_archive, monkeypatch):
     """When extracting an archive and checking the result, 
@@ -194,7 +185,7 @@ def test_check_extract_archive(test_dir, extract_archive, monkeypatch):
         args = ["check", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == set()
+        assert set(get_output(f)) == set()
 
 def test_check_extract_archive_custom_metadata(test_dir, testname, monkeypatch):
     """When extracting an archive and checking the result, 
@@ -219,7 +210,7 @@ def test_check_extract_archive_custom_metadata(test_dir, testname, monkeypatch):
         args = ["check", str(archive_path), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == set()
+        assert set(get_output(f)) == set()
 
 def test_check_present_extract_archive(test_dir, extract_archive, monkeypatch):
     """When extracting an archive and checking the result, 
@@ -236,7 +227,7 @@ def test_check_present_extract_archive(test_dir, extract_archive, monkeypatch):
         args = ["check", "--present", str(test_dir / "archive.tar"), "base"]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_files
+        assert set(get_output(f)) == all_files
 
 def test_check_prefix_allmatch(test_dir, copy_data, monkeypatch):
     """Test the --prefix argument to archive-tool check.
@@ -252,7 +243,7 @@ def test_check_prefix_allmatch(test_dir, copy_data, monkeypatch):
         args = ["check", "--prefix", str(prefix), str(archive_path), "."]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == set()
+        assert set(get_output(f)) == set()
 
 def test_check_prefix_present_allmatch(test_dir, copy_data, monkeypatch):
     """Test the --prefix argument to archive-tool check.
@@ -268,7 +259,7 @@ def test_check_prefix_present_allmatch(test_dir, copy_data, monkeypatch):
                 str(archive_path), "."]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == {"rnd.dat"}
+        assert set(get_output(f)) == {"rnd.dat"}
 
 def test_check_prefix_extract(test_dir, extract_archive, monkeypatch):
     """Test the --prefix argument to archive-tool check.
@@ -284,7 +275,7 @@ def test_check_prefix_extract(test_dir, extract_archive, monkeypatch):
         args = ["check", "--prefix", str(prefix), str(archive_path), "."]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == set()
+        assert set(get_output(f)) == set()
 
 def test_check_prefix_present_extract(test_dir, extract_archive, monkeypatch):
     """Test the --prefix argument to archive-tool check.
@@ -304,7 +295,7 @@ def test_check_prefix_present_extract(test_dir, extract_archive, monkeypatch):
                 str(archive_path), "."]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_results(f) == all_files
+        assert set(get_output(f)) == all_files
 
 def test_check_stdin(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -320,7 +311,7 @@ def test_check_stdin(test_dir, copy_data, monkeypatch):
             f_in.seek(0)
             callscript("archive-tool.py", args, stdin=f_in, stdout=f_out)
         f_out.seek(0)
-        assert get_results(f_out) == {str(new_file)}
+        assert set(get_output(f_out)) == {str(new_file)}
 
 def test_check_stdin_present(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
@@ -336,4 +327,4 @@ def test_check_stdin_present(test_dir, copy_data, monkeypatch):
             f_in.seek(0)
             callscript("archive-tool.py", args, stdin=f_in, stdout=f_out)
         f_out.seek(0)
-        assert get_results(f_out) == {str(old_file)}
+        assert set(get_output(f_out)) == {str(old_file)}

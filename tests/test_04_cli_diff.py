@@ -37,15 +37,6 @@ def test_data(request, test_dir):
         archive.extract(test_dir)
     return test_dir
 
-def get_output(fileobj):
-    out = []
-    while True:
-        line = fileobj.readline()
-        if not line:
-            break
-        out.append(line.strip())
-    return out
-
 @pytest.mark.parametrize("abspath", [False, True])
 def test_diff_equal(test_data, testname, monkeypatch, abspath):
     """Diff two archives having equal content.
@@ -64,7 +55,7 @@ def test_diff_equal(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_output(f) == []
+        assert list(get_output(f)) == []
 
 @pytest.mark.parametrize("abspath", [False, True])
 def test_diff_modified_file(test_data, testname, monkeypatch, abspath):
@@ -86,7 +77,7 @@ def test_diff_modified_file(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=101, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == ("Files %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, p))
@@ -112,7 +103,7 @@ def test_diff_symlink_target(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=101, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == ("Symbol links %s:%s and %s:%s have different target"
                           % (archive_ref_path, p, archive_path, p))
@@ -138,7 +129,7 @@ def test_diff_wrong_type(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == ("Entries %s:%s and %s:%s have different type"
                           % (archive_ref_path, p, archive_path, p))
@@ -164,7 +155,7 @@ def test_diff_missing_files(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 2
         assert out[0] == "Only in %s: %s" % (archive_path, p2)
         assert out[1] == "Only in %s: %s" % (archive_ref_path, p1)
@@ -192,7 +183,7 @@ def test_diff_mult(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 3
         assert out[0] == ("Files %s:%s and %s:%s differ"
                           % (archive_ref_path, pm, archive_path, pm))
@@ -220,13 +211,13 @@ def test_diff_metadata(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_output(f) == []
+        assert list(get_output(f)) == []
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", "--report-meta",
                 str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=100, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == ("File system metadata for %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, p))
@@ -248,7 +239,7 @@ def test_diff_basedir_equal(test_data, testname, monkeypatch):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        assert get_output(f) == []
+        assert list(get_output(f)) == []
 
 def test_diff_basedir_mod_file(test_data, testname, monkeypatch):
     """Diff two archives with different base directories having one file's
@@ -271,7 +262,7 @@ def test_diff_basedir_mod_file(test_data, testname, monkeypatch):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=101, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == ("Files %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, pn))
@@ -296,7 +287,7 @@ def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 2
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
         assert out[1] == "Only in %s: %s" % (archive_ref_path, pd / "rnd.dat")
@@ -305,6 +296,6 @@ def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
                 str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
-        out = get_output(f)
+        out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)

@@ -17,7 +17,8 @@ from archive.tools import ft_mode
 __all__ = [
     'DataDir', 'DataFile', 'DataRandomFile', 'DataSymLink',
     'absflag', 'archive_name', 'callscript',  'check_manifest',
-    'gettestdata', 'require_compression', 'setup_testdata', 'sub_testdata',
+    'get_output', 'gettestdata', 'require_compression', 'setup_testdata',
+    'sub_testdata',
 ]
 
 _cleanup = True
@@ -283,3 +284,12 @@ def callscript(scriptname, args, returncode=0,
     print("\n>", *cmd)
     retcode = subprocess.call(cmd, stdin=stdin, stdout=stdout, stderr=stderr)
     assert retcode == returncode
+
+def get_output(fileobj):
+    while True:
+        line = fileobj.readline()
+        if not line:
+            break
+        line = line.strip()
+        print("< %s" % line)
+        yield line
