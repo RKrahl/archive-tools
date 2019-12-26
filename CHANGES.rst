@@ -1,13 +1,17 @@
 History of changes to archive-tools
 ===================================
 
-0.4 (not yet released)
+0.4 (2019-12-26)
     New features
       + #15, #43: Add `archive-tool find` subcommand.
       + #38, #39: Add `archive-tool diff` subcommand.
       + #40, #44: Add setting tags in the header of the manifest.
       + #41: Add a :meth:`Archive.extract` method.
       + Add a :meth:`Manifest.sort` method.
+
+    Internal changes
+      + Reorganization of the `archive-tool` script, move the code into
+	submodules in the new `archive.cli` package.
 
 0.3 (2019-08-06)
     New features
