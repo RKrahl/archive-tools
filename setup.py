@@ -82,9 +82,9 @@ from archive.exception import *
         if pkgname not in self.packages:
             raise DistutilsSetupError("Expected package '%s' not found"
                                       % pkgname)
-        pkgdir = self.package_dir.get(pkgname, pkgname)
+        pkgdir = Path(self.package_dir.get(pkgname, pkgname))
         ver = self.distribution.get_version()
-        with Path(pkgdir, "__init__.py").open("wt") as f:
+        with (pkgdir / "__init__.py").open("wt") as f:
             print(self.init_template % (__doc__, ver), file=f)
 
 
