@@ -1,5 +1,5 @@
-History of changes to archive-tools
-===================================
+Changelog
+=========
 
 0.4 (2019-12-26)
     New features
