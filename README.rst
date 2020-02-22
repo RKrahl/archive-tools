@@ -1,12 +1,12 @@
 |travis| |pypi|
 
-.. |travis| image:: https://img.shields.io/travis/com/RKrahl/archive-tools/master.svg
+.. |travis| image:: https://img.shields.io/travis/com/RKrahl/archive-tools
    :target: https://travis-ci.com/RKrahl/archive-tools
-   :alt: travis build status
+   :alt: Travis build status
 
-.. |pypi| image:: https://img.shields.io/pypi/v/archive-tools.svg
+.. |pypi| image:: https://img.shields.io/pypi/v/archive-tools
    :target: https://pypi.org/project/archive-tools/
-   :alt: pypi version
+   :alt: PyPI version
 
 Tools for managing archives
 ===========================
