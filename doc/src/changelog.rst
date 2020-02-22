@@ -3,50 +3,66 @@ Changelog
 
 0.4 (2019-12-26)
     New features
-      + #15, #43: Add `archive-tool find` subcommand.
-      + #38, #39: Add `archive-tool diff` subcommand.
-      + #40, #44: Add setting tags in the header of the manifest.
-      + #41: Add a :meth:`Archive.extract` method.
+      + `#15`_, `#43`_: Add `archive-tool find` subcommand.
+      + `#38`_, `#39`_: Add `archive-tool diff` subcommand.
+      + `#40`_, `#44`_: Add setting tags in the header of the
+        manifest.
+      + `#41`_: Add a :meth:`Archive.extract` method.
       + Add a :meth:`Manifest.sort` method.
 
     Internal changes
-      + Reorganization of the `archive-tool` script, move the code into
-	submodules in the new `archive.cli` package.
+      + Reorganization of the `archive-tool` script, move the code
+	into submodules in the new `archive.cli` package.
+
+.. _#15: https://github.com/RKrahl/archive-tools/issues/15
+.. _#38: https://github.com/RKrahl/archive-tools/issues/38
+.. _#39: https://github.com/RKrahl/archive-tools/pull/39
+.. _#40: https://github.com/RKrahl/archive-tools/issues/40
+.. _#41: https://github.com/RKrahl/archive-tools/pull/41
+.. _#43: https://github.com/RKrahl/archive-tools/pull/43
+.. _#44: https://github.com/RKrahl/archive-tools/pull/44
 
 0.3 (2019-08-06)
     New features
-      + #33: `archive-tool create` should have an option to exclude files.
-      + #35: :class:`FileInfo` calculates checksums lazily.
-      + #34: files of unsupported type are ignored when creating an
+      + `#33`_: `archive-tool create` should have an option to exclude
+        files.
+      + `#35`_: :class:`FileInfo` calculates checksums lazily.
+      + `#34`_: files of unsupported type are ignored when creating an
         archive.  A warning is emitted instead of raising an error.
 
     Incompatible changes
-      + #36: Drop support for strings in the file name arguments
+      + `#36`_: Drop support for strings in the file name arguments
         `path`, `paths`, `basedir`, and `workdir` of the methods
         :meth:`Archive.create` and :meth:`Archive.open`.  These
         arguments require :class:`Path` objects now.
 
     Bug fixes and minor changes
-      + #37: `archive-tool create` throws an error when trying to
+      + `#37`_: `archive-tool create` throws an error when trying to
 	explicitly add a symlink.
+
+.. _#33: https://github.com/RKrahl/archive-tools/issues/33
+.. _#34: https://github.com/RKrahl/archive-tools/issues/34
+.. _#35: https://github.com/RKrahl/archive-tools/issues/35
+.. _#36: https://github.com/RKrahl/archive-tools/pull/36
+.. _#37: https://github.com/RKrahl/archive-tools/issues/37
 
 0.2 (2019-07-14)
     New features
-      + #28: support deduplication.
-      + #26 and #30: add support for custom metadata:
+      + `#28`_: support deduplication.
+      + `#26`_, `#30`_: add support for custom metadata:
           - Add methods :meth:`Archive.add_metadata` and
             :meth:`Archive.get_metadata` to add and to retrieve custom
             metadata to and from archives.
           - Add a list of metadata items in the header of the
             manifest.
           - Bump manifest version to 1.1.
-      + #4, #32: Add :class:`MailArchive` implementing a special
+      + `#4`_, `#32`_: Add :class:`MailArchive` implementing a special
         flavour of an :class:`Archive` for storing mails.
-      + #27: Add command line flags `--prefix <dir>` and `--stdin` to
-        `archive-tool check`.
+      + `#27`_: Add command line flags `--prefix <dir>` and `--stdin`
+        to `archive-tool check`.
 
     Incompatible changes
-      + #23 and #26: review the API of :class:`Archive`:
+      + `#23`_, `#26`_: review the API of :class:`Archive`:
           - Add two methods :meth:`Archive.create` and
             :meth:`Archive.open` that create and read archives
             respectively.
@@ -62,10 +78,21 @@ Changelog
           - :class:`Archive` implements the context manager protocol.
 
     Bug fixes and minor changes
-      + #20: :meth:`Archive.create` takes a working directory as
+      + `#20`_: :meth:`Archive.create` takes a working directory as
         optional argument.
-      + #29: Verfiy fails if archive contains hard links.
-      + #25: `archive-tool check` should ignore metadata.
+      + `#29`_: Verfiy fails if archive contains hard links.
+      + `#25`_: `archive-tool check` should ignore metadata.
+
+.. _#4: https://github.com/RKrahl/archive-tools/issues/4
+.. _#20: https://github.com/RKrahl/archive-tools/issues/20
+.. _#23: https://github.com/RKrahl/archive-tools/issues/23
+.. _#25: https://github.com/RKrahl/archive-tools/issues/25
+.. _#26: https://github.com/RKrahl/archive-tools/pull/26
+.. _#27: https://github.com/RKrahl/archive-tools/issues/27
+.. _#28: https://github.com/RKrahl/archive-tools/issues/28
+.. _#29: https://github.com/RKrahl/archive-tools/issues/29
+.. _#30: https://github.com/RKrahl/archive-tools/pull/30
+.. _#32: https://github.com/RKrahl/archive-tools/pull/32
 
 0.1 (2019-04-14)
     + Initial release.
