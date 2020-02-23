@@ -80,7 +80,7 @@ Changelog
     Bug fixes and minor changes
       + `#20`_: :meth:`Archive.create` takes a working directory as
         optional argument.
-      + `#29`_: Verfiy fails if archive contains hard links.
+      + `#29`_: Verify fails if archive contains hard links.
       + `#25`_: `archive-tool check` should ignore metadata.
 
 .. _#4: https://github.com/RKrahl/archive-tools/issues/4

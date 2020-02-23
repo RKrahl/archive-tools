@@ -17,7 +17,7 @@ sys.path.insert(0, str(topdir))
 # -- Project information -----------------------------------------------------
 
 project = 'archive-tools'
-copyright = '2020, Rolf Krahl'
+copyright = '2019–2020, Rolf Krahl'
 author = 'Rolf Krahl'
 
 # The full version, including alpha/beta/rc tags
