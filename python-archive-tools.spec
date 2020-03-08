@@ -44,7 +44,7 @@ python3 setup.py test
 
 %files 
 %defattr(-,root,root)
-%doc README.rst
+%doc README.rst CHANGES.rst
 %{python3_sitelib}/*
 %{_bindir}/*
 
