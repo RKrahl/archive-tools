@@ -67,8 +67,8 @@ Optional library packages:
 
   - date strings will lack time zone indication.
 
-  - the date formats recognized in the `--mtime` argument to
-    `archive-tool.py find` are reduced.
+  - the `--mtime` argument to `archive-tool.py find` recognizes a
+    reduced set of date formats.
 
 + `setuptools_scm`_
 
