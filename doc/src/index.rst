@@ -10,6 +10,7 @@ name, file stats, and checksums of the file.
    :maxdepth: 2
    :caption: Contents:
 
+   moduleref
    changelog
 
 
@@ -17,5 +18,4 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
