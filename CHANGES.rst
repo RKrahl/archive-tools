@@ -12,7 +12,7 @@ Changelog
 
     Internal changes
       + Reorganization of the `archive-tool` script, move the code
-	into submodules in the new `archive.cli` package.
+	into submodules in the new :mod:`archive.cli` package.
 
 .. _#15: https://github.com/RKrahl/archive-tools/issues/15
 .. _#38: https://github.com/RKrahl/archive-tools/issues/38
