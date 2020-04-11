@@ -6,12 +6,7 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-# -- Path setup --------------------------------------------------------------
-
-from pathlib import Path
-import sys
-topdir = Path("../..").resolve()
-sys.path.insert(0, str(topdir))
+import archive
 
 
 # -- Project information -----------------------------------------------------
@@ -21,8 +16,7 @@ copyright = '2019–2020, Rolf Krahl'
 author = 'Rolf Krahl'
 
 # The full version, including alpha/beta/rc tags
-with (topdir / ".version").open("rt") as f:
-    release = f.read()
+release = archive.__version__
 # The short X.Y version
 version = ".".join(release.split(".")[0:2])
 
@@ -71,6 +65,7 @@ pygments_style = 'sphinx'
 # -- Options for autodoc extension -------------------------------------------
 
 autodoc_member_order = 'bysource'
+
 
 # -- Options for HTML output -------------------------------------------------
 
