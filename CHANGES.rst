@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.5 (not yet released)
+    New features
+      + `#45`_: The files argument to `archive-tool check` defaults to
+	the archive's basedir.
+
+.. _#45: https://github.com/RKrahl/archive-tools/issues/45
+
 0.4 (2019-12-26)
     New features
       + `#15`_, `#43`_: Add `archive-tool find` subcommand.

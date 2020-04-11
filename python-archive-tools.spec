@@ -1,13 +1,14 @@
 %bcond_with tests
+%global distname archive-tools
 
-Name:		python3-archive-tools
+Name:		python3-%{distname}
 Version:	$version
 Release:	0
 Url:		$url
 Summary:	$description
 License:	Apache-2.0
 Group:		Development/Libraries/Python
-Source:		archive-tools-%{version}.tar.gz
+Source:		%{distname}-%{version}.tar.gz
 BuildRequires:	python3-base >= 3.4
 %if %{with tests}
 BuildRequires:	python3-PyYAML
@@ -24,11 +25,14 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-build
 %description
 $long_description
 
+
 %prep
-%setup -q -n archive-tools-%{version}
+%setup -q -n %{distname}-%{version}
+
 
 %build
 python3 setup.py build
+
 
 %install
 python3 setup.py install --optimize=1 --prefix=%{_prefix} --root=%{buildroot}
@@ -37,15 +41,18 @@ do
     mv %{buildroot}%{_bindir}/$$f %{buildroot}%{_bindir}/$${f%%.py}
 done
 
+
 %if %{with tests}
 %check
 python3 setup.py test
 %endif
 
-%files 
+
+%files
 %defattr(-,root,root)
 %doc README.rst CHANGES.rst
 %{python3_sitelib}/*
 %{_bindir}/*
+
 
 %changelog

@@ -67,8 +67,8 @@ Optional library packages:
 
   - date strings will lack time zone indication.
 
-  - the date formats recognized in the `--mtime` argument to
-    `archive-tool.py find` are reduced.
+  - the `--mtime` argument to `archive-tool.py find` recognizes a
+    reduced set of date formats.
 
 + `setuptools_scm`_
 
@@ -120,7 +120,7 @@ the site-packages directory of your Python installation.
 Copyright and License
 ---------------------
 
-Copyright 2019 Rolf Krahl
+Copyright 2019–2020 Rolf Krahl
 
 Licensed under the Apache License, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License.  You may
