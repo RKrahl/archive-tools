@@ -52,6 +52,19 @@ def test_check_allmatch(test_dir, copy_data, monkeypatch):
         f.seek(0)
         assert set(get_output(f)) == set()
 
+@pytest.mark.xfail(reason="Issue #45 not yet implemented")
+def test_check_allmatch_default_files(test_dir, copy_data, monkeypatch):
+    """Same as test_check_allmatch(), but ommit the files argument.
+    Rely on the fact that the file argument defaults to the archives's
+    basedir.  Ref. #45.
+    """
+    monkeypatch.chdir(str(copy_data))
+    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        args = ["check", str(test_dir / "archive.tar")]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert set(get_output(f)) == set()
+
 def test_check_add_file(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(str(copy_data))
     fp = Path("base", "new_msg.txt")
