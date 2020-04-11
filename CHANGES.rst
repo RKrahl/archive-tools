@@ -34,7 +34,7 @@ Changelog
       + `#36`_: Drop support for strings in the file name arguments
         `path`, `paths`, `basedir`, and `workdir` of the methods
         :meth:`Archive.create` and :meth:`Archive.open`.  These
-        arguments require :class:`Path` objects now.
+        arguments require :class:`~pathlib.Path` objects now.
 
     Bug fixes and minor changes
       + `#37`_: `archive-tool create` throws an error when trying to
