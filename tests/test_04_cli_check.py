@@ -52,7 +52,6 @@ def test_check_allmatch(test_dir, copy_data, monkeypatch):
         f.seek(0)
         assert set(get_output(f)) == set()
 
-@pytest.mark.xfail(reason="Issue #45 not yet implemented")
 def test_check_allmatch_default_files(test_dir, copy_data, monkeypatch):
     """Same as test_check_allmatch(), but ommit the files argument.
     Rely on the fact that the file argument defaults to the archives's
