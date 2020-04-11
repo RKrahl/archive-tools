@@ -26,10 +26,13 @@ def check(args):
             raise ArgError("can't accept both, --stdin and the files argument")
         files = [Path(l.strip()) for l in sys.stdin]
     else:
-        if not args.files:
-            raise ArgError("either --stdin or the files argument is required")
-        files = args.files
+        if args.files:
+            files = args.files
+        else:
+            files = None
     with Archive().open(args.archive) as archive:
+        if files is None:
+            files = [ archive.basedir ]
         metadata = { Path(md) for md in archive.manifest.metadata }
         FileInfo.Checksums = archive.manifest.checksums
         file_iter = FileInfo.iterpaths(files, set())

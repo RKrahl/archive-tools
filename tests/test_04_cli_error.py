@@ -188,23 +188,6 @@ def test_cli_integrity_missing_file(test_dir, testname, monkeypatch):
         line = f.readline()
         assert "%s:%s: missing" % (name, missing) in line
 
-def test_cli_check_missing_files(test_dir, testname, monkeypatch):
-    monkeypatch.chdir(str(test_dir))
-    name = archive_name(tags=[testname])
-    args = ["create", name, "base"]
-    callscript("archive-tool.py", args)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
-        args = ["check", name]
-        callscript("archive-tool.py", args, returncode=2, stderr=f)
-        f.seek(0)
-        line = f.readline()
-        assert line.startswith("usage: archive-tool.py ")
-        while True:
-            line = f.readline()
-            if not line.startswith(" "):
-                break
-        assert "either --stdin or the files argument is required" in line
-
 def test_cli_check_stdin_and_files(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
     name = archive_name(tags=[testname])
