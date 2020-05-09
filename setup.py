@@ -121,7 +121,7 @@ setup(
     packages = ["archive", "archive.cli"],
     scripts = ["scripts/archive-tool.py", "scripts/imap-to-archive.py"],
     classifiers = [
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
