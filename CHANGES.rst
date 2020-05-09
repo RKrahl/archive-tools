@@ -1,10 +1,14 @@
 Changelog
 =========
 
-0.5 (not yet released)
+0.5 (2020-05-09)
     New features
       + `#45`_: The files argument to `archive-tool check` defaults to
 	the archive's basedir.
+
+    Bug fixes and minor changes
+      + Fix: some test data have not been included in the source
+        distribution.
 
 .. _#45: https://github.com/RKrahl/archive-tools/issues/45
 

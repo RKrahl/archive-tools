@@ -39,8 +39,10 @@ reading through the compressed tar archive.
 Download
 --------
 
-The latest release version is available on PyPI, see
-https://pypi.org/project/archive-tools/
+The latest release version is available on the
+`Python Package Index (PyPI)`__.
+
+.. __: `PyPI site`_
 
 
 System requirements
@@ -122,11 +124,8 @@ Copyright and License
 
 Copyright 2019–2020 Rolf Krahl
 
-Licensed under the Apache License, Version 2.0 (the "License"); you
-may not use this file except in compliance with the License.  You may
-obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
+Licensed under the `Apache License`_, Version 2.0 (the "License"); you
+may not use this file except in compliance with the License.
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -135,7 +134,7 @@ implied.  See the License for the specific language governing
 permissions and limitations under the License.
 
 
-
+.. _PyPI site: https://pypi.org/project/archive-tools/
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
 .. _imapclient: https://github.com/mjs/imapclient/
 .. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
@@ -144,3 +143,4 @@ permissions and limitations under the License.
 .. _distutils-pytest: https://github.com/RKrahl/distutils-pytest
 .. _pytest-dependency: https://pypi.python.org/pypi/pytest_dependency/
 .. _Installing Python Modules: https://docs.python.org/3.7/install/
+.. _Apache License: https://www.apache.org/licenses/LICENSE-2.0
