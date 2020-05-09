@@ -6,6 +6,10 @@ History of changes to archive-tools
       + #45: The files argument to `archive-tool check` defaults to
 	the archive's basedir.
 
+    Bug fixes and minor changes
+      + Fix: some test data have not been included in the source
+        distribution.
+
 0.4 (2019-12-26)
     New features
       + #15, #43: Add `archive-tool find` subcommand.
