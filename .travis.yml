@@ -5,7 +5,7 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-install: pip install 'PyYAML' 'python-dateutil' 'pytest >=3.6.0' 'distutils-pytest' 'pytest-dependency >=0.2'
+install: pip install -r .travis_require
 script: make test
 
 # Local Variables:

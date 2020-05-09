@@ -1,4 +1,4 @@
-PYTHON   = python3
+PYTHON = python3
 
 
 build:
@@ -15,7 +15,6 @@ clean:
 	rm -rf build
 
 distclean: clean
-	rm -f archive/*.pyc scripts/*.pyc tests/*.pyc
 	rm -rf archive/__pycache__ scripts/__pycache__ tests/__pycache__
 	rm -rf tests/.cache tests/.pytest_cache
 	rm -f MANIFEST .version

@@ -1,5 +1,14 @@
-History of changes to archive-tools
-===================================
+Changelog
+=========
+
+0.5 (2020-05-09)
+    New features
+      + #45: The files argument to `archive-tool check` defaults to
+	the archive's basedir.
+
+    Bug fixes and minor changes
+      + Fix: some test data have not been included in the source
+        distribution.
 
 0.4 (2019-12-26)
     New features

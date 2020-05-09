@@ -82,9 +82,9 @@ from archive.exception import *
         if pkgname not in self.packages:
             raise DistutilsSetupError("Expected package '%s' not found"
                                       % pkgname)
-        pkgdir = self.package_dir.get(pkgname, pkgname)
+        pkgdir = Path(self.package_dir.get(pkgname, pkgname))
         ver = self.distribution.get_version()
-        with Path(pkgdir, "__init__.py").open("wt") as f:
+        with (pkgdir / "__init__.py").open("wt") as f:
             print(self.init_template % (__doc__, ver), file=f)
 
 
@@ -121,7 +121,7 @@ setup(
     packages = ["archive", "archive.cli"],
     scripts = ["scripts/archive-tool.py", "scripts/imap-to-archive.py"],
     classifiers = [
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
