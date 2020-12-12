@@ -2,7 +2,6 @@
 """
 
 import email
-from pathlib import Path
 import pytest
 from pytest_dependency import depends
 import yaml

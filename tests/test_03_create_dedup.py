@@ -9,7 +9,6 @@ import tarfile
 import pytest
 from pytest_dependency import depends
 from archive.archive import Archive, DedupMode
-from archive.manifest import Manifest
 from conftest import *
 
 

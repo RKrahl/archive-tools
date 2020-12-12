@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 import stat
-import subprocess
 import tarfile
 from tempfile import TemporaryFile
 from archive.manifest import Manifest

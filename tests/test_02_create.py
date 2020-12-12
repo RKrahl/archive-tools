@@ -5,7 +5,6 @@ import datetime
 from pathlib import Path
 import shutil
 import subprocess
-import tarfile
 import pytest
 from pytest_dependency import depends
 from archive import Archive
