@@ -88,8 +88,8 @@ Incompatible changes
 Bug fixes and minor changes
 ---------------------------
 
-+ #37: `archive-tool create` throws an error when trying to explicitly
-  add a symlink.
++ `#37`_: `archive-tool create` throws an error when trying to
+  explicitly add a symlink.
 
 .. _#33: https://github.com/RKrahl/archive-tools/issues/33
 .. _#34: https://github.com/RKrahl/archive-tools/issues/34
@@ -150,7 +150,7 @@ Bug fixes and minor changes
 + `#20`_: :meth:`Archive.create` takes a working directory as optional
   argument.
 
-+ `#29`_: Verfiy fails if archive contains hard links.
++ `#29`_: Verify fails if archive contains hard links.
 
 + `#25`_: `archive-tool check` should ignore metadata.
 
