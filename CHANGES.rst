@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.5.1 (2020-12-12)
+    Bug fixes and minor changes
+      + #46, #47: `archive-tool` fails with :exc:`NameError` when
+        tying to emit a warning.
+
 0.5 (2020-05-09)
     New features
       + #45: The files argument to `archive-tool check` defaults to
