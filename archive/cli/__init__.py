@@ -9,6 +9,8 @@ from archive.exception import *
 
 subcmds = [ "create", "verify", "ls", "info", "check", "diff", "find", ]
 
+argparser = argparse.ArgumentParser()
+
 def showwarning(message, category, filename, lineno, file=None, line=None):
     """Display ArchiveWarning in a somewhat more user friendly manner.
     All other warnings are formatted the standard way.
@@ -32,7 +34,6 @@ def showwarning(message, category, filename, lineno, file=None, line=None):
 
 def archive_tool():
     warnings.showwarning = showwarning
-    argparser = argparse.ArgumentParser()
     subparsers = argparser.add_subparsers(title='subcommands', dest='subcmd')
     for sc in subcmds:
         m = importlib.import_module('archive.cli.%s' % sc)

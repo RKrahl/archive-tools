@@ -38,7 +38,6 @@ class tmp_socket():
         self.socket.close()
         self.path.unlink()
 
-@pytest.mark.xfail(reason="Issue #46")
 def test_cli_warn_ignore_socket(test_dir, testname, monkeypatch):
     """Create an archive from a directory containing a socket.
 
