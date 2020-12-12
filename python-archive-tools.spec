@@ -1,4 +1,4 @@
-%bcond_with tests
+%bcond_without tests
 %global distname archive-tools
 
 Name:		python3-%{distname}
@@ -9,6 +9,7 @@ Summary:	$description
 License:	Apache-2.0
 Group:		Development/Libraries/Python
 Source:		%{distname}-%{version}.tar.gz
+BuildRequires:	fdupes
 BuildRequires:	python3-base >= 3.4
 %if %{with tests}
 BuildRequires:	python3-PyYAML
@@ -40,6 +41,7 @@ for f in `ls %{buildroot}%{_bindir}`
 do
     mv %{buildroot}%{_bindir}/$$f %{buildroot}%{_bindir}/$${f%%.py}
 done
+%fdupes %{buildroot}
 
 
 %if %{with tests}

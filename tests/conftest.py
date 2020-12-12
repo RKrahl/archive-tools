@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 from random import getrandbits
 import shutil
-import stat
 import subprocess
 import sys
 import tempfile
