@@ -53,7 +53,7 @@ def test_verify_missing_manifest(test_data, testname):
     with pytest.raises(ArchiveIntegrityError) as err:
         with Archive().open(Path(name)) as archive:
             pass
-    assert ".manifest.yaml not found" in str(err.value)
+    assert "metadata item '.manifest.yaml' not found" in str(err.value)
 
 def test_verify_missing_metadata_item(test_data, testname):
     name = archive_name(tags=[testname])
@@ -72,7 +72,7 @@ def test_verify_missing_metadata_item(test_data, testname):
     with Archive().open(Path(name)) as archive:
         with pytest.raises(ArchiveIntegrityError) as err:
             archive.verify()
-        assert "'base/.msg.txt' not found" in str(err.value)
+        assert "metadata item 'base/.msg.txt' not found" in str(err.value)
 
 def test_verify_missing_file(test_data, testname):
     name = archive_name(tags=[testname])
