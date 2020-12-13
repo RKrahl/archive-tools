@@ -153,8 +153,10 @@ class Archive:
                     # This will raise ValueError if p does not start
                     # with basedir:
                     p.relative_to(self.basedir)
-                except ValueError as e:
-                    raise ArchiveCreateError(str(e))
+                except ValueError:
+                    raise ArchiveCreateError("invalid path '%s': must be a "
+                                             "subpath of base directory %s"
+                                             % (p, self.basedir))
         if not abspath:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")

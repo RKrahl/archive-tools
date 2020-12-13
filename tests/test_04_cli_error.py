@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-import re
 import stat
 import tarfile
 from tempfile import TemporaryFile
@@ -114,10 +113,8 @@ def test_cli_create_rel_start_basedir(test_dir, testname, monkeypatch):
         callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
-        # The actual error message differs between Python versions, so
-        # lets just assert that the error is something about
-        # 'base/msg.txt' and 'base/data'.
-        assert re.search(r"'base/msg.txt'.*'base/data'", line)
+        assert ("invalid path 'base/msg.txt': must be a subpath of "
+                "base directory base/data") in line
 
 def test_cli_ls_archive_not_found(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
