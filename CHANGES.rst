@@ -2,6 +2,17 @@ Changelog
 =========
 
 
+0.6 (not yet released)
+~~~~~~~~~~~~~~~~~~~~~~
+
+Bug fixes and minor changes
+---------------------------
+
++ `#48`_: Review and standardize some error messages.
+
+.. _#48: https://github.com/RKrahl/archive-tools/pull/48
+
+
 0.5.1 (2020-12-12)
 ~~~~~~~~~~~~~~~~~~
 
