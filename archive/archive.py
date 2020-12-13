@@ -95,7 +95,7 @@ class Archive:
                 p = fi.path
                 name = self._arcname(p)
                 if name in md_names:
-                    raise ArchiveCreateError("cannot add %s: "
+                    raise ArchiveCreateError("invalid path '%s': "
                                              "this filename is reserved" % p)
                 if fi.is_file():
                     ti = tarf.gettarinfo(str(p), arcname=name)
@@ -140,8 +140,8 @@ class Archive:
         abspath = None
         for p in itertools.chain(paths, excludes or ()):
             if not _is_normalized(p):
-                raise ArchiveCreateError("invalid path %s: must be normalized" 
-                                         % p)
+                raise ArchiveCreateError("invalid path '%s': "
+                                         "must be normalized" % p)
             if abspath is None:
                 abspath = p.is_absolute()
             else:
@@ -153,8 +153,10 @@ class Archive:
                     # This will raise ValueError if p does not start
                     # with basedir:
                     p.relative_to(self.basedir)
-                except ValueError as e:
-                    raise ArchiveCreateError(str(e))
+                except ValueError:
+                    raise ArchiveCreateError("invalid path '%s': must be a "
+                                             "subpath of base directory %s"
+                                             % (p, self.basedir))
         if not abspath:
             if self.basedir.is_symlink() or not self.basedir.is_dir():
                 raise ArchiveCreateError("basedir must be a directory")
@@ -166,7 +168,7 @@ class Archive:
         for md in self._metadata:
             name = str(md.path)
             if name in md_names:
-                raise ArchiveCreateError("duplicate metadata %s" % name)
+                raise ArchiveCreateError("duplicate metadata '%s'" % name)
             md_names.add(name)
             ti = tarf.gettarinfo(arcname=name, fileobj=md.fileobj)
             ti.mode = stat.S_IFREG | stat.S_IMODE(md.mode)
@@ -220,7 +222,7 @@ class Archive:
         ti = self._file.next()
         path = Path(ti.path)
         if path.name != name:
-            raise ArchiveIntegrityError("%s not found" % name)
+            raise ArchiveIntegrityError("metadata item '%s' not found" % name)
         fileobj = self._file.extractfile(ti)
         md = MetadataItem(path=path, tarinfo=ti, fileobj=fileobj)
         self._metadata.append(md)
@@ -257,8 +259,8 @@ class Archive:
         for md in self.manifest.metadata:
             ti = next(tarf_it)
             if ti.name != md:
-                raise ArchiveIntegrityError("Expected metadata item '%s' "
-                                            "not found" % (md))
+                raise ArchiveIntegrityError("metadata item '%s' not found"
+                                            % md)
         # Check the content of the archive.
         for fileinfo in self.manifest:
             self._verify_item(fileinfo)

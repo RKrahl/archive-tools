@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 import stat
-import subprocess
 import tarfile
 from tempfile import TemporaryFile
 from archive.manifest import Manifest
@@ -104,7 +103,7 @@ def test_cli_create_normalized_path(test_dir, testname, monkeypatch):
         callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
-        assert "invalid path base/empty/..: must be normalized" in line
+        assert "invalid path 'base/empty/..': must be normalized" in line
 
 def test_cli_create_rel_start_basedir(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
@@ -114,7 +113,8 @@ def test_cli_create_rel_start_basedir(test_dir, testname, monkeypatch):
         callscript("archive-tool.py", args, returncode=1, stderr=f)
         f.seek(0)
         line = f.readline()
-        assert "'base/msg.txt' does not start with 'base/data'" in line
+        assert ("invalid path 'base/msg.txt': must be a subpath of "
+                "base directory base/data") in line
 
 def test_cli_ls_archive_not_found(test_dir, monkeypatch):
     monkeypatch.chdir(str(test_dir))
@@ -159,7 +159,7 @@ def test_cli_integrity_no_manifest(test_dir, testname, monkeypatch):
         callscript("archive-tool.py", args, returncode=3, stderr=f)
         f.seek(0)
         line = f.readline()
-        assert ".manifest.yaml not found" in line
+        assert "metadata item '.manifest.yaml' not found" in line
 
 def test_cli_integrity_missing_file(test_dir, testname, monkeypatch):
     monkeypatch.chdir(str(test_dir))
