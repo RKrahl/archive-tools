@@ -1,12 +1,13 @@
 """Test creating a mail archive and check its content.
 """
 
+import datetime
 import email
 import pytest
 from pytest_dependency import depends
 import yaml
 from archive import Archive
-from archive.mailarchive import MailArchive
+from archive.mailarchive import MailIndex, MailArchive
 from archive.tools import now_str
 from conftest import gettestdata
 
@@ -70,7 +71,11 @@ def test_check_mailindex_head(tmpdir, dep_testcase):
     archive_path = tmpdir / ("mailarchive-%s.tar.xz" % dep_testcase)
     with MailArchive().open(archive_path) as archive:
         assert archive.mailindex.head
-        assert archive.mailindex.version
+        assert set(archive.mailindex.head.keys()) == {
+            "Date", "Server", "Version"
+        }
+        assert isinstance(archive.mailindex.date, datetime.datetime)
+        assert archive.mailindex.version == MailIndex.Version
 
 @pytest.mark.dependency()
 def test_check_mail_messages(tmpdir, dep_testcase):
