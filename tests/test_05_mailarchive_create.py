@@ -1,12 +1,13 @@
 """Test creating a mail archive and check its content.
 """
 
+import datetime
 import email
 import pytest
 from pytest_dependency import depends
 import yaml
 from archive import Archive
-from archive.mailarchive import MailArchive
+from archive.mailarchive import MailIndex, MailArchive
 from archive.tools import now_str
 from conftest import gettestdata
 
@@ -43,9 +44,8 @@ def test_create_mailarchive(tmpdir, monkeypatch, testcase):
     else:
         monkeypatch.chdir(str(tmpdir))
         archive_path = "mailarchive-rel.tar.xz"
-    comment = "Test mail archive created at %s" % (now_str())
     archive = MailArchive()
-    archive.create(archive_path, getmsgs(), comment=comment)
+    archive.create(archive_path, getmsgs(), server="imap.example.org")
 
 @pytest.mark.dependency()
 def test_verify_mailarchive(tmpdir, dep_testcase):
@@ -65,6 +65,17 @@ def test_check_mailindex(tmpdir, dep_testcase):
             assert item['Subject'] == msg['Subject']
             assert item['To'] == msg['To']
             assert item['folder'] == folder
+
+@pytest.mark.dependency()
+def test_check_mailindex_head(tmpdir, dep_testcase):
+    archive_path = tmpdir / ("mailarchive-%s.tar.xz" % dep_testcase)
+    with MailArchive().open(archive_path) as archive:
+        assert archive.mailindex.head
+        assert set(archive.mailindex.head.keys()) == {
+            "Date", "Server", "Version"
+        }
+        assert isinstance(archive.mailindex.date, datetime.datetime)
+        assert archive.mailindex.version == MailIndex.Version
 
 @pytest.mark.dependency()
 def test_check_mail_messages(tmpdir, dep_testcase):

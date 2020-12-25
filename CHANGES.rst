@@ -5,12 +5,26 @@ Changelog
 0.6 (not yet released)
 ~~~~~~~~~~~~~~~~~~~~~~
 
+New features
+------------
+
++ `#50`_, `#51`_: Add a header with some metadata to the index in a
+  mail archive created by :class:`MailArchive`.
+
+Incompatible changes
+--------------------
+
++ The `comment` keyword argument to :class:`MailArchive` has been
+  dropped, ref. `#51`_.
+
 Bug fixes and minor changes
 ---------------------------
 
 + `#48`_: Review and standardize some error messages.
 
 .. _#48: https://github.com/RKrahl/archive-tools/pull/48
+.. _#50: https://github.com/RKrahl/archive-tools/issues/50
+.. _#51: https://github.com/RKrahl/archive-tools/pull/51
 
 
 0.5.1 (2020-12-12)

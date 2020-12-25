@@ -125,7 +125,6 @@ with IMAPClient(config['host'], port=config['port'], ssl=config['ssl']) as imap:
         imap.starttls()
     imap.login(config['user'], config['pass'])
     log.debug("Login to %s successful", config['host'])
-    comment = "Fetched from %s at %s" % (config['host'], now_str())
     archive = MailArchive()
-    archive.create(archive_path, getmsgs(imap, "INBOX"), comment=comment)
+    archive.create(archive_path, getmsgs(imap, "INBOX"), server=config['host'])
 
