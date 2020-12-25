@@ -43,9 +43,8 @@ def test_create_mailarchive(tmpdir, monkeypatch, testcase):
     else:
         monkeypatch.chdir(str(tmpdir))
         archive_path = "mailarchive-rel.tar.xz"
-    comment = "Test mail archive created at %s" % (now_str())
     archive = MailArchive()
-    archive.create(archive_path, getmsgs(), comment=comment)
+    archive.create(archive_path, getmsgs(), server="imap.example.org")
 
 @pytest.mark.dependency()
 def test_verify_mailarchive(tmpdir, dep_testcase):
@@ -67,7 +66,6 @@ def test_check_mailindex(tmpdir, dep_testcase):
             assert item['folder'] == folder
 
 @pytest.mark.dependency()
-@pytest.mark.xfail(reason="Issue #50 not yet implemented")
 def test_check_mailindex_head(tmpdir, dep_testcase):
     archive_path = tmpdir / ("mailarchive-%s.tar.xz" % dep_testcase)
     with MailArchive().open(archive_path) as archive:

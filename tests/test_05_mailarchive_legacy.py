@@ -9,7 +9,6 @@ from conftest import gettestdata
 def legacy_1_0_archive():
     return gettestdata("mailarchive-legacy-1_0.tar.xz")
 
-@pytest.mark.xfail(reason="Issue #50 not yet implemented")
 def test_1_0_check_mailindex(legacy_1_0_archive):
     with MailArchive().open(legacy_1_0_archive) as archive:
         archive.verify()
