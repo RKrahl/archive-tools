@@ -67,6 +67,14 @@ def test_check_mailindex(tmpdir, dep_testcase):
             assert item['folder'] == folder
 
 @pytest.mark.dependency()
+@pytest.mark.xfail(reason="Issue #50 not yet implemented")
+def test_check_mailindex_head(tmpdir, dep_testcase):
+    archive_path = tmpdir / ("mailarchive-%s.tar.xz" % dep_testcase)
+    with MailArchive().open(archive_path) as archive:
+        assert archive.mailindex.head
+        assert archive.mailindex.version
+
+@pytest.mark.dependency()
 def test_check_mail_messages(tmpdir, dep_testcase):
     archive_path = tmpdir / ("mailarchive-%s.tar.xz" % dep_testcase)
     with MailArchive().open(archive_path) as archive:
