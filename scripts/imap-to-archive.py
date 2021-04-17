@@ -3,14 +3,14 @@
 """
 
 import argparse
-from collections import ChainMap
-import configparser
 import getpass
 import logging
 import os.path
 from pathlib import Path
 import sys
 from imapclient import IMAPClient
+from archive.config import get_config
+from archive.exception import ConfigError
 from archive.mailarchive import MailArchive
 from archive.tools import now_str
 
@@ -54,25 +54,8 @@ args = argparser.parse_args()
 if args.verbose:
     logging.getLogger().setLevel(logging.DEBUG)
 
-class ConfigError(Exception):
-    pass
-
-def get_config(args, defaults):
-    args_cfg_options = ('host', 'port', 'security', 'user')
-    args_cfg = { k:vars(args)[k] for k in args_cfg_options if vars(args)[k] }
-    config = ChainMap({}, args_cfg)
-    if args.config_section:
-        cp = configparser.ConfigParser()
-        if not cp.read(args.config_file):
-            raise ConfigError("configuration file %s not found"
-                              % args.config_file)
-        try:
-            config.maps.append(cp[args.config_section])
-        except KeyError:
-            raise ConfigError("configuration section %s not found"
-                              % args.config_section)
-    config.maps.append(defaults)
-
+try:
+    config = get_config(args, defaults)
     if config['security'] not in security_methods:
         raise ConfigError("invalid security method '%s'" % config['security'])
     if not config['host']:
@@ -84,11 +67,6 @@ def get_config(args, defaults):
         raise ConfigError("IMAP4 user name not specified")
     if config['pass'] is None:
         config['pass'] = getpass.getpass()
-
-    return config
-
-try:
-    config = get_config(args, defaults)
 except ConfigError as e:
     print("%s: configuration error: %s" % (argparser.prog, e), file=sys.stderr)
     sys.exit(2)
