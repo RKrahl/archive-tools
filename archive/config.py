@@ -23,7 +23,8 @@ class Config:
                      if vars(args)[k] is not None }
         self.config = ChainMap({}, args_cfg)
         if self.config_file and config_section:
-            cp = configparser.ConfigParser(comment_prefixes=('#', '!'))
+            cp = configparser.ConfigParser(comment_prefixes=('#', '!'),
+                                           interpolation=None)
             self.config_file = cp.read(self.config_file)
             if isinstance(config_section, str):
                 config_section = (config_section,)
@@ -35,3 +36,15 @@ class Config:
                 except KeyError:
                     pass
         self.config.maps.append(self.defaults)
+
+    def get(self, option, required=False, subst=True, split=False):
+        value = self.config[option]
+        if value is None:
+            if required:
+                raise ConfigError("%s not specified" % option)
+        else:
+            if subst:
+                value = value % self.config
+            if split:
+                value = value.split()
+        return value
