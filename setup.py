@@ -119,7 +119,9 @@ setup(
     license = "Apache-2.0",
     requires = ["PyYAML"],
     packages = ["archive", "archive.cli"],
-    scripts = ["scripts/archive-tool.py", "scripts/imap-to-archive.py"],
+    scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",
+               "scripts/imap-to-archive.py"],
+    data_files = [("/etc", ["etc/backup.cfg"])],
     classifiers = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: System Administrators",
