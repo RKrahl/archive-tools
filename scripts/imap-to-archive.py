@@ -9,7 +9,7 @@ import os.path
 from pathlib import Path
 import sys
 from imapclient import IMAPClient
-from archive.config import get_config
+import archive.config
 from archive.exception import ConfigError
 from archive.mailarchive import MailArchive
 from archive.tools import now_str
@@ -19,15 +19,42 @@ logging.getLogger('imapclient').setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 
 security_methods = {'imaps', 'starttls'}
-
 default_config_file = os.path.expanduser("~/.config/archive/imap.cfg")
-defaults = {
-    'host': None,
-    'port': None,
-    'security': 'imaps',
-    'user': None,
-    'pass': None,
-}
+
+class Config(archive.config.Config):
+
+    defaults = {
+        'host': None,
+        'port': None,
+        'security': 'imaps',
+        'user': None,
+        'pass': None,
+    }
+    args_options = ('host', 'port', 'security', 'user')
+
+    def __init__(self, args):
+        self.config_file = args.config_file
+        super().__init__(args, config_section=args.config_section)
+        if args.config_section:
+            if not self.config_file:
+                raise ConfigError("configuration file %s not found"
+                                  % args.config_file)
+            if not self.config_section:
+                raise ConfigError("configuration section %s not found"
+                                  % args.config_section)
+        if self.config['security'] not in security_methods:
+            raise ConfigError("invalid security method '%s'"
+                              % self.config['security'])
+        if not self.config['host']:
+            raise ConfigError("IMAP4 host name not specified")
+        if self.config['port'] is not None:
+            self.config['port'] = int(config['port'])
+        self.config['ssl'] = self.config['security'] == 'imaps'
+        if not self.config['user']:
+            raise ConfigError("IMAP4 user name not specified")
+        if self.config['pass'] is None:
+            self.config['pass'] = getpass.getpass()
+
 
 argparser = argparse.ArgumentParser(add_help=False)
 argparser.add_argument('--help',
@@ -55,18 +82,7 @@ if args.verbose:
     logging.getLogger().setLevel(logging.DEBUG)
 
 try:
-    config = get_config(args, defaults)
-    if config['security'] not in security_methods:
-        raise ConfigError("invalid security method '%s'" % config['security'])
-    if not config['host']:
-        raise ConfigError("IMAP4 host name not specified")
-    if config['port'] is not None:
-        config['port'] = int(config['port'])
-    config['ssl'] = config['security'] == 'imaps'
-    if not config['user']:
-        raise ConfigError("IMAP4 user name not specified")
-    if config['pass'] is None:
-        config['pass'] = getpass.getpass()
+    config = Config(args).config
 except ConfigError as e:
     print("%s: configuration error: %s" % (argparser.prog, e), file=sys.stderr)
     sys.exit(2)
