@@ -124,12 +124,12 @@ class Archive:
         """
         if not paths:
             raise ArchiveCreateError("refusing to create an empty archive")
+        abspath = paths[0].is_absolute()
         if not basedir:
-            p = paths[0]
-            if p.is_absolute():
+            if abspath:
                 self.basedir = Path(self.path.name.split('.')[0])
             else:
-                self.basedir = Path(p.parts[0])
+                self.basedir = Path(paths[0].parts[0])
         else:
             self.basedir = basedir
         if self.basedir.is_absolute():
@@ -140,17 +140,13 @@ class Archive:
         # The same rules for paths also apply to excludes, if
         # provided.  So we may just iterate over the chain of both
         # lists.
-        abspath = None
         for p in itertools.chain(paths, excludes or ()):
             if not _is_normalized(p):
                 raise ArchiveCreateError("invalid path '%s': "
                                          "must be normalized" % p)
-            if abspath is None:
-                abspath = p.is_absolute()
-            else:
-                if abspath != p.is_absolute():
-                    raise ArchiveCreateError("mixing of absolute and relative "
-                                             "paths is not allowed")
+            if abspath != p.is_absolute():
+                raise ArchiveCreateError("mixing of absolute and relative "
+                                         "paths is not allowed")
             if not p.is_absolute():
                 try:
                     # This will raise ValueError if p does not start
