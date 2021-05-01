@@ -19,11 +19,7 @@ def test_dir(tmpdir):
     return tmpdir
 
 
-@pytest.mark.parametrize("abs_wd", [
-    True,
-    pytest.param(False, marks=pytest.mark.xfail(raises=FileNotFoundError,
-                                                reason="Issue #53"))
-], ids=absflag)
+@pytest.mark.parametrize("abs_wd", [ True, False ], ids=absflag)
 def test_create_workdir(test_dir, monkeypatch, abs_wd):
     """Pass an absolute or relative workdir to Archive.create().
     (Issue #53)

@@ -70,7 +70,7 @@ class Archive:
             mode = 'x:' + compression
         if workdir:
             with tmp_chdir(workdir):
-                self._create(workdir / path, mode, paths, 
+                self._create(path, mode, paths, 
                              basedir, excludes, dedup, tags)
         else:
             self._create(path, mode, paths, basedir, excludes, dedup, tags)
