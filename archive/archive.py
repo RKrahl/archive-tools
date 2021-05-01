@@ -115,8 +115,7 @@ class Archive:
 
     def _check_paths(self, paths, basedir, excludes):
         """Check the paths to be added to an archive for several error
-        conditions.  Accept a list of either strings or path-like
-        objects.  Convert them to a list of Path objects.  Also sets
+        conditions.  Accept a list of path-like objects.  Also sets
         self.basedir.
         """
         if not paths:
