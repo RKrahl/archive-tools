@@ -74,20 +74,20 @@ class Archive:
             if workdir:
                 save_wd = os.getcwd()
                 os.chdir(str(workdir))
-            self._create(path, mode, paths, basedir, excludes, dedup, tags)
+            self.path = path
+            self._check_paths(paths, basedir, excludes)
+            self.manifest = Manifest(paths=paths, excludes=excludes, tags=tags)
+            self.manifest.add_metadata(self.basedir / ".manifest.yaml")
+            for md in self._metadata:
+                md.set_path(self.basedir)
+                self.manifest.add_metadata(md.path)
+            self._create(mode, dedup)
         finally:
             if save_wd:
                 os.chdir(save_wd)
         return self
 
-    def _create(self, path, mode, paths, basedir, excludes, dedup, tags):
-        self.path = path
-        self._check_paths(paths, basedir, excludes)
-        self.manifest = Manifest(paths=paths, excludes=excludes, tags=tags)
-        self.manifest.add_metadata(self.basedir / ".manifest.yaml")
-        for md in self._metadata:
-            md.set_path(self.basedir)
-            self.manifest.add_metadata(md.path)
+    def _create(self, mode, dedup):
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
