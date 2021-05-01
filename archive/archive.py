@@ -3,6 +3,7 @@
 
 from enum import Enum
 import itertools
+import os
 from pathlib import Path
 import stat
 import sys
@@ -10,7 +11,7 @@ import tarfile
 import tempfile
 from archive.manifest import Manifest
 from archive.exception import *
-from archive.tools import tmp_chdir, checksum
+from archive.tools import checksum
 
 def _is_normalized(p):
     """Check if the path is normalized.
@@ -68,12 +69,15 @@ class Archive:
             mode = 'w:' + compression
         else:
             mode = 'x:' + compression
-        if workdir:
-            with tmp_chdir(workdir):
-                self._create(path, mode, paths, 
-                             basedir, excludes, dedup, tags)
-        else:
+        save_wd = None
+        try:
+            if workdir:
+                save_wd = os.getcwd()
+                os.chdir(str(workdir))
             self._create(path, mode, paths, basedir, excludes, dedup, tags)
+        finally:
+            if save_wd:
+                os.chdir(save_wd)
         return self
 
     def _create(self, path, mode, paths, basedir, excludes, dedup, tags):
