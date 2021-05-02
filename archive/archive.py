@@ -1,6 +1,7 @@
 """Provide the Archive class.
 """
 
+from collections.abc import Sequence
 from enum import Enum
 import itertools
 import os
@@ -60,8 +61,8 @@ class Archive:
         self._file = None
         self._metadata = []
 
-    def create(self, path, compression, paths, 
-               basedir=None, workdir=None, excludes=None, 
+    def create(self, path, compression, paths=None, fileinfos=None,
+               basedir=None, workdir=None, excludes=None,
                dedup=DedupMode.LINK, tags=None):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
@@ -75,8 +76,15 @@ class Archive:
                 save_wd = os.getcwd()
                 os.chdir(str(workdir))
             self.path = path
-            self._check_paths(paths, basedir, excludes)
-            self.manifest = Manifest(paths=paths, excludes=excludes, tags=tags)
+            if fileinfos is not None:
+                if not isinstance(fileinfos, Sequence):
+                    fileinfos = list(fileinfos)
+                self._check_paths([fi.path for fi in fileinfos], basedir)
+                self.manifest = Manifest(fileinfos=fileinfos, tags=tags)
+            else:
+                self._check_paths(paths, basedir, excludes)
+                self.manifest = Manifest(paths=paths, excludes=excludes,
+                                         tags=tags)
             self.manifest.add_metadata(self.basedir / ".manifest.yaml")
             for md in self._metadata:
                 md.set_path(self.basedir)
@@ -117,7 +125,7 @@ class Archive:
                 else:
                     tarf.add(str(p), arcname=name, recursive=False)
 
-    def _check_paths(self, paths, basedir, excludes):
+    def _check_paths(self, paths, basedir, excludes=None):
         """Check the paths to be added to an archive for several error
         conditions.  Accept a list of path-like objects.  Also sets
         self.basedir.

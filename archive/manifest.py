@@ -144,14 +144,15 @@ class Manifest(Sequence):
 
     Version = "1.1"
 
-    def __init__(self, fileobj=None, paths=None, excludes=None, tags=None):
+    def __init__(self, fileobj=None, paths=None, excludes=None,
+                 fileinfos=None, tags=None):
         if fileobj is not None:
             docs = yaml.safe_load_all(fileobj)
             self.head = next(docs)
             # Legacy: version 1.0 head did not have Metadata:
             self.head.setdefault("Metadata", [])
             self.fileinfos = [ FileInfo(data=d) for d in next(docs) ]
-        elif paths is not None:
+        elif paths is not None or fileinfos is not None:
             self.head = {
                 "Checksums": FileInfo.Checksums,
                 "Date": now_str(),
@@ -161,10 +162,13 @@ class Manifest(Sequence):
             }
             if tags is not None:
                 self.head["Tags"] = tags
-            fileinfos = FileInfo.iterpaths(paths, set(excludes or ()))
-            self.fileinfos = sorted(fileinfos, key=lambda fi: fi.path)
+            if fileinfos is None:
+                fileinfos = FileInfo.iterpaths(paths, set(excludes or ()))
+            self.fileinfos = list(fileinfos)
+            self.sort()
         else:
-            raise TypeError("Either fileobj or paths must be provided")
+            raise TypeError("Either fileobj or paths or fileinfos "
+                            "must be provided")
 
     def __len__(self):
         return len(self.fileinfos)
