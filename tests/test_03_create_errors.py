@@ -6,6 +6,7 @@ from tempfile import TemporaryFile
 import pytest
 from archive import Archive
 from archive.exception import ArchiveCreateError
+from archive.manifest import FileInfo, Manifest
 from conftest import *
 
 
@@ -134,3 +135,41 @@ def test_create_metadata_vs_content(test_dir, testname, monkeypatch):
             archive.add_metadata("msg.txt", tmpf)
             archive.create(Path(name), "", [p])
         assert "filename is reserved" in str(err.value)
+
+def test_create_fileinfos_missing_checksum(test_dir, testname, monkeypatch):
+    """When an archive is created from precompiled fileinfos,
+    they must already contain suitable checksums.
+    """
+    monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
+    with monkeypatch.context() as m:
+        m.setattr(FileInfo, "Checksums", ['md5'])
+        fileinfos = list(FileInfo.iterpaths([Path("base")], set()))
+        # Checksums are calculated lazily, we must explicitely access
+        # the attribute while monkeypatching FileInfo.Checksums is
+        # active.
+        for fi in fileinfos:
+            if fi.is_file():
+                assert set(fi.checksum.keys()) == {'md5'}
+    with pytest.raises(ArchiveCreateError) as err:
+        Archive().create(Path(name), "", fileinfos=fileinfos)
+    assert "Missing checksum" in str(err.value)
+
+def test_create_manifest_missing_checksum(test_dir, testname, monkeypatch):
+    """Same as last test, but now creating the archive from a precompiled
+    manifest.
+    """
+    monkeypatch.chdir(str(test_dir))
+    name = archive_name(tags=[testname])
+    with monkeypatch.context() as m:
+        m.setattr(FileInfo, "Checksums", ['md5'])
+        manifest = Manifest(paths=[Path("base")])
+        # Checksums are calculated lazily, we must explicitely access
+        # the attribute while monkeypatching FileInfo.Checksums is
+        # active.
+        for fi in manifest:
+            if fi.is_file():
+                assert set(fi.checksum.keys()) == {'md5'}
+    with pytest.raises(ArchiveCreateError) as err:
+        Archive().create(Path(name), "", fileinfos=manifest)
+    assert "Missing checksum" in str(err.value)

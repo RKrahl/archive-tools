@@ -1,8 +1,10 @@
 """Provide the Archive class.
 """
 
+from collections.abc import Sequence
 from enum import Enum
 import itertools
+import os
 from pathlib import Path
 import stat
 import sys
@@ -10,7 +12,7 @@ import tarfile
 import tempfile
 from archive.manifest import Manifest
 from archive.exception import *
-from archive.tools import tmp_chdir, checksum
+from archive.tools import checksum
 
 def _is_normalized(p):
     """Check if the path is normalized.
@@ -59,8 +61,8 @@ class Archive:
         self._file = None
         self._metadata = []
 
-    def create(self, path, compression, paths, 
-               basedir=None, workdir=None, excludes=None, 
+    def create(self, path, compression, paths=None, fileinfos=None,
+               basedir=None, workdir=None, excludes=None,
                dedup=DedupMode.LINK, tags=None):
         if sys.version_info < (3, 5):
             # The 'x' (exclusive creation) mode was added to tarfile
@@ -68,22 +70,35 @@ class Archive:
             mode = 'w:' + compression
         else:
             mode = 'x:' + compression
-        if workdir:
-            with tmp_chdir(workdir):
-                self._create(workdir / path, mode, paths, 
-                             basedir, excludes, dedup, tags)
-        else:
-            self._create(path, mode, paths, basedir, excludes, dedup, tags)
+        save_wd = None
+        try:
+            if workdir:
+                save_wd = os.getcwd()
+                os.chdir(str(workdir))
+            self.path = path
+            if fileinfos is not None:
+                if not isinstance(fileinfos, Sequence):
+                    fileinfos = list(fileinfos)
+                self._check_paths([fi.path for fi in fileinfos], basedir)
+                try:
+                    self.manifest = Manifest(fileinfos=fileinfos, tags=tags)
+                except ValueError as e:
+                    raise ArchiveCreateError("invalid fileinfos: %s" % e)
+            else:
+                self._check_paths(paths, basedir, excludes)
+                self.manifest = Manifest(paths=paths, excludes=excludes,
+                                         tags=tags)
+            self.manifest.add_metadata(self.basedir / ".manifest.yaml")
+            for md in self._metadata:
+                md.set_path(self.basedir)
+                self.manifest.add_metadata(md.path)
+            self._create(mode, dedup)
+        finally:
+            if save_wd:
+                os.chdir(save_wd)
         return self
 
-    def _create(self, path, mode, paths, basedir, excludes, dedup, tags):
-        self.path = path
-        self._check_paths(paths, basedir, excludes)
-        self.manifest = Manifest(paths=paths, excludes=excludes, tags=tags)
-        self.manifest.add_metadata(self.basedir / ".manifest.yaml")
-        for md in self._metadata:
-            md.set_path(self.basedir)
-            self.manifest.add_metadata(md.path)
+    def _create(self, mode, dedup):
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
@@ -113,20 +128,19 @@ class Archive:
                 else:
                     tarf.add(str(p), arcname=name, recursive=False)
 
-    def _check_paths(self, paths, basedir, excludes):
+    def _check_paths(self, paths, basedir, excludes=None):
         """Check the paths to be added to an archive for several error
-        conditions.  Accept a list of either strings or path-like
-        objects.  Convert them to a list of Path objects.  Also sets
+        conditions.  Accept a list of path-like objects.  Also sets
         self.basedir.
         """
         if not paths:
             raise ArchiveCreateError("refusing to create an empty archive")
+        abspath = paths[0].is_absolute()
         if not basedir:
-            p = paths[0]
-            if p.is_absolute():
+            if abspath:
                 self.basedir = Path(self.path.name.split('.')[0])
             else:
-                self.basedir = Path(p.parts[0])
+                self.basedir = Path(paths[0].parts[0])
         else:
             self.basedir = basedir
         if self.basedir.is_absolute():
@@ -137,17 +151,13 @@ class Archive:
         # The same rules for paths also apply to excludes, if
         # provided.  So we may just iterate over the chain of both
         # lists.
-        abspath = None
         for p in itertools.chain(paths, excludes or ()):
             if not _is_normalized(p):
                 raise ArchiveCreateError("invalid path '%s': "
                                          "must be normalized" % p)
-            if abspath is None:
-                abspath = p.is_absolute()
-            else:
-                if abspath != p.is_absolute():
-                    raise ArchiveCreateError("mixing of absolute and relative "
-                                             "paths is not allowed")
+            if abspath != p.is_absolute():
+                raise ArchiveCreateError("mixing of absolute and relative "
+                                         "paths is not allowed")
             if not p.is_absolute():
                 try:
                     # This will raise ValueError if p does not start
