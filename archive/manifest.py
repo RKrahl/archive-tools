@@ -163,8 +163,15 @@ class Manifest(Sequence):
             if tags is not None:
                 self.head["Tags"] = tags
             if fileinfos is None:
-                fileinfos = FileInfo.iterpaths(paths, set(excludes or ()))
-            self.fileinfos = list(fileinfos)
+                fileinfos = list(FileInfo.iterpaths(paths, set(excludes or ())))
+            else:
+                fileinfos = list(fileinfos)
+                cs = set(FileInfo.Checksums)
+                for fi in fileinfos:
+                    if fi.is_file() and not cs.issubset(fi.checksum.keys()):
+                        raise ValueError("Missing checksum on item %s"
+                                         % fi.path)
+            self.fileinfos = fileinfos
             self.sort()
         else:
             raise TypeError("Either fileobj or paths or fileinfos "
