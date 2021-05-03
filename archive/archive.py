@@ -80,7 +80,10 @@ class Archive:
                 if not isinstance(fileinfos, Sequence):
                     fileinfos = list(fileinfos)
                 self._check_paths([fi.path for fi in fileinfos], basedir)
-                self.manifest = Manifest(fileinfos=fileinfos, tags=tags)
+                try:
+                    self.manifest = Manifest(fileinfos=fileinfos, tags=tags)
+                except ValueError as e:
+                    raise ArchiveCreateError("invalid fileinfos: %s" % e)
             else:
                 self._check_paths(paths, basedir, excludes)
                 self.manifest = Manifest(paths=paths, excludes=excludes,
