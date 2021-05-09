@@ -299,3 +299,28 @@ def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
         out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
+
+@pytest.mark.xfail(reason="Issue #55")
+@pytest.mark.parametrize("abspath", [False, True])
+def test_diff_extrafile_end(test_data, testname, monkeypatch, abspath):
+    """The first archives has an extra entry as last item.  Ref. #55
+    """
+    monkeypatch.chdir(str(test_data))
+    if abspath:
+        archive_ref_path = Path("archive-abs.tar")
+        base_dir = test_data / "base"
+    else:
+        archive_ref_path = Path("archive-rel.tar")
+        base_dir = Path("base")
+    p = base_dir / "zzz.dat"
+    shutil.copy(str(gettestdata("rnd2.dat")), str(p))
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
+    Archive().create(archive_path, "bz2", [base_dir])
+    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+        args = ["diff", str(archive_path), str(archive_ref_path)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = list(get_output(f))
+        assert len(out) == 1
+        assert out[0] == "Only in %s: %s" % (archive_path, p)
