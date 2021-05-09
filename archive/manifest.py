@@ -4,6 +4,7 @@
 from collections.abc import Sequence
 import datetime
 from distutils.version import StrictVersion
+from enum import Enum
 import grp
 import os
 from pathlib import Path
@@ -14,6 +15,18 @@ import yaml
 import archive
 from archive.exception import ArchiveInvalidTypeError, ArchiveWarning
 from archive.tools import now_str, parse_date, checksum, mode_ft, ft_mode
+
+
+class DiffStatus(Enum):
+    """Status of an item as the result of comparing two iterables of FileInfo.
+
+    See :func:`diff_manifest` for the semantic of the values.
+    """
+    MATCH = 0
+    META = 1
+    CONTENT = 2
+    MISSING_A = 3
+    MISSING_B = 4
 
 
 class FileInfo:
@@ -214,3 +227,82 @@ class Manifest(Sequence):
         if key is None:
             key = lambda fi: fi.path
         self.fileinfos.sort(key=key, reverse=reverse)
+
+def diff_manifest(manifest_a, manifest_b, checksum=FileInfo.Checksums[0]):
+    """Compare two iterables of :class:`~archive.manifest.FileInfo` objects.
+
+    Items are matched by the :attr:`~archive.manifest.FileInfo.path`.
+    For each pair `fi_a` and `fi_b` of FileInfo objects with matching
+    path from `manifest_a` and `manifest_b` respectively, yield a
+    tuple (`status`, `fi_a`, `fi_b`), where `status` is a
+    :class:`~archive.manifest.DiffStatus`.  The value of `status` will
+    be :const:`~archive.manifest.DiffStatus.CONTENT` if
+    :attr:`~archive.manifest.FileInfo.type` differ, or if both `fi_a`
+    and `fi_b` represent regular files and checksum differ, or if
+    `fi_a` and `fi_b` represent symbolic links and target differ.  If
+    `fi_a` and `fi_b` represent regular files and there are mismatches
+    in any other metadata, `status` will be
+    :const:`~archive.manifest.DiffStatus.META`.  It will be
+    :const:`~archive.manifest.DiffStatus.MATCH` if `fi_a` and `fi_b`
+    fully coincide.  If an item `fi_a` from `manifest_a` has no match
+    in `manifest_b`, yield
+    (:const:`~archive.manifest.DiffStatus.MISSING_B`, `fi_a`, :const:`None`).
+    Accordingly, yield
+    (:const:`~archive.manifest.DiffStatus.MISSING_A`, :const:`None`, `fi_b`),
+    if there is no match for `fi_b`.
+
+    It is assumed that `manifest_a` and `manifest_b` are sorted by
+    path.  Spurious mismatches will be reported if this is not the
+    case.
+    """
+    def _next(it):
+        try:
+            return next(it)
+        except StopIteration:
+            return None
+
+    def _match(fi_a, fi_b, algorithm):
+        assert fi_a.path == fi_b.path
+        if fi_a.type != fi_b.type:
+            return DiffStatus.CONTENT
+        elif fi_a.type == "l":
+            if fi_a.target != fi_b.target:
+                return DiffStatus.CONTENT
+        elif fi_a.type == "f":
+            # Note: we don't need to compare the size, because if
+            # the size differs, it's mostly certain that also the
+            # checksum do.
+            if fi_a.checksum[algorithm] != fi_b.checksum[algorithm]:
+                return DiffStatus.CONTENT
+            elif (fi_a.uid != fi_b.uid or
+                  fi_a.uname != fi_b.uname or
+                  fi_a.gid != fi_b.gid or
+                  fi_a.gname != fi_b.gname or
+                  fi_a.mode != fi_b.mode or
+                  int(fi_a.mtime) != int(fi_b.mtime)):
+                return DiffStatus.META
+        return DiffStatus.MATCH
+
+    it_a = iter(manifest_a)
+    it_b = iter(manifest_b)
+    fi_a = _next(it_a)
+    fi_b = _next(it_b)
+    while True:
+        if fi_a is None and fi_b is None:
+            break
+        elif fi_a is None:
+            yield (DiffStatus.MISSING_A, None, fi_b)
+            fi_b = _next(it_b)
+        elif fi_b is None:
+            yield (DiffStatus.MISSING_B, fi_a, None)
+            fi_a = _next(it_a)
+        elif fi_a.path > fi_b.path:
+            yield (DiffStatus.MISSING_A, None, fi_b)
+            fi_b = _next(it_b)
+        elif fi_b.path > fi_a.path:
+            yield (DiffStatus.MISSING_B, fi_a, None)
+            fi_a = _next(it_a)
+        else:
+            yield (_match(fi_a, fi_b, checksum), fi_a, fi_b)
+            fi_a = _next(it_a)
+            fi_b = _next(it_b)
