@@ -255,7 +255,6 @@ def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
         assert len(out) == 1
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
 
-@pytest.mark.xfail(reason="Issue #55")
 @pytest.mark.parametrize("abspath", [False, True])
 def test_diff_extrafile_end(test_data, testname, monkeypatch, abspath):
     """The first archives has an extra entry as last item.  Ref. #55
