@@ -222,51 +222,6 @@ def test_diff_metadata(test_data, testname, monkeypatch, abspath):
         assert out[0] == ("File system metadata for %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, p))
 
-def test_diff_basedir_equal(test_data, testname, monkeypatch):
-    """Diff two archives with different base directories having equal
-    content.
-
-    This test makes only sense for archives with relative path names.
-    """
-    monkeypatch.chdir(str(test_data))
-    newbase = Path("newbase")
-    shutil.rmtree(str(newbase), ignore_errors=True)
-    Path("base").rename(newbase)
-    archive_ref_path = Path("archive-rel.tar")
-    archive_path = Path(archive_name(ext="bz2", tags=[testname, "rel"]))
-    Archive().create(archive_path, "bz2", [newbase])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
-        args = ["diff", str(archive_ref_path), str(archive_path)]
-        callscript("archive-tool.py", args, stdout=f)
-        f.seek(0)
-        assert list(get_output(f)) == []
-
-def test_diff_basedir_mod_file(test_data, testname, monkeypatch):
-    """Diff two archives with different base directories having one file's
-    content modified.
-
-    This test makes only sense for archives with relative path names.
-    """
-    monkeypatch.chdir(str(test_data))
-    base = Path("base")
-    newbase = Path("newbase")
-    shutil.rmtree(str(newbase), ignore_errors=True)
-    base.rename(newbase)
-    archive_ref_path = Path("archive-rel.tar")
-    p = base / "rnd.dat"
-    pn = newbase / "rnd.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(pn))
-    archive_path = Path(archive_name(ext="bz2", tags=[testname, "rel"]))
-    Archive().create(archive_path, "bz2", [newbase])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
-        args = ["diff", str(archive_ref_path), str(archive_path)]
-        callscript("archive-tool.py", args, returncode=101, stdout=f)
-        f.seek(0)
-        out = list(get_output(f))
-        assert len(out) == 1
-        assert out[0] == ("Files %s:%s and %s:%s differ"
-                          % (archive_ref_path, p, archive_path, pn))
-
 @pytest.mark.parametrize("abspath", [False, True])
 def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
     """Diff two archives with one subdirectory missing.

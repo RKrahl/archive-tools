@@ -29,15 +29,6 @@ def _next(it, skip=None):
     except StopIteration:
         return None
 
-def _relpath(fi, basedir):
-    if fi is not None:
-        if fi.path.is_absolute():
-            return fi.path
-        else:
-            return fi.path.relative_to(basedir)
-    else:
-        return None
-
 def diff(args):
     archive1 = Archive().open(args.archive1)
     archive1.close()
@@ -50,18 +41,16 @@ def diff(args):
     fi2 = _next(it2)
     status = 0
     while True:
-        path1 = _relpath(fi1, archive1.basedir)
-        path2 = _relpath(fi2, archive2.basedir)
-        if path1 is None and path2 is None:
+        if fi1 is None and fi2 is None:
             break
-        elif path1 is None or path1 > path2:
+        elif fi1 is None or fi1.path > fi2.path:
             print("Only in %s: %s" % (archive2.path, fi2.path))
             if args.skip_dir_content and fi2.is_dir():
                 fi2 = _next(it2, skip=fi2.path)
             else:
                 fi2 = _next(it2)
             status = max(status, 102)
-        elif path2 is None or path2 > path1:
+        elif fi2 is None or fi2.path > fi1.path:
             print("Only in %s: %s" % (archive1.path, fi1.path))
             if args.skip_dir_content and fi1.is_dir():
                 fi1 = _next(it1, skip=fi1.path)
@@ -69,7 +58,7 @@ def diff(args):
                 fi1 = _next(it1)
             status = max(status, 102)
         else:
-            assert path1 == path2
+            assert fi1.path == fi2.path
             if fi1.type != fi2.type:
                 print("Entries %s:%s and %s:%s have different type"
                       % (archive1.path, fi1.path, archive2.path, fi2.path))
