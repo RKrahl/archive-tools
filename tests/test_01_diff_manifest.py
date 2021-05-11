@@ -101,7 +101,7 @@ def test_diff_manifest_symlink_target(test_data, testname, monkeypatch):
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1
     status, fi_a, fi_b = diff[0]
-    assert status == DiffStatus.CONTENT
+    assert status == DiffStatus.SYMLNK_TARGET
     assert fi_a.type == fi_b.type == 'l'
     assert fi_a.path == fi_b.path == p
 
@@ -119,7 +119,7 @@ def test_diff_manifest_wrong_type(test_data, testname, monkeypatch):
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1
     status, fi_a, fi_b = diff[0]
-    assert status == DiffStatus.CONTENT
+    assert status == DiffStatus.TYPE
     assert fi_a.type == 'l'
     assert fi_b.type == 'f'
     assert fi_a.path == fi_b.path == p

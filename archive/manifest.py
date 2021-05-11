@@ -25,8 +25,10 @@ class DiffStatus(Enum):
     MATCH = 0
     META = 1
     CONTENT = 2
-    MISSING_A = 3
-    MISSING_B = 4
+    SYMLNK_TARGET = 3
+    TYPE = 4
+    MISSING_A = 5
+    MISSING_B = 6
 
 
 class FileInfo:
@@ -264,10 +266,10 @@ def diff_manifest(manifest_a, manifest_b, checksum=FileInfo.Checksums[0]):
     def _match(fi_a, fi_b, algorithm):
         assert fi_a.path == fi_b.path
         if fi_a.type != fi_b.type:
-            return DiffStatus.CONTENT
+            return DiffStatus.TYPE
         elif fi_a.type == "l":
             if fi_a.target != fi_b.target:
-                return DiffStatus.CONTENT
+                return DiffStatus.SYMLNK_TARGET
         elif fi_a.type == "f":
             # Note: we don't need to compare the size, because if
             # the size differs, it's mostly certain that also the
