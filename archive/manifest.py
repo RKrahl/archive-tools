@@ -6,6 +6,7 @@ import datetime
 from distutils.version import StrictVersion
 from enum import Enum
 import grp
+import itertools
 import os
 from pathlib import Path
 import pwd
@@ -257,12 +258,6 @@ def diff_manifest(manifest_a, manifest_b, checksum=FileInfo.Checksums[0]):
     path.  Spurious mismatches will be reported if this is not the
     case.
     """
-    def _next(it):
-        try:
-            return next(it)
-        except StopIteration:
-            return None
-
     def _match(fi_a, fi_b, algorithm):
         assert fi_a.path == fi_b.path
         if fi_a.type != fi_b.type:
@@ -285,26 +280,26 @@ def diff_manifest(manifest_a, manifest_b, checksum=FileInfo.Checksums[0]):
                 return DiffStatus.META
         return DiffStatus.MATCH
 
-    it_a = iter(manifest_a)
-    it_b = iter(manifest_b)
-    fi_a = _next(it_a)
-    fi_b = _next(it_b)
+    it_a = iter(itertools.chain(manifest_a, itertools.repeat(None)))
+    it_b = iter(itertools.chain(manifest_b, itertools.repeat(None)))
+    fi_a = next(it_a)
+    fi_b = next(it_b)
     while True:
         if fi_a is None and fi_b is None:
             break
         elif fi_a is None:
             yield (DiffStatus.MISSING_A, None, fi_b)
-            fi_b = _next(it_b)
+            fi_b = next(it_b)
         elif fi_b is None:
             yield (DiffStatus.MISSING_B, fi_a, None)
-            fi_a = _next(it_a)
+            fi_a = next(it_a)
         elif fi_a.path > fi_b.path:
             yield (DiffStatus.MISSING_A, None, fi_b)
-            fi_b = _next(it_b)
+            fi_b = next(it_b)
         elif fi_b.path > fi_a.path:
             yield (DiffStatus.MISSING_B, fi_a, None)
-            fi_a = _next(it_a)
+            fi_a = next(it_a)
         else:
             yield (_match(fi_a, fi_b, checksum), fi_a, fi_b)
-            fi_a = _next(it_a)
-            fi_b = _next(it_b)
+            fi_a = next(it_a)
+            fi_b = next(it_b)
