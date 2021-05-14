@@ -8,6 +8,8 @@ Changelog
 New features
 ------------
 
++ `#57`_: Add a function :func:`diff_manifest`.
+
 + `#50`_, `#51`_: Add a header with some metadata to the index in a
   mail archive created by :class:`MailArchive`.
 
@@ -20,11 +22,22 @@ Incompatible changes
 Bug fixes and minor changes
 ---------------------------
 
++ `#57`_: Do not take the paths relative to the base directory in the
+  `archive-tool diff` command.
+
++ `#55`_, `#57`_: `archive-tool diff` fails with :exc:`TypeError`.
+
++ `#56`_, `#57`_: Inconsistent result from `archive-tool diff` with
+  option `--skip-dir-content`.
+
 + `#48`_: Review and standardize some error messages.
 
 .. _#48: https://github.com/RKrahl/archive-tools/pull/48
 .. _#50: https://github.com/RKrahl/archive-tools/issues/50
 .. _#51: https://github.com/RKrahl/archive-tools/pull/51
+.. _#55: https://github.com/RKrahl/archive-tools/issues/55
+.. _#56: https://github.com/RKrahl/archive-tools/issues/56
+.. _#57: https://github.com/RKrahl/archive-tools/pull/57
 
 
 0.5.1 (2020-12-12)
