@@ -260,7 +260,6 @@ def test_diff_missing_dir(test_data, testname, monkeypatch, abspath):
         assert len(out) == 1
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
 
-@pytest.mark.xfail(reason="Issue #56")
 @pytest.mark.parametrize("abspath", [False, True])
 def test_diff_orphan_dir_content(test_data, testname, monkeypatch, abspath):
     """Diff archives having content in a missing directory.  Ref. #56

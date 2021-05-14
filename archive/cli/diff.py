@@ -16,33 +16,23 @@ def _common_checksum(manifest1, manifest2):
                                "cannot compare archive content.")
 
 def _skip_dir_filter(diff):
-    skip_stat = None
     skip_path = None
     for t in diff:
         diff_stat, fi1, fi2 = t
-        if diff_stat == skip_stat == DiffStatus.MISSING_A:
+        if skip_path:
+            p = (fi1 or fi2).path
             try:
-                fi2.path.relative_to(skip_path)
-            except ValueError:
-                pass
-            else:
-                continue
-        elif diff_stat == skip_stat == DiffStatus.MISSING_B:
-            try:
-                fi1.path.relative_to(skip_path)
+                p.relative_to(skip_path)
             except ValueError:
                 pass
             else:
                 continue
         yield t
         if diff_stat == DiffStatus.MISSING_A and fi2.type == 'd':
-            skip_stat = diff_stat
             skip_path = fi2.path
         elif diff_stat == DiffStatus.MISSING_B and fi1.type == 'd':
-            skip_stat = diff_stat
             skip_path = fi1.path
         else:
-            skip_stat = None
             skip_path = None
 
 
