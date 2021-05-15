@@ -36,7 +36,7 @@ class CopyArchive(Archive):
     def _add_item(self, tarf, fi, arcname):
         inp_tarf = self.inp_arch._file
         inp_arcname = self.inp_arch._arcname(fi.path)
-        ti = inp_tarf.getmember(inp_arcname)
+        ti = inp_tarf._getmember(inp_arcname, normalize=True)
         if fi.is_file():
             dup = self._check_duplicate(ti, arcname)
             if dup:
