@@ -231,6 +231,18 @@ class Manifest(Sequence):
             key = lambda fi: fi.path
         self.fileinfos.sort(key=key, reverse=reverse)
 
+
+def _common_checksum(manifest_a, manifest_b):
+    """Return a checksum algorithm that is present in both manifest objects.
+    """
+    for algorithm in manifest_a.checksums:
+        if algorithm in manifest_b.checksums:
+            return algorithm
+    else:
+        raise ArchiveReadError("No common checksum algorithm, "
+                               "cannot compare archive content.")
+
+
 def diff_manifest(manifest_a, manifest_b, checksum=FileInfo.Checksums[0]):
     """Compare two iterables of :class:`~archive.manifest.FileInfo` objects.
 

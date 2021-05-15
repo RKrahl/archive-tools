@@ -4,16 +4,8 @@
 from pathlib import Path
 from archive.archive import Archive
 from archive.exception import ArchiveReadError
-from archive.manifest import DiffStatus, diff_manifest
+from archive.manifest import DiffStatus, _common_checksum, diff_manifest
 
-
-def _common_checksum(manifest1, manifest2):
-    for algorithm in manifest1.checksums:
-        if algorithm in manifest2.checksums:
-            return algorithm
-    else:
-        raise ArchiveReadError("No common checksum algorithm, "
-                               "cannot compare archive content.")
 
 def _skip_dir_filter(diff):
     skip_path = None
