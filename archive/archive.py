@@ -60,6 +60,8 @@ class Archive:
         self.manifest = None
         self._file = None
         self._metadata = []
+        self._dedup = None
+        self._dupindex = None
 
     def create(self, path, compression, paths=None, fileinfos=None,
                basedir=None, workdir=None, excludes=None,
@@ -76,6 +78,8 @@ class Archive:
                 save_wd = os.getcwd()
                 os.chdir(str(workdir))
             self.path = path
+            self._dedup = dedup
+            self._dupindex = {}
             if fileinfos is not None:
                 if not isinstance(fileinfos, Sequence):
                     fileinfos = list(fileinfos)
@@ -92,41 +96,42 @@ class Archive:
             for md in self._metadata:
                 md.set_path(self.basedir)
                 self.manifest.add_metadata(md.path)
-            self._create(mode, dedup)
+            self._create(mode)
         finally:
             if save_wd:
                 os.chdir(save_wd)
         return self
 
-    def _create(self, mode, dedup):
+    def _create(self, mode):
         with tarfile.open(str(self.path), mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
                 self.add_metadata(".manifest.yaml", tmpf)
                 md_names = self._add_metadata_files(tarf)
-            dupindex = {}
             for fi in self.manifest:
-                p = fi.path
-                name = self._arcname(p)
-                if name in md_names:
-                    raise ArchiveCreateError("invalid path '%s': "
-                                             "this filename is reserved" % p)
-                if fi.is_file():
-                    ti = tarf.gettarinfo(str(p), arcname=name)
-                    dup = self._check_duplicate(fi, name, dedup, dupindex)
-                    if dup:
-                        ti.type = tarfile.LNKTYPE
-                        ti.linkname = dup
-                        tarf.addfile(ti)
-                    else:
-                        ti.size = fi.size
-                        ti.type = tarfile.REGTYPE
-                        ti.linkname = ''
-                        with p.open("rb") as f:
-                            tarf.addfile(ti, fileobj=f)
-                else:
-                    tarf.add(str(p), arcname=name, recursive=False)
+                arcname = self._arcname(fi.path)
+                if arcname in md_names:
+                    raise ArchiveCreateError("invalid path '%s': this "
+                                             "filename is reserved" % fi.path)
+                self._add_item(tarf, fi, arcname)
+
+    def _add_item(self, tarf, fi, arcname):
+        ti = tarf.gettarinfo(str(fi.path), arcname=arcname)
+        if fi.is_file():
+            dup = self._check_duplicate(fi, arcname)
+            if dup:
+                ti.type = tarfile.LNKTYPE
+                ti.linkname = dup
+                tarf.addfile(ti)
+            else:
+                ti.size = fi.size
+                ti.type = tarfile.REGTYPE
+                ti.linkname = ''
+                with fi.path.open("rb") as f:
+                    tarf.addfile(ti, fileobj=f)
+        else:
+            tarf.addfile(ti)
 
     def _check_paths(self, paths, basedir, excludes=None):
         """Check the paths to be added to an archive for several error
@@ -185,17 +190,17 @@ class Archive:
             tarf.addfile(ti, md.fileobj)
         return md_names
 
-    def _check_duplicate(self, fileinfo, name, dedup, dupindex):
+    def _check_duplicate(self, fileinfo, name):
         """Check if the archive item fileinfo should be linked
         to another item already added to the archive.
         """
         assert fileinfo.is_file()
-        if dedup == DedupMode.LINK:
+        if self._dedup == DedupMode.LINK:
             st = fileinfo.path.stat()
             if st.st_nlink == 1:
                 return None
             idxkey = (st.st_dev, st.st_ino)
-        elif dedup == DedupMode.CONTENT:
+        elif self._dedup == DedupMode.CONTENT:
             try:
                 hashalg = fileinfo.Checksums[0]
             except IndexError:
@@ -203,10 +208,10 @@ class Archive:
             idxkey = fileinfo.checksum[hashalg]
         else:
             return None
-        if idxkey in dupindex:
-            return dupindex[idxkey]
+        if idxkey in self._dupindex:
+            return self._dupindex[idxkey]
         else:
-            dupindex[idxkey] = name
+            self._dupindex[idxkey] = name
             return None
 
     def add_metadata(self, name, fileobj, mode=0o444):
