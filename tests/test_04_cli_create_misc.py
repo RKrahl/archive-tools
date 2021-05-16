@@ -42,3 +42,12 @@ def test_cli_create_tags(test_dir, monkeypatch, tags, expected):
     with Archive().open(archive_path) as archive:
         assert archive.manifest.tags == expected
         check_manifest(archive.manifest, testdata)
+
+def test_cli_create_directory(test_dir):
+    """Change the working directory using the --directory argument.
+    """
+    archive_path = archive_name(tags=["dir"])
+    args = ["create", "--directory", str(test_dir), archive_path, "base"]
+    callscript("archive-tool.py", args)
+    with Archive().open(test_dir / archive_path) as archive:
+        check_manifest(archive.manifest, testdata)
