@@ -8,12 +8,14 @@ Changelog
 New features
 ------------
 
-+ `#54`_: Add a command line flags `--directory <dir>` to
++ `#54`_: Add command line flags `--directory <dir>` to
   `archive-tool create`.  The script will change into this directory
   prior creating the archive if provided.
 
-+ `#54`_: Add a new keyword argument `fileinfos` that
-  :class:`Manifest` and :meth:`Archive.create` accept.
++ `#54`_: Add new keyword argument `fileinfos` that :class:`Manifest`
+  and :meth:`Archive.create` accept.
+
++ `#57`_: Add :func:`diff_manifest`.
 
 + `#50`_, `#51`_: Add a header with some metadata to the index in a
   mail archive created by :class:`MailArchive`.
@@ -27,9 +29,17 @@ Incompatible changes
 Bug fixes and minor changes
 ---------------------------
 
++ `#57`_: Do not take the paths relative to the base directory in the
+  `archive-tool diff` command.
+
 + `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
   :meth:`Archive.create` when passing a relative path as `workdir`
   argument.
+
++ `#55`_, `#57`_: `archive-tool diff` fails with :exc:`TypeError`.
+
++ `#56`_, `#57`_: Inconsistent result from `archive-tool diff` with
+  option `--skip-dir-content`.
 
 + `#48`_: Review and standardize some error messages.
 
@@ -38,6 +48,9 @@ Bug fixes and minor changes
 .. _#51: https://github.com/RKrahl/archive-tools/pull/51
 .. _#53: https://github.com/RKrahl/archive-tools/issues/53
 .. _#54: https://github.com/RKrahl/archive-tools/pull/54
+.. _#55: https://github.com/RKrahl/archive-tools/issues/55
+.. _#56: https://github.com/RKrahl/archive-tools/issues/56
+.. _#57: https://github.com/RKrahl/archive-tools/pull/57
 
 
 0.5.1 (2020-12-12)
