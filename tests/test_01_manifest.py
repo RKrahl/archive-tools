@@ -26,22 +26,6 @@ def test_dir(tmpdir):
     return tmpdir
 
 
-def test_manifest_from_paths(test_dir, monkeypatch):
-    """Create a manifest reading the files in test_dir.
-    """
-    monkeypatch.chdir(str(test_dir))
-    manifest = Manifest(paths=[Path("base")])
-    head = manifest.head
-    assert set(head.keys()) == {
-        "Checksums", "Date", "Generator", "Metadata", "Version"
-    }
-    assert manifest.version == Manifest.Version
-    assert isinstance(manifest.date, datetime.datetime)
-    assert manifest.checksums == tuple(FileInfo.Checksums)
-    assert manifest.tags == ()
-    check_manifest(manifest, testdata)
-
-
 def test_manifest_from_fileobj():
     """Read a manifest from a YAML file.
     """
@@ -54,6 +38,22 @@ def test_manifest_from_fileobj():
     assert manifest.version == "1.1"
     assert isinstance(manifest.date, datetime.datetime)
     assert manifest.checksums == ("sha256",)
+    assert manifest.tags == ()
+    check_manifest(manifest, testdata)
+
+
+def test_manifest_from_paths(test_dir, monkeypatch):
+    """Create a manifest reading the files in test_dir.
+    """
+    monkeypatch.chdir(str(test_dir))
+    manifest = Manifest(paths=[Path("base")])
+    head = manifest.head
+    assert set(head.keys()) == {
+        "Checksums", "Date", "Generator", "Metadata", "Version"
+    }
+    assert manifest.version == Manifest.Version
+    assert isinstance(manifest.date, datetime.datetime)
+    assert manifest.checksums == tuple(FileInfo.Checksums)
     assert manifest.tags == ()
     check_manifest(manifest, testdata)
 
@@ -115,7 +115,25 @@ def test_manifest_exclude_explicit_include(test_dir, monkeypatch):
     data = sub_testdata(testdata, excludes[0], paths[1])
     check_manifest(manifest, data)
 
-def test_mnifest_sort(test_dir, monkeypatch):
+
+def test_manifest_from_fileinfos(test_dir, monkeypatch):
+    """Create a manifest providing an iterable of fileinfos.
+    """
+    monkeypatch.chdir(str(test_dir))
+    fileinfos = FileInfo.iterpaths([Path("base")], set())
+    manifest = Manifest(fileinfos=fileinfos)
+    head = manifest.head
+    assert set(head.keys()) == {
+        "Checksums", "Date", "Generator", "Metadata", "Version"
+    }
+    assert manifest.version == Manifest.Version
+    assert isinstance(manifest.date, datetime.datetime)
+    assert manifest.checksums == tuple(FileInfo.Checksums)
+    assert manifest.tags == ()
+    check_manifest(manifest, testdata)
+
+
+def test_manifest_sort(test_dir, monkeypatch):
     """Test the Manifest.sort() method.
     """
     monkeypatch.chdir(str(test_dir))

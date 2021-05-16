@@ -15,9 +15,14 @@ from conftest import *
 testdata = [
     DataDir(Path("base"), 0o755),
     DataDir(Path("base", "data"), 0o750),
+    DataDir(Path("base", "data", "aa"), 0o750),
+    DataDir(Path("base", "data", "zz"), 0o750),
     DataDir(Path("base", "empty"), 0o755),
     DataFile(Path("base", "msg.txt"), 0o644),
     DataFile(Path("base", "data", "rnd.dat"), 0o600),
+    DataFile(Path("base", "data", "rnd2.dat"), 0o600),
+    DataRandomFile(Path("base", "data", "aa", "rnd_a.dat"), 0o600),
+    DataRandomFile(Path("base", "data", "zz", "rnd_z.dat"), 0o600),
     DataFile(Path("base", "rnd.dat"), 0o600),
     DataSymLink(Path("base", "s.dat"), Path("data", "rnd.dat")),
 ]
@@ -222,53 +227,8 @@ def test_diff_metadata(test_data, testname, monkeypatch, abspath):
         assert out[0] == ("File system metadata for %s:%s and %s:%s differ"
                           % (archive_ref_path, p, archive_path, p))
 
-def test_diff_basedir_equal(test_data, testname, monkeypatch):
-    """Diff two archives with different base directories having equal
-    content.
-
-    This test makes only sense for archives with relative path names.
-    """
-    monkeypatch.chdir(str(test_data))
-    newbase = Path("newbase")
-    shutil.rmtree(str(newbase), ignore_errors=True)
-    Path("base").rename(newbase)
-    archive_ref_path = Path("archive-rel.tar")
-    archive_path = Path(archive_name(ext="bz2", tags=[testname, "rel"]))
-    Archive().create(archive_path, "bz2", [newbase])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
-        args = ["diff", str(archive_ref_path), str(archive_path)]
-        callscript("archive-tool.py", args, stdout=f)
-        f.seek(0)
-        assert list(get_output(f)) == []
-
-def test_diff_basedir_mod_file(test_data, testname, monkeypatch):
-    """Diff two archives with different base directories having one file's
-    content modified.
-
-    This test makes only sense for archives with relative path names.
-    """
-    monkeypatch.chdir(str(test_data))
-    base = Path("base")
-    newbase = Path("newbase")
-    shutil.rmtree(str(newbase), ignore_errors=True)
-    base.rename(newbase)
-    archive_ref_path = Path("archive-rel.tar")
-    p = base / "rnd.dat"
-    pn = newbase / "rnd.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(pn))
-    archive_path = Path(archive_name(ext="bz2", tags=[testname, "rel"]))
-    Archive().create(archive_path, "bz2", [newbase])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
-        args = ["diff", str(archive_ref_path), str(archive_path)]
-        callscript("archive-tool.py", args, returncode=101, stdout=f)
-        f.seek(0)
-        out = list(get_output(f))
-        assert len(out) == 1
-        assert out[0] == ("Files %s:%s and %s:%s differ"
-                          % (archive_ref_path, p, archive_path, pn))
-
 @pytest.mark.parametrize("abspath", [False, True])
-def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
+def test_diff_missing_dir(test_data, testname, monkeypatch, abspath):
     """Diff two archives with one subdirectory missing.
     """
     monkeypatch.chdir(str(test_data))
@@ -278,7 +238,7 @@ def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
     else:
         archive_ref_path = Path("archive-rel.tar")
         base_dir = Path("base")
-    pd = base_dir / "data"
+    pd = base_dir / "data" / "zz"
     shutil.rmtree(str(pd))
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
@@ -290,7 +250,7 @@ def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
         out = list(get_output(f))
         assert len(out) == 2
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
-        assert out[1] == "Only in %s: %s" % (archive_ref_path, pd / "rnd.dat")
+        assert out[1] == "Only in %s: %s" % (archive_ref_path, pd / "rnd_z.dat")
     with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
         args = ["diff", "--skip-dir-content",
                 str(archive_ref_path), str(archive_path)]
@@ -299,3 +259,68 @@ def test_diff_dircontent(test_data, testname, monkeypatch, abspath):
         out = list(get_output(f))
         assert len(out) == 1
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
+
+@pytest.mark.parametrize("abspath", [False, True])
+def test_diff_orphan_dir_content(test_data, testname, monkeypatch, abspath):
+    """Diff archives having content in a missing directory.  Ref. #56
+    """
+    monkeypatch.chdir(str(test_data))
+    if abspath:
+        base_dir = test_data / "base"
+    else:
+        base_dir = Path("base")
+    pd = base_dir / "data"
+    excl_a = [ pd / "zz" ]
+    flag = absflag(abspath)
+    archive_a = Path(archive_name(ext="bz2", tags=[testname, "a", flag]))
+    Archive().create(archive_a, "bz2", [base_dir], excludes=excl_a)
+    pm = pd / "rnd2.dat"
+    shutil.copy(str(gettestdata("rnd.dat")), str(pm))
+    incl_b = [ base_dir, pd / "aa", pd / "rnd2.dat", pd / "zz" ]
+    excl_b = [ pd, pd / "rnd.dat" ]
+    flag = absflag(abspath)
+    archive_b = Path(archive_name(ext="bz2", tags=[testname, "b", flag]))
+    Archive().create(archive_b, "bz2", incl_b, excludes=excl_b)
+    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+        args = ["diff", str(archive_a), str(archive_b)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = list(get_output(f))
+        assert len(out) == 5
+        assert out[0] == "Only in %s: %s" % (archive_a, pd)
+        assert out[1] == "Only in %s: %s" % (archive_a, pd / "rnd.dat")
+        assert out[2] == ("Files %s:%s and %s:%s differ"
+                          % (archive_a, pm, archive_b, pm))
+        assert out[3] == "Only in %s: %s" % (archive_b, pd / "zz")
+        assert out[4] == "Only in %s: %s" % (archive_b, pd / "zz" / "rnd_z.dat")
+    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+        args = ["diff", "--skip-dir-content", str(archive_a), str(archive_b)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = list(get_output(f))
+        assert len(out) == 1
+        assert out[0] == "Only in %s: %s" % (archive_a, pd)
+
+@pytest.mark.parametrize("abspath", [False, True])
+def test_diff_extrafile_end(test_data, testname, monkeypatch, abspath):
+    """The first archives has an extra entry as last item.  Ref. #55
+    """
+    monkeypatch.chdir(str(test_data))
+    if abspath:
+        archive_ref_path = Path("archive-abs.tar")
+        base_dir = test_data / "base"
+    else:
+        archive_ref_path = Path("archive-rel.tar")
+        base_dir = Path("base")
+    p = base_dir / "zzz.dat"
+    shutil.copy(str(gettestdata("rnd2.dat")), str(p))
+    flag = absflag(abspath)
+    archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
+    Archive().create(archive_path, "bz2", [base_dir])
+    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+        args = ["diff", str(archive_path), str(archive_ref_path)]
+        callscript("archive-tool.py", args, returncode=102, stdout=f)
+        f.seek(0)
+        out = list(get_output(f))
+        assert len(out) == 1
+        assert out[0] == "Only in %s: %s" % (archive_path, p)
