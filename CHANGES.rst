@@ -32,6 +32,9 @@ Bug fixes and minor changes
 + `#57`_: Do not take the paths relative to the base directory in the
   `archive-tool diff` command.
 
++ `#58`_: Weaken the condition introduced in `#9`_ that basedir must
+  be a directory.
+
 + `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
   :meth:`Archive.create` when passing a relative path as `workdir`
   argument.
@@ -51,6 +54,7 @@ Bug fixes and minor changes
 .. _#55: https://github.com/RKrahl/archive-tools/issues/55
 .. _#56: https://github.com/RKrahl/archive-tools/issues/56
 .. _#57: https://github.com/RKrahl/archive-tools/pull/57
+.. _#58: https://github.com/RKrahl/archive-tools/pull/58
 
 
 0.5.1 (2020-12-12)
@@ -221,3 +225,5 @@ Bug fixes and minor changes
 ~~~~~~~~~~~~~~~~
 
 + Initial release.
+
+.. _#9: https://github.com/RKrahl/archive-tools/issues/9
