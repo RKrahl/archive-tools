@@ -92,6 +92,10 @@ class Archive:
                 self._check_paths(paths, basedir, excludes)
                 self.manifest = Manifest(paths=paths, excludes=excludes,
                                          tags=tags)
+            bd_fi = self.manifest.find(self.basedir)
+            if bd_fi and not bd_fi.is_dir():
+                raise ArchiveCreateError("base directory %s must "
+                                         "be a directory" % self.basedir)
             self.manifest.add_metadata(self.basedir / ".manifest.yaml")
             for md in self._metadata:
                 md.set_path(self.basedir)
@@ -172,9 +176,6 @@ class Archive:
                     raise ArchiveCreateError("invalid path '%s': must be a "
                                              "subpath of base directory %s"
                                              % (p, self.basedir))
-        if not abspath:
-            if self.basedir.is_symlink() or not self.basedir.is_dir():
-                raise ArchiveCreateError("basedir must be a directory")
 
     def _add_metadata_files(self, tarf):
         """Add the metadata files to the tar file.
