@@ -12,6 +12,9 @@ jobs:
           - '3.8'
           - '3.9'
           - '3.10.0-beta - 3.10.0'
+        include:
+          - python-version: '3.4'
+            os: ubuntu-18.04
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
@@ -21,23 +24,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          pip install -r .github/requirements.txt
-      - name: Test with pytest
-        run: |
-          python setup.py test
-  Test_3_4:
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.4
       - name: Install dependencies
         run: |
           pip install -r .github/requirements.txt
