@@ -1,9 +1,9 @@
-|travis| |pypi|
+|gh-test| |pypi|
 
-.. |travis| image:: https://img.shields.io/travis/com/RKrahl/archive-tools
-   :target: https://travis-ci.com/RKrahl/archive-tools
-   :alt: Travis build status
-
+.. |gh-test| image:: https://img.shields.io/github/workflow/status/RKrahl/archive-tools/Run%20Test
+   :target: https://github.com/RKrahl/archive-tools/actions/workflows/run-tests.yaml
+   :alt: GitHub Workflow Status
+	 
 .. |pypi| image:: https://img.shields.io/pypi/v/archive-tools
    :target: https://pypi.org/project/archive-tools/
    :alt: PyPI version

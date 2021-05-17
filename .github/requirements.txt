@@ -1,0 +1,9 @@
+PyYAML <=5.2 ; python_version == '3.4'
+PyYAML >=5.3.1 ; python_version == '3.5'
+PyYAML >=5.4 ; python_version > '3.5'
+distutils-pytest
+pytest >=3.6.0
+pytest-dependency >=0.2
+python-dateutil
+setuptools_scm
+typing ; python_version == '3.4'

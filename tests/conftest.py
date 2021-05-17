@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import pytest
+import archive
 from archive.tools import ft_mode
 
 
@@ -292,3 +293,10 @@ def get_output(fileobj):
         line = line.strip()
         print("< %s" % line)
         yield line
+
+def pytest_report_header(config):
+    """Add information on the package version used in the tests.
+    """
+    modpath = Path(archive.__file__).resolve().parent
+    return [ "archive-tools: %s" % (archive.__version__),
+             "               %s" % (modpath)]
