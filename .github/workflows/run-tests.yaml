@@ -2,9 +2,10 @@ name: Run Test
 on: [push, pull_request]
 jobs:
   Test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: ubuntu-latest
         python-version:
           - '3.5'
           - '3.6'
