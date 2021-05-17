@@ -5,7 +5,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
         python-version:
           - '3.5'
           - '3.6'
@@ -13,6 +12,7 @@ jobs:
           - '3.8'
           - '3.9'
           - '3.10.0-beta - 3.10.0'
+        os: [ubuntu-latest]
         include:
           - python-version: '3.4'
             os: ubuntu-18.04
