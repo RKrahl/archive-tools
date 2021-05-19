@@ -28,7 +28,7 @@ def test_create_default_basedir_rel(test_dir, monkeypatch):
     """Check the default basedir with relative paths.  (Issue #8)
     """
     monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-rel.tar"
+    archive_path = Path("archive-rel.tar")
     p = Path("base", "data")
     Archive().create(archive_path, "", [p])
     with Archive().open(archive_path) as archive:
@@ -91,7 +91,7 @@ def test_create_add_symlink(test_dir, monkeypatch):
     """Check adding explicitly adding a symbolic link.  (Issue #37)
     """
     monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-symlink.tar"
+    archive_path = Path("archive-symlink.tar")
     paths = [Path("base", "data", "misc"), Path("base", "data", "s.dat")]
     data = [ testdata[i] for i in (1,3,4) ]
     Archive().create(archive_path, "", paths)
@@ -109,7 +109,7 @@ def test_create_tags(test_dir, monkeypatch, tags, expected):
     """Test setting tags.
     """
     monkeypatch.chdir(str(test_dir))
-    archive_path = archive_name(tags=["tags"], counter="create_tags")
+    archive_path = Path(archive_name(tags=["tags"], counter="create_tags"))
     Archive().create(archive_path, "", [Path("base")], tags=tags)
     with Archive().open(archive_path) as archive:
         assert archive.manifest.tags == expected
