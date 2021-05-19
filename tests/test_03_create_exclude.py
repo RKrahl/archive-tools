@@ -31,7 +31,7 @@ def test_dir(tmpdir):
 def test_create_exclude_file(test_dir, testname, monkeypatch):
     """Exclude one single file.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [Path("base")]
     excludes = [Path("base", "msg.txt")]
@@ -45,7 +45,7 @@ def test_create_exclude_file(test_dir, testname, monkeypatch):
 def test_create_exclude_subdir(test_dir, testname, monkeypatch):
     """Exclude a subdirectory.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [Path("base")]
     excludes = [Path("base", "data")]
@@ -59,7 +59,7 @@ def test_create_exclude_subdir(test_dir, testname, monkeypatch):
 def test_create_exclude_samelevel(test_dir, testname, monkeypatch):
     """Exclude a directory explictely named in paths.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [Path("base", "data"), Path("base", "empty")]
     excludes = [paths[1]]
@@ -74,7 +74,7 @@ def test_create_exclude_explicit_include(test_dir, testname, monkeypatch):
     """Exclude a directory, but explicitely include an item in that
     directory.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [Path("base"), Path("base", "data", "rnd1.dat")]
     excludes = [Path("base", "data")]

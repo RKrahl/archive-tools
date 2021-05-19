@@ -24,7 +24,7 @@ def test_create_workdir(test_dir, monkeypatch, abs_wd):
     """Pass an absolute or relative workdir to Archive.create().
     (Issue #53)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     if abs_wd:
         workdir = test_dir / "work"
     else:

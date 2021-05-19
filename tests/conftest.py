@@ -62,7 +62,7 @@ class TmpDir(object):
         self.dir = Path(tempfile.mkdtemp(prefix="archive-tools-test-"))
     def cleanup(self):
         if self.dir and _cleanup:
-            shutil.rmtree(str(self.dir))
+            shutil.rmtree(self.dir)
         self.dir = None
     def __enter__(self):
         return self.dir
@@ -116,7 +116,7 @@ def _set_fs_attrs(path, mode, mtime):
     if mode is not None:
         path.chmod(mode)
     if mtime is not None:
-        os.utime(str(path), (mtime, mtime), follow_symlinks=False)
+        os.utime(path, (mtime, mtime), follow_symlinks=False)
 
 class DataItem:
 
@@ -179,7 +179,7 @@ class DataFile(DataFileOrDir):
     def create(self, main_dir):
         path = main_dir / self.path
         path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(str(gettestdata(self.path.name)), str(path))
+        shutil.copy(gettestdata(self.path.name), path)
         _set_fs_attrs(path, self.mode, self.mtime)
 
 class DataRandomFile(DataFileOrDir):

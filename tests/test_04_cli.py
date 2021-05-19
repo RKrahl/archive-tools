@@ -53,7 +53,7 @@ def dep_testcase(request, testcase):
 def test_cli_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
     require_compression(compression)
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = archive_name(ext=compression, tags=[absflag(abspath)])
     if abspath:
         paths = str(test_dir / "base")
@@ -110,7 +110,7 @@ def test_cli_checksums(test_dir, dep_testcase):
         args = ["ls", "--format=checksum", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        cwd = None if abspath else str(test_dir)
+        cwd = None if abspath else test_dir
         try:
             sha256 = subprocess.Popen([sha256sum, "--check"],
                                       cwd=cwd, stdin=subprocess.PIPE)

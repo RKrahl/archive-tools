@@ -37,7 +37,7 @@ def test_dir(tmpdir):
 
 @pytest.fixture(scope="function")
 def test_data(request, test_dir):
-    shutil.rmtree(str(test_dir / "base"), ignore_errors=True)
+    shutil.rmtree(test_dir / "base", ignore_errors=True)
     with Archive().open(test_dir / "archive.tar") as archive:
         archive.extract(test_dir)
     return test_dir
@@ -45,7 +45,7 @@ def test_data(request, test_dir):
 def test_diff_manifest_equal(test_data, testname, monkeypatch):
     """Diff two fileinfo lists having equal content.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
@@ -56,7 +56,7 @@ def test_diff_manifest_equal(test_data, testname, monkeypatch):
 def test_diff_manifest_metadata(test_data, testname, monkeypatch):
     """Diff two fileinfo lists having one file's metadata modified.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
@@ -73,12 +73,12 @@ def test_diff_manifest_metadata(test_data, testname, monkeypatch):
 def test_diff_manifest_modified_file(test_data, testname, monkeypatch):
     """Diff two fileinfo lists having one file's content modified.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
     p = base_dir / "rnd.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(p))
+    shutil.copy(gettestdata("rnd2.dat"), p)
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1
@@ -90,7 +90,7 @@ def test_diff_manifest_modified_file(test_data, testname, monkeypatch):
 def test_diff_manifest_symlink_target(test_data, testname, monkeypatch):
     """Diff two fileinfo lists having one symlink's target modified.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
@@ -108,7 +108,7 @@ def test_diff_manifest_symlink_target(test_data, testname, monkeypatch):
 def test_diff_manifest_wrong_type(test_data, testname, monkeypatch):
     """Diff two fileinfo lists with one entry having a wrong type.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
@@ -127,7 +127,7 @@ def test_diff_manifest_wrong_type(test_data, testname, monkeypatch):
 def test_diff_manifest_missing_files(test_data, testname, monkeypatch):
     """Diff two fileinfo lists having one file's name changed.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
@@ -151,12 +151,12 @@ def test_diff_manifest_missing_files(test_data, testname, monkeypatch):
 def test_diff_manifest_mult(test_data, testname, monkeypatch):
     """Diff two fileinfo lists having multiple differences.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
     pm = base_dir / "data" / "rnd.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(pm))
+    shutil.copy(gettestdata("rnd2.dat"), pm)
     p1 = base_dir / "msg.txt"
     p2 = base_dir / "o.txt"
     p1.rename(p2)
@@ -181,12 +181,12 @@ def test_diff_manifest_mult(test_data, testname, monkeypatch):
 def test_diff_manifest_dircontent(test_data, testname, monkeypatch):
     """Diff two fileinfo lists with one subdirectory missing.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
     pd = base_dir / "data"
-    shutil.rmtree(str(pd))
+    shutil.rmtree(pd)
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 2
@@ -207,12 +207,12 @@ def test_diff_manifest_add_file_last(test_data, testname, monkeypatch):
     The implementation of the corresponding command line tool used to
     have a flaw in this particular case, ref. #55.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
     p = base_dir / "zzz.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(p))
+    shutil.copy(gettestdata("rnd2.dat"), p)
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1

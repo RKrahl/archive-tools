@@ -44,7 +44,7 @@ def test_cli_warn_ignore_socket(test_dir, testname, monkeypatch):
     archive-tool.py should issue a warning that the socket has been
     ignored, but otherwise proceed to create the archive.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     basedir = Path("base")
     fp = basedir / "socket"

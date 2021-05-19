@@ -37,7 +37,7 @@ def test_dir(tmpdir):
 
 @pytest.fixture(scope="function")
 def test_data(request, test_dir):
-    shutil.rmtree(str(test_dir / "base"), ignore_errors=True)
+    shutil.rmtree(test_dir / "base", ignore_errors=True)
     with Archive().open(test_dir / "archive-rel.tar") as archive:
         archive.extract(test_dir)
     return test_dir
@@ -46,7 +46,7 @@ def test_data(request, test_dir):
 def test_diff_equal(test_data, testname, monkeypatch, abspath):
     """Diff two archives having equal content.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -66,7 +66,7 @@ def test_diff_equal(test_data, testname, monkeypatch, abspath):
 def test_diff_modified_file(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one file's content modified.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -74,7 +74,7 @@ def test_diff_modified_file(test_data, testname, monkeypatch, abspath):
         archive_ref_path = Path("archive-rel.tar")
         base_dir = Path("base")
     p = base_dir / "rnd.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(p))
+    shutil.copy(gettestdata("rnd2.dat"), p)
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
@@ -91,7 +91,7 @@ def test_diff_modified_file(test_data, testname, monkeypatch, abspath):
 def test_diff_symlink_target(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one symlink's target modified.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -117,7 +117,7 @@ def test_diff_symlink_target(test_data, testname, monkeypatch, abspath):
 def test_diff_wrong_type(test_data, testname, monkeypatch, abspath):
     """Diff two archives with one entry having a wrong type.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -143,7 +143,7 @@ def test_diff_wrong_type(test_data, testname, monkeypatch, abspath):
 def test_diff_missing_files(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one file's name changed.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -169,7 +169,7 @@ def test_diff_missing_files(test_data, testname, monkeypatch, abspath):
 def test_diff_mult(test_data, testname, monkeypatch, abspath):
     """Diff two archives having multiple differences.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -177,7 +177,7 @@ def test_diff_mult(test_data, testname, monkeypatch, abspath):
         archive_ref_path = Path("archive-rel.tar")
         base_dir = Path("base")
     pm = base_dir / "data" / "rnd.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(pm))
+    shutil.copy(gettestdata("rnd2.dat"), pm)
     p1 = base_dir / "msg.txt"
     p2 = base_dir / "o.txt"
     p1.rename(p2)
@@ -200,7 +200,7 @@ def test_diff_metadata(test_data, testname, monkeypatch, abspath):
     """Diff two archives having one file's file system metadata modified.
     This difference should be ignored by default.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -231,7 +231,7 @@ def test_diff_metadata(test_data, testname, monkeypatch, abspath):
 def test_diff_missing_dir(test_data, testname, monkeypatch, abspath):
     """Diff two archives with one subdirectory missing.
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -239,7 +239,7 @@ def test_diff_missing_dir(test_data, testname, monkeypatch, abspath):
         archive_ref_path = Path("archive-rel.tar")
         base_dir = Path("base")
     pd = base_dir / "data" / "zz"
-    shutil.rmtree(str(pd))
+    shutil.rmtree(pd)
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
@@ -264,7 +264,7 @@ def test_diff_missing_dir(test_data, testname, monkeypatch, abspath):
 def test_diff_orphan_dir_content(test_data, testname, monkeypatch, abspath):
     """Diff archives having content in a missing directory.  Ref. #56
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         base_dir = test_data / "base"
     else:
@@ -275,7 +275,7 @@ def test_diff_orphan_dir_content(test_data, testname, monkeypatch, abspath):
     archive_a = Path(archive_name(ext="bz2", tags=[testname, "a", flag]))
     Archive().create(archive_a, "bz2", [base_dir], excludes=excl_a)
     pm = pd / "rnd2.dat"
-    shutil.copy(str(gettestdata("rnd.dat")), str(pm))
+    shutil.copy(gettestdata("rnd.dat"), pm)
     incl_b = [ base_dir, pd / "aa", pd / "rnd2.dat", pd / "zz" ]
     excl_b = [ pd, pd / "rnd.dat" ]
     flag = absflag(abspath)
@@ -305,7 +305,7 @@ def test_diff_orphan_dir_content(test_data, testname, monkeypatch, abspath):
 def test_diff_extrafile_end(test_data, testname, monkeypatch, abspath):
     """The first archives has an extra entry as last item.  Ref. #55
     """
-    monkeypatch.chdir(str(test_data))
+    monkeypatch.chdir(test_data)
     if abspath:
         archive_ref_path = Path("archive-abs.tar")
         base_dir = test_data / "base"
@@ -313,7 +313,7 @@ def test_diff_extrafile_end(test_data, testname, monkeypatch, abspath):
         archive_ref_path = Path("archive-rel.tar")
         base_dir = Path("base")
     p = base_dir / "zzz.dat"
-    shutil.copy(str(gettestdata("rnd2.dat")), str(p))
+    shutil.copy(gettestdata("rnd2.dat"), p)
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])

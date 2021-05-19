@@ -42,7 +42,7 @@ def test_create_mailarchive(tmpdir, monkeypatch, testcase):
     if testcase == "abs":
         archive_path = tmpdir / "mailarchive-abs.tar.xz"
     else:
-        monkeypatch.chdir(str(tmpdir))
+        monkeypatch.chdir(tmpdir)
         archive_path = "mailarchive-rel.tar.xz"
     archive = MailArchive()
     archive.create(archive_path, getmsgs(), server="imap.example.org")

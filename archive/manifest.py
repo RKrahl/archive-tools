@@ -71,7 +71,7 @@ class FileInfo:
             elif stat.S_ISDIR(fstat.st_mode):
                 pass
             elif stat.S_ISLNK(fstat.st_mode):
-                self.target = Path(os.readlink(str(self.path)))
+                self.target = Path(os.readlink(self.path))
             else:
                 ftype = stat.S_IFMT(fstat.st_mode)
                 raise ArchiveInvalidTypeError(self.path, ftype)

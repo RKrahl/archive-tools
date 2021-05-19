@@ -31,9 +31,9 @@ sha256sum = "sha256sum"
 def test_dir(tmpdir):
     setup_testdata(tmpdir, testdata)
     sf = next(filter(lambda f: f.path == src, testdata))
-    os.link(str(tmpdir / src), str(tmpdir / dest_lnk))
+    os.link(tmpdir / src, tmpdir / dest_lnk)
     testdata.append(DataFile(dest_lnk, sf.mode, checksum=sf.checksum))
-    shutil.copy(str(tmpdir / src), str(tmpdir / dest_cp))
+    shutil.copy(tmpdir / src, tmpdir / dest_cp)
     testdata.append(DataFile(dest_cp, sf.mode, checksum=sf.checksum))
     return tmpdir
 
@@ -55,7 +55,7 @@ def dep_testcase(request, testcase):
 @pytest.mark.dependency()
 def test_create(test_dir, monkeypatch, testcase):
     dedup = testcase
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path(archive_name(tags=[dedup.value]))
     paths = [Path("base")]
     Archive().create(archive_path, '', paths, dedup=dedup)
@@ -72,13 +72,13 @@ def test_check_content(test_dir, dep_testcase):
     dedup = dep_testcase
     archive_path = test_dir / archive_name(tags=[dedup.value])
     outdir = test_dir / "out"
-    shutil.rmtree(str(outdir), ignore_errors=True)
+    shutil.rmtree(outdir, ignore_errors=True)
     outdir.mkdir()
     with tarfile.open(str(archive_path), "r") as tarf:
         tarf.extractall(path=str(outdir))
     try:
         sha256 = subprocess.Popen([sha256sum, "--check"], 
-                                  cwd=str(outdir), stdin=subprocess.PIPE)
+                                  cwd=outdir, stdin=subprocess.PIPE)
     except FileNotFoundError:
         pytest.skip("%s program not found" % sha256sum)
     for f in testdata:

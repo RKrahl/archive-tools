@@ -25,7 +25,7 @@ class tmp_chdir():
     """
     def __init__(self, dir):
         self.save_dir = None
-        self.dir = str(dir)
+        self.dir = dir
     def __enter__(self):
         self.save_dir = os.getcwd()
         os.chdir(self.dir)

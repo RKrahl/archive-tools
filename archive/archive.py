@@ -71,7 +71,7 @@ class Archive:
         try:
             if workdir:
                 save_wd = os.getcwd()
-                os.chdir(str(workdir))
+                os.chdir(workdir)
             self.path = path
             self._dedup = dedup
             self._dupindex = {}
