@@ -66,12 +66,7 @@ class Archive:
     def create(self, path, compression, paths=None, fileinfos=None,
                basedir=None, workdir=None, excludes=None,
                dedup=DedupMode.LINK, tags=None):
-        if sys.version_info < (3, 5):
-            # The 'x' (exclusive creation) mode was added to tarfile
-            # in Python 3.5.
-            mode = 'w:' + compression
-        else:
-            mode = 'x:' + compression
+        mode = 'x:' + compression
         save_wd = None
         try:
             if workdir:
