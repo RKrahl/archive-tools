@@ -27,7 +27,7 @@ def test_dir(tmpdir):
 def test_create_default_basedir_rel(test_dir, monkeypatch):
     """Check the default basedir with relative paths.  (Issue #8)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = "archive-rel.tar"
     p = Path("base", "data")
     Archive().create(archive_path, "", [p])
@@ -39,7 +39,7 @@ def test_create_default_basedir_rel(test_dir, monkeypatch):
 def test_create_default_basedir_abs(test_dir, monkeypatch):
     """Check the default basedir with absolute paths.  (Issue #8)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path("archive-abs.tar")
     p = test_dir / Path("base", "data")
     Archive().create(archive_path, "", [p])
@@ -51,7 +51,7 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
 def test_create_sorted(test_dir, monkeypatch):
     """The entries in the manifest should be sorted.  (Issue #11)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path("archive-sort.tar")
     files = [ Path("base", fn) for fn in ("c", "a", "d", "b") ]
     for p in files:
@@ -69,10 +69,10 @@ def test_create_sorted(test_dir, monkeypatch):
 def test_create_custom_metadata(test_dir, monkeypatch):
     """Add additional custom metadata to the archive.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path("archive-custom-md.tar")
     p = Path("base", "data")
-    with TemporaryFile(dir=str(test_dir)) as tmpf:
+    with TemporaryFile(dir=test_dir) as tmpf:
         archive = Archive()
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)
@@ -90,7 +90,7 @@ def test_create_custom_metadata(test_dir, monkeypatch):
 def test_create_add_symlink(test_dir, monkeypatch):
     """Check adding explicitly adding a symbolic link.  (Issue #37)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = "archive-symlink.tar"
     paths = [Path("base", "data", "misc"), Path("base", "data", "s.dat")]
     data = [ testdata[i] for i in (1,3,4) ]
@@ -108,7 +108,7 @@ def test_create_add_symlink(test_dir, monkeypatch):
 def test_create_tags(test_dir, monkeypatch, tags, expected):
     """Test setting tags.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = archive_name(tags=["tags"], counter="create_tags")
     Archive().create(archive_path, "", [Path("base")], tags=tags)
     with Archive().open(archive_path) as archive:

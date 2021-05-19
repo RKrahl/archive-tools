@@ -62,7 +62,7 @@ class TmpDir(object):
         self.dir = Path(tempfile.mkdtemp(prefix="archive-tools-test-"))
     def cleanup(self):
         if self.dir and _cleanup:
-            shutil.rmtree(str(self.dir))
+            shutil.rmtree(self.dir)
         self.dir = None
     def __enter__(self):
         return self.dir
@@ -112,18 +112,11 @@ def _get_checksums():
             checksums[fp] = cs
     return checksums
 
-def _mk_dir(path):
-    # path.mkdir(parents=True, exist_ok=True) requires Python 3.5.
-    try:
-        path.mkdir(parents=True)
-    except FileExistsError:
-        pass
-
 def _set_fs_attrs(path, mode, mtime):
     if mode is not None:
         path.chmod(mode)
     if mtime is not None:
-        os.utime(str(path), (mtime, mtime), follow_symlinks=False)
+        os.utime(path, (mtime, mtime), follow_symlinks=False)
 
 class DataItem:
 
@@ -164,7 +157,7 @@ class DataDir(DataFileOrDir):
 
     def create(self, main_dir):
         path = main_dir / self.path
-        _mk_dir(path)
+        path.mkdir(parents=True, exist_ok=True)
         _set_fs_attrs(path, self.mode, self.mtime)
 
 class DataFile(DataFileOrDir):
@@ -185,8 +178,8 @@ class DataFile(DataFileOrDir):
 
     def create(self, main_dir):
         path = main_dir / self.path
-        _mk_dir(path.parent)
-        shutil.copy(str(gettestdata(self.path.name)), str(path))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(gettestdata(self.path.name), path)
         _set_fs_attrs(path, self.mode, self.mtime)
 
 class DataRandomFile(DataFileOrDir):
@@ -209,7 +202,7 @@ class DataRandomFile(DataFileOrDir):
         data = bytearray(getrandbits(8) for _ in range(self._size))
         h.update(data)
         self._checksum = h.hexdigest()
-        _mk_dir(path.parent)
+        path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as f:
             f.write(data)
         _set_fs_attrs(path, self.mode, self.mtime)
@@ -230,7 +223,7 @@ class DataSymLink(DataItem):
 
     def create(self, main_dir):
         path = main_dir / self.path
-        _mk_dir(path.parent)
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.symlink_to(self.target)
         _set_fs_attrs(path, None, self.mtime)
 
