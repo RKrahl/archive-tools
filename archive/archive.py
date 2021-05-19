@@ -77,7 +77,7 @@ class Archive:
             if workdir:
                 save_wd = os.getcwd()
                 os.chdir(str(workdir))
-            self.path = path
+            self.path = path.resolve()
             self._dedup = dedup
             self._dupindex = {}
             if fileinfos is not None:
@@ -221,11 +221,11 @@ class Archive:
         self._metadata.insert(0, md)
 
     def open(self, path):
-        self.path = path
         try:
-            self._file = tarfile.open(str(self.path), 'r')
+            self._file = tarfile.open(str(path), 'r')
         except OSError as e:
             raise ArchiveReadError(str(e))
+        self.path = path.resolve()
         md = self.get_metadata(".manifest.yaml")
         self.basedir = md.path.parent
         self.manifest = Manifest(fileobj=md.fileobj)

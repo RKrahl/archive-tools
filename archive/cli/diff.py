@@ -42,26 +42,26 @@ def diff(args):
     status = 0
     for diff_stat, fi1, fi2 in diff:
         if diff_stat == DiffStatus.MISSING_A:
-            print("Only in %s: %s" % (archive2.path, fi2.path))
+            print("Only in %s: %s" % (args.archive2, fi2.path))
             status = max(status, 102)
         elif diff_stat == DiffStatus.MISSING_B:
-            print("Only in %s: %s" % (archive1.path, fi1.path))
+            print("Only in %s: %s" % (args.archive1, fi1.path))
             status = max(status, 102)
         elif diff_stat == DiffStatus.TYPE:
             print("Entries %s:%s and %s:%s have different type"
-                  % (archive1.path, fi1.path, archive2.path, fi2.path))
+                  % (args.archive1, fi1.path, args.archive2, fi2.path))
             status = max(status, 102)
         elif diff_stat == DiffStatus.SYMLNK_TARGET:
             print("Symbol links %s:%s and %s:%s have different target"
-                  % (archive1.path, fi1.path, archive2.path, fi2.path))
+                  % (args.archive1, fi1.path, args.archive2, fi2.path))
             status = max(status, 101)
         elif diff_stat == DiffStatus.CONTENT:
             print("Files %s:%s and %s:%s differ"
-                  % (archive1.path, fi1.path, archive2.path, fi2.path))
+                  % (args.archive1, fi1.path, args.archive2, fi2.path))
             status = max(status, 101)
         elif diff_stat == DiffStatus.META and args.report_meta:
             print("File system metadata for %s:%s and %s:%s differ"
-                  % (archive1.path, fi1.path, archive2.path, fi2.path))
+                  % (args.archive1, fi1.path, args.archive2, fi2.path))
             status = max(status, 100)
     return status
 
