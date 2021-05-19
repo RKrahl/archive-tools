@@ -32,7 +32,7 @@ def test_dir(tmpdir):
 def test_cli_create_tags(test_dir, monkeypatch, tags, expected):
     """Set tags using the --tags argument.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = archive_name(tags=["tags"], counter="cli_create_tags")
     args = ["create"]
     for t in tags:

@@ -30,7 +30,7 @@ def test_dir(tmpdir):
 def test_create_empty(test_dir, testname, monkeypatch):
     """Creating an empty archive will be refused.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     with pytest.raises(ArchiveCreateError):
         Archive().create(Path(name), "", [], basedir=Path("base"))
@@ -38,7 +38,7 @@ def test_create_empty(test_dir, testname, monkeypatch):
 def test_create_abs_basedir(test_dir, testname, monkeypatch):
     """Base dir must be a a relative path.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [Path("base")]
     basedir = test_dir / "base"
@@ -48,7 +48,7 @@ def test_create_abs_basedir(test_dir, testname, monkeypatch):
 def test_create_mixing_abs_rel(test_dir, testname, monkeypatch):
     """Mixing absolute and relative paths is not allowed.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [ Path("base", "msg.txt"), test_dir / "base" / "data" ]
     with pytest.raises(ArchiveCreateError):
@@ -57,7 +57,7 @@ def test_create_mixing_abs_rel(test_dir, testname, monkeypatch):
 def test_create_rel_not_in_base(test_dir, testname, monkeypatch):
     """Relative paths must be in the base directory.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [ Path("other", "rnd.dat") ]
     with pytest.raises(ArchiveCreateError):
@@ -66,7 +66,7 @@ def test_create_rel_not_in_base(test_dir, testname, monkeypatch):
 def test_create_norm_path(test_dir, testname, monkeypatch):
     """Items in paths must be normalized.  (Issue #6)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = [ Path("base"), Path("base/../../../etc/passwd") ]
     with pytest.raises(ArchiveCreateError):
@@ -75,7 +75,7 @@ def test_create_norm_path(test_dir, testname, monkeypatch):
 def test_create_rel_check_basedir(test_dir, testname, monkeypatch):
     """Base directory must be a directory.  (Issue #9)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     p = Path("msg.txt")
     with pytest.raises(ArchiveCreateError):
@@ -92,7 +92,7 @@ def test_create_rel_no_manifest_file(test_dir, testname, monkeypatch):
     /.manifest.yaml to the archive.  Obviously, we cannot create such
     a file for the test.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     base = Path("base")
     manifest = base / ".manifest.yaml"
@@ -108,10 +108,10 @@ def test_create_duplicate_metadata(test_dir, testname, monkeypatch):
     """Add additional custom metadata to the archive,
     using a name that is already taken.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     p = Path("base")
-    with TemporaryFile(dir=str(test_dir)) as tmpf:
+    with TemporaryFile(dir=test_dir) as tmpf:
         archive = Archive()
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)
@@ -124,10 +124,10 @@ def test_create_metadata_vs_content(test_dir, testname, monkeypatch):
     """Add additional custom metadata to the archive,
     using a name that conflicts with a content file.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     p = Path("base")
-    with TemporaryFile(dir=str(test_dir)) as tmpf:
+    with TemporaryFile(dir=test_dir) as tmpf:
         archive = Archive()
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)
@@ -140,7 +140,7 @@ def test_create_fileinfos_missing_checksum(test_dir, testname, monkeypatch):
     """When an archive is created from precompiled fileinfos,
     they must already contain suitable checksums.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     with monkeypatch.context() as m:
         m.setattr(FileInfo, "Checksums", ['md5'])
@@ -159,7 +159,7 @@ def test_create_manifest_missing_checksum(test_dir, testname, monkeypatch):
     """Same as last test, but now creating the archive from a precompiled
     manifest.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     with monkeypatch.context() as m:
         m.setattr(FileInfo, "Checksums", ['md5'])

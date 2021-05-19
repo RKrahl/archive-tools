@@ -30,7 +30,7 @@ def test_dir(tmpdir):
 def test_create_fileinfos_list(test_dir, monkeypatch):
     """Create the archive from a list of FileInfo objects.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     fileinfos = list(FileInfo.iterpaths([Path("base")], set()))
     archive_path = Path("archive-fi-list.tar")
     Archive().create(archive_path, "", fileinfos=fileinfos)
@@ -41,7 +41,7 @@ def test_create_fileinfos_list(test_dir, monkeypatch):
 def test_create_fileinfos_generator(test_dir, monkeypatch):
     """Create the archive from FileInfo.iterpaths() which returns a generator.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     fileinfos = FileInfo.iterpaths([Path("base")], set())
     archive_path = Path("archive-fi-generator.tar")
     Archive().create(archive_path, "", fileinfos=fileinfos)
@@ -53,7 +53,7 @@ def test_create_fileinfos_manifest(test_dir, monkeypatch):
     """Create the archive from a Manifest.
     A Manifest is an iterable of FileInfo objects.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     manifest = Manifest(paths=[Path("base")])
     archive_path = Path("archive-fi-manifest.tar")
     Archive().create(archive_path, "", fileinfos=manifest)
@@ -66,7 +66,7 @@ def test_create_fileinfos_subset(test_dir, monkeypatch):
     This test verifies that creating an archive from fileinfos does
     not implicitly descend subdirectories.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     excludes = [Path("base", "data", "rnd.dat")]
     fileinfos = FileInfo.iterpaths([Path("base")], set(excludes))
     data = sub_testdata(testdata, excludes[0])

@@ -44,7 +44,7 @@ class tmp_fifo():
     """
     def __init__(self, path):
         self.path = path
-        os.mkfifo(str(self.path))
+        os.mkfifo(self.path)
     def __enter__(self):
         return self.path
     def __exit__(self, type, value, tb):
@@ -53,7 +53,7 @@ class tmp_fifo():
 def test_create_invalid_file_socket(test_dir, testname, monkeypatch):
     """Create an archive from a directory containing a socket.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path(archive_name(tags=[testname]))
     p = Path("base")
     fp = p / "socket"
@@ -68,7 +68,7 @@ def test_create_invalid_file_socket(test_dir, testname, monkeypatch):
 def test_create_invalid_file_fifo(test_dir, testname, monkeypatch):
     """Create an archive from a directory containing a FIFO.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path(archive_name(tags=[testname]))
     p = Path("base")
     fp = p / "fifo"

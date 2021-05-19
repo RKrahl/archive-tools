@@ -12,7 +12,6 @@ from pathlib import Path
 import sys
 from imapclient import IMAPClient
 from archive.mailarchive import MailArchive
-from archive.tools import now_str
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logging.getLogger('imapclient').setLevel(logging.WARNING)

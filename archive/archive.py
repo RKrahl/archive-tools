@@ -66,17 +66,12 @@ class Archive:
     def create(self, path, compression, paths=None, fileinfos=None,
                basedir=None, workdir=None, excludes=None,
                dedup=DedupMode.LINK, tags=None):
-        if sys.version_info < (3, 5):
-            # The 'x' (exclusive creation) mode was added to tarfile
-            # in Python 3.5.
-            mode = 'w:' + compression
-        else:
-            mode = 'x:' + compression
+        mode = 'x:' + compression
         save_wd = None
         try:
             if workdir:
                 save_wd = os.getcwd()
-                os.chdir(str(workdir))
+                os.chdir(workdir)
             self.path = path.resolve()
             self._dedup = dedup
             self._dupindex = {}
@@ -107,7 +102,7 @@ class Archive:
         return self
 
     def _create(self, mode):
-        with tarfile.open(str(self.path), mode) as tarf:
+        with tarfile.open(self.path, mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
@@ -222,7 +217,7 @@ class Archive:
 
     def open(self, path):
         try:
-            self._file = tarfile.open(str(path), 'r')
+            self._file = tarfile.open(path, 'r')
         except OSError as e:
             raise ArchiveReadError(str(e))
         self.path = path.resolve()

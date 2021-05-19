@@ -71,7 +71,7 @@ class FileInfo:
             elif stat.S_ISDIR(fstat.st_mode):
                 pass
             elif stat.S_ISLNK(fstat.st_mode):
-                self.target = Path(os.readlink(str(self.path)))
+                self.target = Path(os.readlink(self.path))
             else:
                 ftype = stat.S_IFMT(fstat.st_mode)
                 raise ArchiveInvalidTypeError(self.path, ftype)
@@ -129,7 +129,7 @@ class FileInfo:
         if self.type == 'l':
             p = "%s -> %s" % (self.path, self.target)
         else:
-            p = str(self.path)
+            p = self.path
         return "%s  %s  %s  %s  %s" % (m, ug, s, d, p)
 
     @classmethod

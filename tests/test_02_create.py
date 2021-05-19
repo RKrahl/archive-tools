@@ -54,7 +54,7 @@ def dep_testcase(request, testcase):
 def test_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
     require_compression(compression)
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path(archive_name(ext=compression, tags=[absflag(abspath)]))
     if abspath:
         paths = [test_dir / "base"]
@@ -89,7 +89,7 @@ def test_check_content(test_dir, dep_testcase, inclmeta):
     flag = absflag(abspath)
     archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     outdir = test_dir / "out"
-    shutil.rmtree(str(outdir), ignore_errors=True)
+    shutil.rmtree(outdir, ignore_errors=True)
     outdir.mkdir()
     if abspath:
         cwd = outdir / "archive" / test_dir.relative_to(test_dir.anchor)
@@ -102,7 +102,7 @@ def test_check_content(test_dir, dep_testcase, inclmeta):
         assert (outdir / f).is_file() == inclmeta
     try:
         sha256 = subprocess.Popen([sha256sum, "--check"], 
-                                  cwd=str(cwd), stdin=subprocess.PIPE)
+                                  cwd=cwd, stdin=subprocess.PIPE)
     except FileNotFoundError:
         pytest.skip("%s program not found" % sha256sum)
     for f in testdata:
