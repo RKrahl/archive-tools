@@ -31,6 +31,9 @@ Incompatible changes
 Bug fixes and minor changes
 ---------------------------
 
++ `#59`_: Change :attr:`Archive.path` to the absolute path of the
+  archive.
+
 + `#57`_: Do not take the paths relative to the base directory in the
   `archive-tool diff` command.
 
@@ -57,6 +60,7 @@ Bug fixes and minor changes
 .. _#56: https://github.com/RKrahl/archive-tools/issues/56
 .. _#57: https://github.com/RKrahl/archive-tools/pull/57
 .. _#58: https://github.com/RKrahl/archive-tools/pull/58
+.. _#59: https://github.com/RKrahl/archive-tools/pull/59
 .. _#60: https://github.com/RKrahl/archive-tools/pull/60
 
 

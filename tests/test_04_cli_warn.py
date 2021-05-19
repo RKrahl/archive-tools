@@ -55,7 +55,7 @@ def test_cli_warn_ignore_socket(test_dir, testname, monkeypatch):
             f.seek(0)
             line = f.readline().strip()
             assert line == ("archive-tool.py: %s: socket ignored" % fp)
-    with Archive().open(name) as archive:
+    with Archive().open(Path(name)) as archive:
         assert archive.basedir == basedir
         check_manifest(archive.manifest, testdata)
         archive.verify()

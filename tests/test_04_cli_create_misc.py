@@ -39,7 +39,7 @@ def test_cli_create_tags(test_dir, monkeypatch, tags, expected):
         args += ("--tag", t)
     args += (archive_path, "base")
     callscript("archive-tool.py", args)
-    with Archive().open(archive_path) as archive:
+    with Archive().open(Path(archive_path)) as archive:
         assert archive.manifest.tags == expected
         check_manifest(archive.manifest, testdata)
 

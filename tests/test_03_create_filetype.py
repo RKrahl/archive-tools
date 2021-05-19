@@ -54,13 +54,13 @@ def test_create_invalid_file_socket(test_dir, testname, monkeypatch):
     """Create an archive from a directory containing a socket.
     """
     monkeypatch.chdir(test_dir)
-    name = archive_name(tags=[testname])
+    archive_path = Path(archive_name(tags=[testname]))
     p = Path("base")
     fp = p / "socket"
     with tmp_socket(fp):
         with pytest.warns(ArchiveWarning, match="%s: socket ignored" % fp):
-            Archive().create(name, "", [p])
-    with Archive().open(name) as archive:
+            Archive().create(archive_path, "", [p])
+    with Archive().open(archive_path) as archive:
         assert archive.basedir == Path("base")
         check_manifest(archive.manifest, testdata)
         archive.verify()
@@ -69,13 +69,13 @@ def test_create_invalid_file_fifo(test_dir, testname, monkeypatch):
     """Create an archive from a directory containing a FIFO.
     """
     monkeypatch.chdir(test_dir)
-    name = archive_name(tags=[testname])
+    archive_path = Path(archive_name(tags=[testname]))
     p = Path("base")
     fp = p / "fifo"
     with tmp_fifo(fp):
         with pytest.warns(ArchiveWarning, match="%s: FIFO ignored" % fp):
-            Archive().create(name, "", [p])
-    with Archive().open(name) as archive:
+            Archive().create(archive_path, "", [p])
+    with Archive().open(archive_path) as archive:
         assert archive.basedir == Path("base")
         check_manifest(archive.manifest, testdata)
         archive.verify()

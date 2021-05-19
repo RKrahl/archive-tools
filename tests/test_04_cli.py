@@ -54,7 +54,7 @@ def test_cli_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
     require_compression(compression)
     monkeypatch.chdir(test_dir)
-    archive_path = archive_name(ext=compression, tags=[absflag(abspath)])
+    archive_path = Path(archive_name(ext=compression, tags=[absflag(abspath)]))
     if abspath:
         paths = str(test_dir / "base")
         basedir = "archive"
@@ -64,7 +64,7 @@ def test_cli_create(test_dir, monkeypatch, testcase):
     if compression is None:
         compression = "none"
     args = ["create", "--compression", compression, "--basedir", basedir,
-            archive_path, paths]
+            str(archive_path), paths]
     callscript("archive-tool.py", args)
     with Archive().open(archive_path) as archive:
         assert str(archive.basedir) == basedir
