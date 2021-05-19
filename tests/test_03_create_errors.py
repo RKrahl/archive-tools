@@ -111,7 +111,7 @@ def test_create_duplicate_metadata(test_dir, testname, monkeypatch):
     monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     p = Path("base")
-    with TemporaryFile(dir=str(test_dir)) as tmpf:
+    with TemporaryFile(dir=test_dir) as tmpf:
         archive = Archive()
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)
@@ -127,7 +127,7 @@ def test_create_metadata_vs_content(test_dir, testname, monkeypatch):
     monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     p = Path("base")
-    with TemporaryFile(dir=str(test_dir)) as tmpf:
+    with TemporaryFile(dir=test_dir) as tmpf:
         archive = Archive()
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)

@@ -74,7 +74,7 @@ def test_check_content(test_dir, dep_testcase):
     outdir = test_dir / "out"
     shutil.rmtree(outdir, ignore_errors=True)
     outdir.mkdir()
-    with tarfile.open(str(archive_path), "r") as tarf:
+    with tarfile.open(archive_path, "r") as tarf:
         tarf.extractall(path=str(outdir))
     try:
         sha256 = subprocess.Popen([sha256sum, "--check"], 

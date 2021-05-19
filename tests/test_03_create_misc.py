@@ -72,7 +72,7 @@ def test_create_custom_metadata(test_dir, monkeypatch):
     monkeypatch.chdir(test_dir)
     archive_path = Path("archive-custom-md.tar")
     p = Path("base", "data")
-    with TemporaryFile(dir=str(test_dir)) as tmpf:
+    with TemporaryFile(dir=test_dir) as tmpf:
         archive = Archive()
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)

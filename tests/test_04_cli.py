@@ -85,7 +85,7 @@ def test_cli_ls(test_dir, dep_testcase):
     flag = absflag(abspath)
     archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     prefix_dir = test_dir if abspath else Path(".")
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["ls", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -106,7 +106,7 @@ def test_cli_checksums(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     flag = absflag(abspath)
     archive_path = test_dir / archive_name(ext=compression, tags=[flag])
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["ls", "--format=checksum", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -133,7 +133,7 @@ def test_cli_info(test_dir, dep_testcase):
     for entry in testdata:
         if entry.type in types_done:
             continue
-        with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        with TemporaryFile(mode="w+t", dir=test_dir) as f:
             args = ["info", str(archive_path), str(prefix_dir / entry.path)]
             callscript("archive-tool.py", args, stdout=f)
             f.seek(0)

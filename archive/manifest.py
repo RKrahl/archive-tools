@@ -129,7 +129,7 @@ class FileInfo:
         if self.type == 'l':
             p = "%s -> %s" % (self.path, self.target)
         else:
-            p = str(self.path)
+            p = self.path
         return "%s  %s  %s  %s  %s" % (m, ug, s, d, p)
 
     @classmethod

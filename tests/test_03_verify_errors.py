@@ -61,7 +61,7 @@ def test_verify_missing_metadata_item(test_data, testname):
     manifest.add_metadata(Path("base", ".manifest.yaml"))
     manifest.add_metadata(Path("base", ".msg.txt"))
     with tarfile.open(name, "w") as tarf:
-        with tempfile.TemporaryFile(dir=str(test_data)) as tmpf:
+        with tempfile.TemporaryFile(dir=test_data) as tmpf:
             manifest.write(tmpf)
             tmpf.seek(0)
             ti = tarf.gettarinfo(arcname="base/.manifest.yaml", 

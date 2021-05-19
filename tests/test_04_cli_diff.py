@@ -56,7 +56,7 @@ def test_diff_equal(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -78,7 +78,7 @@ def test_diff_modified_file(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=101, stdout=f)
         f.seek(0)
@@ -104,7 +104,7 @@ def test_diff_symlink_target(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=101, stdout=f)
         f.seek(0)
@@ -130,7 +130,7 @@ def test_diff_wrong_type(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
@@ -156,7 +156,7 @@ def test_diff_missing_files(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
@@ -184,7 +184,7 @@ def test_diff_mult(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
@@ -212,12 +212,12 @@ def test_diff_metadata(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
         assert list(get_output(f)) == []
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", "--report-meta",
                 str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=100, stdout=f)
@@ -243,7 +243,7 @@ def test_diff_missing_dir(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
@@ -251,7 +251,7 @@ def test_diff_missing_dir(test_data, testname, monkeypatch, abspath):
         assert len(out) == 2
         assert out[0] == "Only in %s: %s" % (archive_ref_path, pd)
         assert out[1] == "Only in %s: %s" % (archive_ref_path, pd / "rnd_z.dat")
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", "--skip-dir-content",
                 str(archive_ref_path), str(archive_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
@@ -281,7 +281,7 @@ def test_diff_orphan_dir_content(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_b = Path(archive_name(ext="bz2", tags=[testname, "b", flag]))
     Archive().create(archive_b, "bz2", incl_b, excludes=excl_b)
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_a), str(archive_b)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
@@ -293,7 +293,7 @@ def test_diff_orphan_dir_content(test_data, testname, monkeypatch, abspath):
                           % (archive_a, pm, archive_b, pm))
         assert out[3] == "Only in %s: %s" % (archive_b, pd / "zz")
         assert out[4] == "Only in %s: %s" % (archive_b, pd / "zz" / "rnd_z.dat")
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", "--skip-dir-content", str(archive_a), str(archive_b)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)
@@ -317,7 +317,7 @@ def test_diff_extrafile_end(test_data, testname, monkeypatch, abspath):
     flag = absflag(abspath)
     archive_path = Path(archive_name(ext="bz2", tags=[testname, flag]))
     Archive().create(archive_path, "bz2", [base_dir])
-    with TemporaryFile(mode="w+t", dir=str(test_data)) as f:
+    with TemporaryFile(mode="w+t", dir=test_data) as f:
         args = ["diff", str(archive_path), str(archive_ref_path)]
         callscript("archive-tool.py", args, returncode=102, stdout=f)
         f.seek(0)

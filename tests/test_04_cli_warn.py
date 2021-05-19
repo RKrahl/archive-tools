@@ -49,7 +49,7 @@ def test_cli_warn_ignore_socket(test_dir, testname, monkeypatch):
     basedir = Path("base")
     fp = basedir / "socket"
     with tmp_socket(fp):
-        with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        with TemporaryFile(mode="w+t", dir=test_dir) as f:
             args = ["create", name, "base"]
             callscript("archive-tool.py", args, stderr=f)
             f.seek(0)

@@ -68,7 +68,7 @@ def test_find_all(test_dir, abspath):
     Expect the call to list all entries from the archives.
     """
     archives = archive_paths(test_dir, abspath)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["find"] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -88,7 +88,7 @@ def test_find_bytype(test_dir, abspath, type):
     """Call archive-tool to find entries by type.
     """
     archives = archive_paths(test_dir, abspath)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["find", "--type", type] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -111,7 +111,7 @@ def test_find_byname_exact(test_dir, abspath):
     """Call archive-tool to find entries by exact name.
     """
     archives = archive_paths(test_dir, abspath)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["find", "--name", "rnd.dat"] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -135,7 +135,7 @@ def test_find_byname_wildcard(test_dir, pattern, abspath):
     """Call archive-tool to find entries with matching name.
     """
     archives = archive_paths(test_dir, abspath)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["find", "--name", pattern] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -173,7 +173,7 @@ def test_find_bymtime_rel(test_dir, mtime, delta):
         elif direct == '-':
             return entry.mtime is None or entry.mtime > timestamp
     archives = archive_paths(test_dir, False)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["find", "--mtime=%s" % mtime] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -204,7 +204,7 @@ def test_find_bymtime_abs(test_dir, mtime, dt):
         elif direct == '>':
             return entry.mtime is None or entry.mtime > timestamp
     archives = archive_paths(test_dir, False)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["find", "--mtime=%s" % mtime] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -238,7 +238,7 @@ def test_find_bymtime_abs_datefmt(test_dir, mtime, dt):
         elif direct == '>':
             return entry.mtime is None or entry.mtime > timestamp
     archives = archive_paths(test_dir, False)
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["find", "--mtime=%s" % mtime] + [str(p) for p in archives]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
