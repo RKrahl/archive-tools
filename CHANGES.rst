@@ -23,6 +23,8 @@ New features
 Incompatible changes
 --------------------
 
++ `#60`_: Drop support for Python 3.4 and 3.5.
+
 + The `comment` keyword argument to :class:`MailArchive` has been
   dropped, ref. `#51`_.
 
@@ -55,6 +57,7 @@ Bug fixes and minor changes
 .. _#56: https://github.com/RKrahl/archive-tools/issues/56
 .. _#57: https://github.com/RKrahl/archive-tools/pull/57
 .. _#58: https://github.com/RKrahl/archive-tools/pull/58
+.. _#60: https://github.com/RKrahl/archive-tools/pull/60
 
 
 0.5.1 (2020-12-12)
