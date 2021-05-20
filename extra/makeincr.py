@@ -33,6 +33,21 @@ class CopyArchive(Archive):
         self.inp_arch = inp_arch
         super().__init__()
 
+    def _create(self, mode):
+        self.manifest.head['Date'] = self.inp_arch.manifest.head['Date']
+        tags = []
+        for t in self.inp_arch.manifest.tags:
+            try:
+                k, v = t.split(':')
+            except ValueError:
+                continue
+            else:
+                if k in ('host', 'policy', 'user'):
+                    tags.append(t)
+        if tags:
+            self.manifest.head['Tags'] = tags
+        super()._create(mode)
+
     def _add_item(self, tarf, fi, arcname):
         inp_tarf = self.inp_arch._file
         inp_arcname = self.inp_arch._arcname(fi.path)
