@@ -20,6 +20,34 @@ except ImportError:
     _dateutil_parse = None
 
 
+if hasattr(datetime.datetime, 'fromisoformat'):
+    # Python 3.7 and newer
+    _dt_fromisoformat = datetime.datetime.fromisoformat
+else:
+    # Python 3.6
+    import re
+    _dt_isofmt_re = re.compile(r'''^
+        (?P<dy>\d{4})-(?P<dm>\d{2})-(?P<dd>\d{2})   # date
+        .                                           # separator (any character)
+        (?P<th>\d{2}):(?P<tm>\d{2}):(?P<ts>\d{2})   # time
+        (?:(?P<zh>[+-]\d{2}):(?P<zm>\d{2}))?        # time zone (optional)
+    $''', re.X)
+    def _dt_fromisoformat(date_string):
+        m = _dt_isofmt_re.match(date_string)
+        if m:
+            dt = [int(i) for i in m.group('dy', 'dm', 'dd', 'th', 'tm', 'ts')]
+            if m.group('zh'):
+                zh = int(m.group('zh'))
+                zm = int(m.group('zm'))
+                offs = datetime.timedelta(hours=zh, minutes=zm)
+                tz = datetime.timezone(offs)
+            else:
+                tz = None
+            return datetime.datetime(*dt, tzinfo=tz)
+        else:
+            raise ValueError("Invalid isoformat string: '%s'" % date_string)
+
+
 class tmp_chdir():
     """A context manager to temporarily change directory.
     """
@@ -57,30 +85,44 @@ class tmp_umask():
         self._restore_mask()
 
 
+def date_str_rfc5322(dt):
+    """Return a RFC 5322 string representation of a datetime.
+    """
+    return dt.strftime("%a, %d %b %Y %H:%M:%S %z").strip()
+
+
 def now_str():
     """Return the current local date and time as a string.
     """
     if gettz:
         now = datetime.datetime.now(tz=gettz())
-        date_fmt = "%a, %d %b %Y %H:%M:%S %z"
     else:
         now = datetime.datetime.now()
-        date_fmt = "%a, %d %b %Y %H:%M:%S"
-    return now.strftime(date_fmt)
+    return date_str_rfc5322(now)
 
 
 def parse_date(date_string):
-    """Parse a date string as returned from now_str() into a datetime object.
+    """Parse a date string into a datetime object.
+
+    The function accepts strings as returned by datetime.isoformat()
+    and date_str_rfc5322().
     """
     if _dateutil_parse:
         return _dateutil_parse(date_string)
     else:
         try:
-            date_fmt = "%a, %d %b %Y %H:%M:%S %z"
-            return datetime.datetime.strptime(date_string, date_fmt)
+            return _dt_fromisoformat(date_string)
         except ValueError:
-            date_fmt = "%a, %d %b %Y %H:%M:%S"
-            return datetime.datetime.strptime(date_string, date_fmt)
+            try:
+                date_fmt = "%a, %d %b %Y %H:%M:%S %z"
+                return datetime.datetime.strptime(date_string, date_fmt)
+            except ValueError:
+                try:
+                    date_fmt = "%a, %d %b %Y %H:%M:%S"
+                    return datetime.datetime.strptime(date_string, date_fmt)
+                except ValueError:
+                    raise ValueError("Invalid date string: '%s'"
+                                     % date_string) from None
 
 
 def checksum(fileobj, hashalg):
