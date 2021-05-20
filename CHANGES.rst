@@ -40,6 +40,13 @@ Bug fixes and minor changes
 + `#58`_: Weaken the condition introduced in `#9`_ that basedir must
   be a directory.
 
++ `#61`_: Review date helper functions in :mod:`archive.tools`
+
+  - Add :func:`date_str_rfc5322`.
+
+  - :func:`parse_date` now also accepts date strings as returned by
+    :meth:`datetime.datetime.isoformat`.
+
 + `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
   :meth:`Archive.create` when passing a relative path as `workdir`
   argument.
@@ -62,6 +69,7 @@ Bug fixes and minor changes
 .. _#58: https://github.com/RKrahl/archive-tools/pull/58
 .. _#59: https://github.com/RKrahl/archive-tools/pull/59
 .. _#60: https://github.com/RKrahl/archive-tools/pull/60
+.. _#61: https://github.com/RKrahl/archive-tools/pull/61
 
 
 0.5.1 (2020-12-12)
