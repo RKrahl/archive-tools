@@ -38,34 +38,67 @@ class Config(archive.config.Config):
     defaults = {
         'dirs': None,
         'excludes': "",
-        'targetdir': None,
-        'backupdir': "%(targetdir)s",
+        'backupdir': None,
+        'targetdir': "%(backupdir)s",
         'name': "%(host)s-%(date)s-%(schedule)s.tar.bz2",
-        'tags': "",
     }
-    config_file = get_config_file()
     args_options = ('policy', 'user', 'schedule')
 
     def __init__(self, args):
         host = socket.gethostname()
+        config_file = get_config_file()
         sections = ("%s/%s" % (host, args.policy), host, args.policy)
+        self.config_file = config_file
         super().__init__(args, config_section=sections)
         if not self.config_file:
-            raise ConfigError("configuration file %s not found"
-                              % self.config_file)
-        self.config['host'] = host
-        self.config['date'] = datetime.date.today().strftime("%y%m%d")
+            raise ConfigError("configuration file %s not found" % config_file)
+        self['host'] = host
+        self['date'] = datetime.date.today().strftime("%y%m%d")
         if args.user:
             try:
-                self.config['home'] = pwd.getpwnam(self.config['user']).pw_dir
+                self['home'] = pwd.getpwnam(args.user).pw_dir
             except KeyError:
                 pass
-        self.config['name'] = self.get('name', required=True)
-        self.config['dirs'] = self.get('dirs', required=True, split=True)
-        self.config['excludes'] = self.get('excludes', split=True)
-        self.config['targetdir'] = self.get('targetdir', required=True)
-        self.config['backupdir'] = self.get('backupdir')
-        self.config['tags'] = self.get('tags', split=True)
+
+    @property
+    def host(self):
+        return self.get('host')
+
+    @property
+    def policy(self):
+        return self.get('policy')
+
+    @property
+    def user(self):
+        return self.get('user')
+
+    @property
+    def schedule(self):
+        return self.get('schedule')
+
+    @property
+    def name(self):
+        return self.get('name', required=True)
+
+    @property
+    def dirs(self):
+        return self.get('dirs', required=True, split=True, type=Path)
+
+    @property
+    def excludes(self):
+        return self.get('excludes', split=True, type=Path)
+
+    @property
+    def backupdir(self):
+        return self.get('backupdir', required=True, type=Path)
+
+    @property
+    def targetdir(self):
+        return self.get('targetdir', required=True, type=Path)
+
+    @property
+    def path(self):
+        return self.targetdir / self.name
 
 argparser = argparse.ArgumentParser()
 clsgrp = argparser.add_mutually_exclusive_group()
@@ -82,7 +115,7 @@ if args.user:
     args.policy = 'user'
 
 try:
-    config = Config(args).config
+    config = Config(args)
 except ConfigError as e:
     print("%s: configuration error: %s" % (argparser.prog, e), file=sys.stderr)
     sys.exit(2)
