@@ -37,7 +37,7 @@ class Config(ChainMap):
                     pass
         self.maps.append(self.defaults)
 
-    def get(self, key, required=False, subst=True, split=False):
+    def get(self, key, required=False, subst=True, split=False, type=None):
         value = super().get(key)
         if value is None:
             if required:
@@ -46,5 +46,11 @@ class Config(ChainMap):
             if subst:
                 value = value % self
             if split:
-                value = value.split()
+                if type:
+                    value = [type(v) for v in value.split()]
+                else:
+                    value = value.split()
+            else:
+                if type:
+                    value = type(value)
         return value
