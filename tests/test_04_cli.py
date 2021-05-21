@@ -53,8 +53,8 @@ def dep_testcase(request, testcase):
 def test_cli_create(test_dir, monkeypatch, testcase):
     compression, abspath = testcase
     require_compression(compression)
-    monkeypatch.chdir(str(test_dir))
-    archive_path = archive_name(ext=compression, tags=[absflag(abspath)])
+    monkeypatch.chdir(test_dir)
+    archive_path = Path(archive_name(ext=compression, tags=[absflag(abspath)]))
     if abspath:
         paths = str(test_dir / "base")
         basedir = "archive"
@@ -64,7 +64,7 @@ def test_cli_create(test_dir, monkeypatch, testcase):
     if compression is None:
         compression = "none"
     args = ["create", "--compression", compression, "--basedir", basedir,
-            archive_path, paths]
+            str(archive_path), paths]
     callscript("archive-tool.py", args)
     with Archive().open(archive_path) as archive:
         assert str(archive.basedir) == basedir
@@ -85,7 +85,7 @@ def test_cli_ls(test_dir, dep_testcase):
     flag = absflag(abspath)
     archive_path = test_dir / archive_name(ext=compression, tags=[flag])
     prefix_dir = test_dir if abspath else Path(".")
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["ls", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
@@ -106,11 +106,11 @@ def test_cli_checksums(test_dir, dep_testcase):
     compression, abspath = dep_testcase
     flag = absflag(abspath)
     archive_path = test_dir / archive_name(ext=compression, tags=[flag])
-    with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["ls", "--format=checksum", str(archive_path)]
         callscript("archive-tool.py", args, stdout=f)
         f.seek(0)
-        cwd = None if abspath else str(test_dir)
+        cwd = None if abspath else test_dir
         try:
             sha256 = subprocess.Popen([sha256sum, "--check"],
                                       cwd=cwd, stdin=subprocess.PIPE)
@@ -133,7 +133,7 @@ def test_cli_info(test_dir, dep_testcase):
     for entry in testdata:
         if entry.type in types_done:
             continue
-        with TemporaryFile(mode="w+t", dir=str(test_dir)) as f:
+        with TemporaryFile(mode="w+t", dir=test_dir) as f:
             args = ["info", str(archive_path), str(prefix_dir / entry.path)]
             callscript("archive-tool.py", args, stdout=f)
             f.seek(0)

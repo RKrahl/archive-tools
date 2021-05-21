@@ -13,15 +13,6 @@ from archive.archive import Archive
 from archive.manifest import DiffStatus, _common_checksum, diff_manifest
 
 
-suffix_map = {
-    '.tar': '',
-    '.tar.gz': 'gz',
-    '.tar.bz2': 'bz2',
-    '.tar.xz': 'xz',
-}
-"""Map path suffix to compression mode."""
-
-
 class CopyArchive(Archive):
     """Read items from a TarFile.
 
@@ -32,6 +23,21 @@ class CopyArchive(Archive):
     def __init__(self, inp_arch):
         self.inp_arch = inp_arch
         super().__init__()
+
+    def _create(self, mode):
+        self.manifest.head['Date'] = self.inp_arch.manifest.head['Date']
+        tags = []
+        for t in self.inp_arch.manifest.tags:
+            try:
+                k, v = t.split(':')
+            except ValueError:
+                continue
+            else:
+                if k in ('host', 'policy', 'user'):
+                    tags.append(t)
+        if tags:
+            self.manifest.head['Tags'] = tags
+        super()._create(mode)
 
     def _add_item(self, tarf, fi, arcname):
         inp_tarf = self.inp_arch._file
@@ -88,12 +94,7 @@ def main():
         with Archive().open(p) as base:
             fileinfos = filter_fileinfos(base.manifest, fileinfos, algorithm)
 
-    try:
-        compression = suffix_map["".join(args.output.suffixes)]
-    except KeyError:
-        compression = 'gz'
-    archive = CopyArchive(inp_archive).create(args.output, compression,
-                                              fileinfos=fileinfos)
+    archive = CopyArchive(inp_archive).create(args.output, fileinfos=fileinfos)
 
 
 if __name__ == "__main__":

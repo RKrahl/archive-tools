@@ -52,6 +52,15 @@ class MetadataItem:
         self.path = basedir / self.name
 
 
+compression_map = {
+    '.tar': '',
+    '.tar.gz': 'gz',
+    '.tar.bz2': 'bz2',
+    '.tar.xz': 'xz',
+}
+"""Map path suffix to compression mode."""
+
+
 class Archive:
 
     def __init__(self):
@@ -63,21 +72,22 @@ class Archive:
         self._dedup = None
         self._dupindex = None
 
-    def create(self, path, compression, paths=None, fileinfos=None,
+    def create(self, path, compression=None, paths=None, fileinfos=None,
                basedir=None, workdir=None, excludes=None,
                dedup=DedupMode.LINK, tags=None):
-        if sys.version_info < (3, 5):
-            # The 'x' (exclusive creation) mode was added to tarfile
-            # in Python 3.5.
-            mode = 'w:' + compression
-        else:
-            mode = 'x:' + compression
+        if compression is None:
+            try:
+                compression = compression_map["".join(path.suffixes)]
+            except KeyError:
+                # Last ressort default
+                compression = 'gz'
+        mode = 'x:' + compression
         save_wd = None
         try:
             if workdir:
                 save_wd = os.getcwd()
-                os.chdir(str(workdir))
-            self.path = path
+                os.chdir(workdir)
+            self.path = path.resolve()
             self._dedup = dedup
             self._dupindex = {}
             if fileinfos is not None:
@@ -107,7 +117,7 @@ class Archive:
         return self
 
     def _create(self, mode):
-        with tarfile.open(str(self.path), mode) as tarf:
+        with tarfile.open(self.path, mode) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)
@@ -221,11 +231,11 @@ class Archive:
         self._metadata.insert(0, md)
 
     def open(self, path):
-        self.path = path
         try:
-            self._file = tarfile.open(str(self.path), 'r')
+            self._file = tarfile.open(path, 'r')
         except OSError as e:
             raise ArchiveReadError(str(e))
+        self.path = path.resolve()
         md = self.get_metadata(".manifest.yaml")
         self.basedir = md.path.parent
         self.manifest = Manifest(fileobj=md.fileobj)

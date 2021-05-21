@@ -45,7 +45,7 @@ class ArchiveInvalidTypeError(ArchiveError):
             tstr = "socket"
         else:
             tstr = "unsuported type %x" % ftype
-        super().__init__("%s: %s" % (str(path), tstr))
+        super().__init__("%s: %s" % (path, tstr))
 
 class ArchiveWarning(Warning):
     pass

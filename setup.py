@@ -128,8 +128,6 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
@@ -138,4 +136,3 @@ setup(
         ],
     cmdclass = {'build_py': build_py, 'sdist': sdist, 'init_py': init_py},
 )
-

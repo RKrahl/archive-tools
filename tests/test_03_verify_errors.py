@@ -28,7 +28,7 @@ testdata = [
 
 @pytest.fixture(scope="function")
 def test_data(tmpdir, monkeypatch):
-    monkeypatch.chdir(str(tmpdir))
+    monkeypatch.chdir(tmpdir)
     shutil.rmtree("base", ignore_errors=True)
     setup_testdata(tmpdir, testdata)
     manifest = Manifest(paths=[Path("base")])
@@ -61,7 +61,7 @@ def test_verify_missing_metadata_item(test_data, testname):
     manifest.add_metadata(Path("base", ".manifest.yaml"))
     manifest.add_metadata(Path("base", ".msg.txt"))
     with tarfile.open(name, "w") as tarf:
-        with tempfile.TemporaryFile(dir=str(test_data)) as tmpf:
+        with tempfile.TemporaryFile(dir=test_data) as tmpf:
             manifest.write(tmpf)
             tmpf.seek(0)
             ti = tarf.gettarinfo(arcname="base/.manifest.yaml", 
@@ -77,9 +77,9 @@ def test_verify_missing_metadata_item(test_data, testname):
 def test_verify_missing_file(test_data, testname):
     name = archive_name(tags=[testname])
     path = Path("base", "msg.txt")
-    mtime_parent = os.stat(str(path.parent)).st_mtime
+    mtime_parent = os.stat(path.parent).st_mtime
     path.unlink()
-    os.utime(str(path.parent), times=(mtime_parent, mtime_parent))
+    os.utime(path.parent, times=(mtime_parent, mtime_parent))
     create_archive(name)
     with Archive().open(Path(name)) as archive:
         with pytest.raises(ArchiveIntegrityError) as err:
@@ -110,7 +110,7 @@ def test_verify_wrong_mtime(test_data, testname):
     name = archive_name(tags=[testname])
     path = Path("base", "msg.txt")
     hour_ago = time.time() - 3600
-    os.utime(str(path), times=(hour_ago, hour_ago))
+    os.utime(path, times=(hour_ago, hour_ago))
     create_archive(name)
     with Archive().open(Path(name)) as archive:
         with pytest.raises(ArchiveIntegrityError) as err:
@@ -120,14 +120,14 @@ def test_verify_wrong_mtime(test_data, testname):
 def test_verify_wrong_type(test_data, testname):
     name = archive_name(tags=[testname])
     path = Path("base", "msg.txt")
-    mode = os.stat(str(path)).st_mode
-    mtime = os.stat(str(path)).st_mtime
-    mtime_parent = os.stat(str(path.parent)).st_mtime
+    mode = os.stat(path).st_mode
+    mtime = os.stat(path).st_mtime
+    mtime_parent = os.stat(path.parent).st_mtime
     path.unlink()
     path.mkdir()
     path.chmod(mode)
-    os.utime(str(path), times=(mtime, mtime))
-    os.utime(str(path.parent), times=(mtime_parent, mtime_parent))
+    os.utime(path, times=(mtime, mtime))
+    os.utime(path.parent, times=(mtime_parent, mtime_parent))
     create_archive(name)
     with Archive().open(Path(name)) as archive:
         with pytest.raises(ArchiveIntegrityError) as err:
@@ -137,14 +137,14 @@ def test_verify_wrong_type(test_data, testname):
 def test_verify_wrong_checksum(test_data, testname):
     name = archive_name(tags=[testname])
     path = Path("base", "data", "rnd.dat")
-    stat = os.stat(str(path))
+    stat = os.stat(path)
     mode = stat.st_mode
     mtime = stat.st_mtime
     size = stat.st_size
     with path.open("wb") as f:
         f.write(b'0' * size)
     path.chmod(mode)
-    os.utime(str(path), times=(mtime, mtime))
+    os.utime(path, times=(mtime, mtime))
     create_archive(name)
     with Archive().open(Path(name)) as archive:
         with pytest.raises(ArchiveIntegrityError) as err:

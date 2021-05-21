@@ -11,7 +11,7 @@ from collections import ChainMap
 import configparser
 from archive.exception import ConfigError
 
-class Config:
+class Config(ChainMap):
 
     defaults = dict()
     config_file = None
@@ -21,7 +21,7 @@ class Config:
         args_cfg = { k:vars(args)[k]
                      for k in self.args_options
                      if vars(args)[k] is not None }
-        self.config = ChainMap({}, args_cfg)
+        super().__init__({}, args_cfg)
         if self.config_file and config_section:
             cp = configparser.ConfigParser(comment_prefixes=('#', '!'),
                                            interpolation=None)
@@ -31,20 +31,26 @@ class Config:
             self.config_section = []
             for section in config_section:
                 try:
-                    self.config.maps.append(cp[section])
+                    self.maps.append(cp[section])
                     self.config_section.append(section)
                 except KeyError:
                     pass
-        self.config.maps.append(self.defaults)
+        self.maps.append(self.defaults)
 
-    def get(self, option, required=False, subst=True, split=False):
-        value = self.config[option]
+    def get(self, key, required=False, subst=True, split=False, type=None):
+        value = super().get(key)
         if value is None:
             if required:
-                raise ConfigError("%s not specified" % option)
+                raise ConfigError("%s not specified" % key)
         else:
             if subst:
-                value = value % self.config
+                value = value % self
             if split:
-                value = value.split()
+                if type:
+                    value = [type(v) for v in value.split()]
+                else:
+                    value = value.split()
+            else:
+                if type:
+                    value = type(value)
         return value

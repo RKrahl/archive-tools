@@ -23,17 +23,33 @@ New features
 Incompatible changes
 --------------------
 
++ `#60`_: Drop support for Python 3.4 and 3.5.
+
 + The `comment` keyword argument to :class:`MailArchive` has been
   dropped, ref. `#51`_.
 
 Bug fixes and minor changes
 ---------------------------
 
++ `#59`_: Change :attr:`Archive.path` to the absolute path of the
+  archive.
+
 + `#57`_: Do not take the paths relative to the base directory in the
   `archive-tool diff` command.
 
 + `#58`_: Weaken the condition introduced in `#9`_ that basedir must
   be a directory.
+
++ `#61`_: Review date helper functions in :mod:`archive.tools`
+
+  - Add :func:`date_str_rfc5322`.
+
+  - :func:`parse_date` now also accepts date strings as returned by
+    :meth:`datetime.datetime.isoformat`.
+
++ Make `compression` keyword argument to :meth:`Archive.create`
+  optional.  The default will be derived from the suffixes of the
+  `path` argument.
 
 + `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
   :meth:`Archive.create` when passing a relative path as `workdir`
@@ -55,6 +71,9 @@ Bug fixes and minor changes
 .. _#56: https://github.com/RKrahl/archive-tools/issues/56
 .. _#57: https://github.com/RKrahl/archive-tools/pull/57
 .. _#58: https://github.com/RKrahl/archive-tools/pull/58
+.. _#59: https://github.com/RKrahl/archive-tools/pull/59
+.. _#60: https://github.com/RKrahl/archive-tools/pull/60
+.. _#61: https://github.com/RKrahl/archive-tools/pull/61
 
 
 0.5.1 (2020-12-12)
