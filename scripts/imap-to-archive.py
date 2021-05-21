@@ -41,18 +41,17 @@ class Config(archive.config.Config):
             if not self.config_section:
                 raise ConfigError("configuration section %s not found"
                                   % args.config_section)
-        if self.config['security'] not in security_methods:
-            raise ConfigError("invalid security method '%s'"
-                              % self.config['security'])
-        if not self.config['host']:
+        if self['security'] not in security_methods:
+            raise ConfigError("invalid security method '%s'" % self['security'])
+        if not self['host']:
             raise ConfigError("IMAP4 host name not specified")
-        if self.config['port'] is not None:
-            self.config['port'] = int(config['port'])
-        self.config['ssl'] = self.config['security'] == 'imaps'
-        if not self.config['user']:
+        if self['port'] is not None:
+            self['port'] = int(config['port'])
+        self['ssl'] = self['security'] == 'imaps'
+        if not self['user']:
             raise ConfigError("IMAP4 user name not specified")
-        if self.config['pass'] is None:
-            self.config['pass'] = getpass.getpass()
+        if self['pass'] is None:
+            self['pass'] = getpass.getpass()
 
 
 argparser = argparse.ArgumentParser(add_help=False)
@@ -81,7 +80,7 @@ if args.verbose:
     logging.getLogger().setLevel(logging.DEBUG)
 
 try:
-    config = Config(args).config
+    config = Config(args)
 except ConfigError as e:
     print("%s: configuration error: %s" % (argparser.prog, e), file=sys.stderr)
     sys.exit(2)
@@ -120,4 +119,3 @@ with IMAPClient(config['host'], port=config['port'], ssl=config['ssl']) as imap:
     log.debug("Login to %s successful", config['host'])
     archive = MailArchive()
     archive.create(archive_path, getmsgs(imap, "INBOX"), server=config['host'])
-
