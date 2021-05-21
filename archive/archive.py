@@ -52,6 +52,15 @@ class MetadataItem:
         self.path = basedir / self.name
 
 
+compression_map = {
+    '.tar': '',
+    '.tar.gz': 'gz',
+    '.tar.bz2': 'bz2',
+    '.tar.xz': 'xz',
+}
+"""Map path suffix to compression mode."""
+
+
 class Archive:
 
     def __init__(self):
@@ -63,9 +72,15 @@ class Archive:
         self._dedup = None
         self._dupindex = None
 
-    def create(self, path, compression, paths=None, fileinfos=None,
+    def create(self, path, compression=None, paths=None, fileinfos=None,
                basedir=None, workdir=None, excludes=None,
                dedup=DedupMode.LINK, tags=None):
+        if compression is None:
+            try:
+                compression = compression_map["".join(path.suffixes)]
+            except KeyError:
+                # Last ressort default
+                compression = 'gz'
         mode = 'x:' + compression
         save_wd = None
         try:

@@ -13,15 +13,6 @@ from archive.archive import Archive
 from archive.manifest import DiffStatus, _common_checksum, diff_manifest
 
 
-suffix_map = {
-    '.tar': '',
-    '.tar.gz': 'gz',
-    '.tar.bz2': 'bz2',
-    '.tar.xz': 'xz',
-}
-"""Map path suffix to compression mode."""
-
-
 class CopyArchive(Archive):
     """Read items from a TarFile.
 
@@ -103,12 +94,7 @@ def main():
         with Archive().open(p) as base:
             fileinfos = filter_fileinfos(base.manifest, fileinfos, algorithm)
 
-    try:
-        compression = suffix_map["".join(args.output.suffixes)]
-    except KeyError:
-        compression = 'gz'
-    archive = CopyArchive(inp_archive).create(args.output, compression,
-                                              fileinfos=fileinfos)
+    archive = CopyArchive(inp_archive).create(args.output, fileinfos=fileinfos)
 
 
 if __name__ == "__main__":

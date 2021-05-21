@@ -47,6 +47,10 @@ Bug fixes and minor changes
   - :func:`parse_date` now also accepts date strings as returned by
     :meth:`datetime.datetime.isoformat`.
 
++ Make `compression` keyword argument to :meth:`Archive.create`
+  optional.  The default will be derived from the suffixes of the
+  `path` argument.
+
 + `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
   :meth:`Archive.create` when passing a relative path as `workdir`
   argument.
