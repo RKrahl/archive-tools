@@ -1,0 +1,29 @@
+name: Run Test
+on: [push, pull_request]
+jobs:
+  Test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version:
+          - '3.6'
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10.0-beta - 3.10.0'
+        os: [ubuntu-latest]
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install -r .github/requirements.txt
+      - name: Test with pytest
+        run: |
+          python setup.py test

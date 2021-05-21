@@ -58,7 +58,7 @@ class MailArchive(Archive):
         with TemporaryDirectory(prefix="mailarchive-") as tmpdir:
             with tmp_chdir(tmpdir), tmp_umask(0o077):
                 basedir = Path(path.name.split('.')[0])
-                maildir = Maildir(str(basedir), create=True)
+                maildir = Maildir(basedir, create=True)
                 self.mailindex = MailIndex(server=server)
                 last_folder = None
                 for folder, msgbytes in mails:

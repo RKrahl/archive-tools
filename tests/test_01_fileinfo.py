@@ -31,7 +31,7 @@ def test_dir(tmpdir):
 def test_fileinfo_lazy_checksum(test_dir, monkeypatch):
     """Check that checksums are calculated lazily.  Ref. #35.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     checksum_count = ChecksumCounter()
     entry = next(filter(lambda i: i.type == 'f', testdata))
     monkeypatch.setattr(archive.manifest, "checksum", checksum_count.checksum)

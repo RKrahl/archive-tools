@@ -1,6 +1,6 @@
-PyYAML <=5.2 ; python_version == '3.4'
-PyYAML ; python_version > '3.4'
+PyYAML >=5.4
 distutils-pytest
 pytest >=3.6.0
 pytest-dependency >=0.2
 python-dateutil
+setuptools_scm

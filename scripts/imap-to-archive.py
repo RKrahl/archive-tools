@@ -12,7 +12,6 @@ from imapclient import IMAPClient
 import archive.config
 from archive.exception import ConfigError
 from archive.mailarchive import MailArchive
-from archive.tools import now_str
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logging.getLogger('imapclient').setLevel(logging.WARNING)

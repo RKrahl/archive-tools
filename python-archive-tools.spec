@@ -10,7 +10,7 @@ License:	Apache-2.0
 Group:		Development/Libraries/Python
 Source:		%{distname}-%{version}.tar.gz
 BuildRequires:	fdupes
-BuildRequires:	python3-base >= 3.4
+BuildRequires:	python3-base >= 3.6
 %if %{with tests}
 BuildRequires:	python3-PyYAML
 BuildRequires:	python3-distutils-pytest
