@@ -2,9 +2,11 @@
 """
 
 from pathlib import Path
+import sys
 from tempfile import TemporaryFile
 import pytest
 from archive import Archive
+from archive.exception import ArchiveIntegrityError
 from conftest import *
 
 
@@ -16,6 +18,15 @@ testdata = [
     DataDir(Path("base", "data", "other"), 0o755),
     DataFile(Path("base", "data", "misc", "rnd.dat"), 0o644),
     DataSymLink(Path("base", "data", "s.dat"), Path("misc", "rnd.dat")),
+]
+# Test data having a directory with a long path name, needed in
+# test_create_long_directory_name()
+long_dir_path = Path("lets_start_with_a_somewhat_long_directory_name_"
+                     "because_we_need_a_very_long_overall_path")
+testdata_long_dir = [
+    DataDir(long_dir_path, 0o755),
+    DataDir(long_dir_path / "sub-1", 0o755),
+    DataDir(long_dir_path / "sub-directory-2", 0o755),
 ]
 
 @pytest.fixture(scope="module")
@@ -113,3 +124,18 @@ def test_create_tags(test_dir, monkeypatch, tags, expected):
     Archive().create(archive_path, "", [Path("base")], tags=tags)
     with Archive().open(archive_path) as archive:
         assert archive.manifest.tags == expected
+
+@pytest.mark.xfail(sys.version_info < (3, 8),
+                   reason="Issue #62", raises=ArchiveIntegrityError)
+def test_create_long_directory_name(tmpdir, monkeypatch):
+    """An archive containing a directory with a long path name.
+
+    Verification fails if the archive is created in the GNU tar format.
+    """
+    setup_testdata(tmpdir, testdata_long_dir)
+    monkeypatch.chdir(tmpdir)
+    archive_path = Path("archive-longdir.tar")
+    Archive().create(archive_path, "", [long_dir_path])
+    with Archive().open(archive_path) as archive:
+        check_manifest(archive.manifest, testdata_long_dir)
+        archive.verify()
