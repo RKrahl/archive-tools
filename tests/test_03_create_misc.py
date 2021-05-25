@@ -2,11 +2,9 @@
 """
 
 from pathlib import Path
-import sys
 from tempfile import TemporaryFile
 import pytest
 from archive import Archive
-from archive.exception import ArchiveIntegrityError
 from conftest import *
 
 
@@ -125,8 +123,6 @@ def test_create_tags(test_dir, monkeypatch, tags, expected):
     with Archive().open(archive_path) as archive:
         assert archive.manifest.tags == expected
 
-@pytest.mark.xfail(sys.version_info < (3, 8),
-                   reason="Issue #62", raises=ArchiveIntegrityError)
 def test_create_long_directory_name(tmpdir, monkeypatch):
     """An archive containing a directory with a long path name.
 
