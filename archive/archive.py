@@ -117,7 +117,7 @@ class Archive:
         return self
 
     def _create(self, mode):
-        with tarfile.open(self.path, mode) as tarf:
+        with tarfile.open(self.path, mode, format=tarfile.PAX_FORMAT) as tarf:
             with tempfile.TemporaryFile() as tmpf:
                 self.manifest.write(tmpf)
                 tmpf.seek(0)

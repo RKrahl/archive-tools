@@ -20,6 +20,10 @@ New features
 + `#50`_, `#51`_: Add a header with some metadata to the index in a
   mail archive created by :class:`MailArchive`.
 
++ `#62`_, `#63`_: Explicitely select POSIX.1-2001 (pax) format in the
+  tarfile.  This fixes failing verification if the archive contains a
+  directory with a long path name.
+
 Incompatible changes
 --------------------
 
@@ -74,6 +78,8 @@ Bug fixes and minor changes
 .. _#59: https://github.com/RKrahl/archive-tools/pull/59
 .. _#60: https://github.com/RKrahl/archive-tools/pull/60
 .. _#61: https://github.com/RKrahl/archive-tools/pull/61
+.. _#62: https://github.com/RKrahl/archive-tools/issues/62
+.. _#63: https://github.com/RKrahl/archive-tools/pull/63
 
 
 0.5.1 (2020-12-12)
