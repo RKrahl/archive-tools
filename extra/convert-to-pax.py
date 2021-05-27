@@ -1,5 +1,11 @@
 #! /usr/bin/python3
 """Convert a tar file to POSIX.1-2001 (pax) format.
+
+Note: this script does not use archive-tools.  It can be used for any
+tar file.  But it is related to archive-tools because it may be used to
+retroactively repair archives that fail to verify due to `Issue #62`_.
+
+.. _Issue #62: https://github.com/RKrahl/archive-tools/issues/62
 """
 
 import argparse
