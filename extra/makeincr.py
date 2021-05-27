@@ -84,7 +84,7 @@ def main():
     argparser.add_argument('input', type=Path,
                            help=("input archive"))
     argparser.add_argument('output', type=Path,
-                           help=("input archive"))
+                           help=("output archive"))
     args = argparser.parse_args()
 
     inp_archive = Archive().open(args.input)
