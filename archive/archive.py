@@ -329,7 +329,9 @@ class Archive:
 
     def extract_member(self, fi, targetdir):
         arcname = self._arcname(fi.path)
+        mtimes = (fi.mtime, fi.mtime)
         self._file.extract(arcname, path=str(targetdir))
+        os.utime(targetdir / arcname, mtimes, follow_symlinks=False)
 
     def extract(self, targetdir, inclmeta=False):
         # We extract the directories last in reverse order.  This way,

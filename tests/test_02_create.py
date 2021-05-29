@@ -115,7 +115,6 @@ def test_check_content(test_dir, dep_testcase, inclmeta):
     sha256.wait()
     assert sha256.returncode == 0
 
-@pytest.mark.xfail(reason="Issue #64")
 @pytest.mark.dependency()
 def test_check_fstat(test_dir, dep_testcase):
     """Check that file system metadata are preserved
