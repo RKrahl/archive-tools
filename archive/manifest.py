@@ -289,18 +289,14 @@ def diff_manifest(manifest_a, manifest_b, checksum=FileInfo.Checksums[0]):
             if fi_a.target != fi_b.target:
                 return DiffStatus.SYMLNK_TARGET
         elif fi_a.type == "f":
-            # Note: we don't need to compare the size, because if
-            # the size differs, it's mostly certain that also the
-            # checksum do.
-            if fi_a.checksum[algorithm] != fi_b.checksum[algorithm]:
+            if (fi_a.size != fi_b.size or
+                fi_a.checksum[algorithm] != fi_b.checksum[algorithm]):
                 return DiffStatus.CONTENT
-            elif (fi_a.uid != fi_b.uid or
-                  fi_a.uname != fi_b.uname or
-                  fi_a.gid != fi_b.gid or
-                  fi_a.gname != fi_b.gname or
-                  fi_a.mode != fi_b.mode or
-                  int(fi_a.mtime) != int(fi_b.mtime)):
-                return DiffStatus.META
+        if (fi_a.uid != fi_b.uid or fi_a.uname != fi_b.uname or
+            fi_a.gid != fi_b.gid or fi_a.gname != fi_b.gname or
+            fi_a.mode != fi_b.mode or
+            int(fi_a.mtime) != int(fi_b.mtime)):
+            return DiffStatus.META
         return DiffStatus.MATCH
 
     it_a = iter(itertools.chain(manifest_a, itertools.repeat(None)))
