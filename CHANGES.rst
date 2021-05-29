@@ -15,7 +15,9 @@ New features
 + `#54`_: Add new keyword argument `fileinfos` that :class:`Manifest`
   and :meth:`Archive.create` accept.
 
-+ `#57`_: Add :func:`diff_manifest`.
++ `#57`_, `#66`_: Add :func:`diff_manifest`.  The `archive-tool diff`
+  command with `--report-meta` flag also reports differences in file
+  system metadata for directories and symbol links.
 
 + `#50`_, `#51`_: Add a header with some metadata to the index in a
   mail archive created by :class:`MailArchive`.
@@ -55,6 +57,9 @@ Bug fixes and minor changes
   optional.  The default will be derived from the suffixes of the
   `path` argument.
 
++ `#65`_: Add a method :meth:`Archive.extract_member` to extract an
+  individual member of the archive.
+
 + `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
   :meth:`Archive.create` when passing a relative path as `workdir`
   argument.
@@ -63,6 +68,9 @@ Bug fixes and minor changes
 
 + `#56`_, `#57`_: Inconsistent result from `archive-tool diff` with
   option `--skip-dir-content`.
+
++ `#64`_, `#65`_: :meth:`Archive.extract` does not preserve the file
+  modification time for symbol links.
 
 + `#48`_: Review and standardize some error messages.
 
@@ -80,6 +88,9 @@ Bug fixes and minor changes
 .. _#61: https://github.com/RKrahl/archive-tools/pull/61
 .. _#62: https://github.com/RKrahl/archive-tools/issues/62
 .. _#63: https://github.com/RKrahl/archive-tools/pull/63
+.. _#64: https://github.com/RKrahl/archive-tools/issues/64
+.. _#65: https://github.com/RKrahl/archive-tools/pull/65
+.. _#66: https://github.com/RKrahl/archive-tools/pull/66
 
 
 0.5.1 (2020-12-12)

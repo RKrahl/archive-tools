@@ -327,6 +327,12 @@ class Archive:
         else:
             raise ArchiveIntegrityError("%s: invalid type" % (itemname))
 
+    def extract_member(self, fi, targetdir):
+        arcname = self._arcname(fi.path)
+        mtimes = (fi.mtime, fi.mtime)
+        self._file.extract(arcname, path=str(targetdir))
+        os.utime(targetdir / arcname, mtimes, follow_symlinks=False)
+
     def extract(self, targetdir, inclmeta=False):
         # We extract the directories last in reverse order.  This way,
         # the directory attributes, in particular the file modification
@@ -338,12 +344,12 @@ class Archive:
                 self._file.extract(mi, path=str(targetdir))
         for fi in self.manifest:
             if fi.is_dir():
-                dirstack.append(fi.path)
+                dirstack.append(fi)
             else:
-                self._file.extract(self._arcname(fi.path), path=str(targetdir))
+                self.extract_member(fi, targetdir)
         while True:
             try:
-                p = dirstack.pop()
+                fi = dirstack.pop()
             except IndexError:
                 break
-            self._file.extract(self._arcname(p), path=str(targetdir))
+            self.extract_member(fi, targetdir)

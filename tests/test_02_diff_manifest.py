@@ -1,6 +1,7 @@
 """Test diff_manifest() function in archive.manifest.
 """
 
+import os
 from pathlib import Path
 import shutil
 from tempfile import TemporaryFile
@@ -77,8 +78,10 @@ def test_diff_manifest_modified_file(test_data, testname, monkeypatch):
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
+    mtime_base = os.stat(base_dir).st_mtime
     p = base_dir / "rnd.dat"
     shutil.copy(gettestdata("rnd2.dat"), p)
+    os.utime(base_dir, times=(mtime_base, mtime_base))
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1
@@ -94,9 +97,11 @@ def test_diff_manifest_symlink_target(test_data, testname, monkeypatch):
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
+    mtime_base = os.stat(base_dir).st_mtime
     p = base_dir / "s.dat"
     p.unlink()
     p.symlink_to(Path("msg.txt"))
+    os.utime(base_dir, times=(mtime_base, mtime_base))
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1
@@ -112,9 +117,11 @@ def test_diff_manifest_wrong_type(test_data, testname, monkeypatch):
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
+    mtime_base = os.stat(base_dir).st_mtime
     p = base_dir / "rnd.dat"
     p.unlink()
     p.symlink_to(Path("data", "rnd.dat"))
+    os.utime(base_dir, times=(mtime_base, mtime_base))
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1
@@ -131,9 +138,11 @@ def test_diff_manifest_missing_files(test_data, testname, monkeypatch):
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
+    mtime_base = os.stat(base_dir).st_mtime
     p1 = base_dir / "rnd.dat"
     p2 = base_dir / "a.dat"
     p1.rename(p2)
+    os.utime(base_dir, times=(mtime_base, mtime_base))
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 2
@@ -155,11 +164,15 @@ def test_diff_manifest_mult(test_data, testname, monkeypatch):
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
+    mtime_base = os.stat(base_dir).st_mtime
+    mtime_data = os.stat(base_dir / "data").st_mtime
     pm = base_dir / "data" / "rnd.dat"
     shutil.copy(gettestdata("rnd2.dat"), pm)
     p1 = base_dir / "msg.txt"
     p2 = base_dir / "o.txt"
     p1.rename(p2)
+    os.utime(base_dir, times=(mtime_base, mtime_base))
+    os.utime(base_dir / "data", times=(mtime_data, mtime_data))
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 3
@@ -185,8 +198,10 @@ def test_diff_manifest_dircontent(test_data, testname, monkeypatch):
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
+    mtime_base = os.stat(base_dir).st_mtime
     pd = base_dir / "data"
     shutil.rmtree(pd)
+    os.utime(base_dir, times=(mtime_base, mtime_base))
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 2
@@ -211,8 +226,10 @@ def test_diff_manifest_add_file_last(test_data, testname, monkeypatch):
     with Archive().open(Path("archive.tar")) as archive:
         manifest_ref = archive.manifest
     base_dir = Path("base")
+    mtime_base = os.stat(base_dir).st_mtime
     p = base_dir / "zzz.dat"
     shutil.copy(gettestdata("rnd2.dat"), p)
+    os.utime(base_dir, times=(mtime_base, mtime_base))
     fileinfos = get_fileinfos(base_dir)
     diff = list(filter(non_match, diff_manifest(fileinfos, manifest_ref)))
     assert len(diff) == 1
