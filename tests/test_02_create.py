@@ -4,11 +4,13 @@
 import datetime
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import pytest
 from pytest_dependency import depends
 from archive import Archive
 from archive.manifest import FileInfo, Manifest
+from archive.tools import mode_ft
 from conftest import *
 
 
@@ -112,6 +114,28 @@ def test_check_content(test_dir, dep_testcase, inclmeta):
     sha256.stdin.close()
     sha256.wait()
     assert sha256.returncode == 0
+
+@pytest.mark.dependency()
+def test_check_fstat(test_dir, dep_testcase):
+    """Check that file system metadata are preserved
+    """
+    compression, abspath = dep_testcase
+    flag = absflag(abspath)
+    archive_path = test_dir / archive_name(ext=compression, tags=[flag])
+    outdir = test_dir / "out"
+    shutil.rmtree(outdir, ignore_errors=True)
+    outdir.mkdir()
+    if abspath:
+        cwd = outdir / "archive" / test_dir.relative_to(test_dir.anchor)
+    else:
+        cwd = outdir
+    with Archive().open(archive_path) as archive:
+        archive.extract(outdir)
+    for f in testdata:
+        fstat = (cwd / f.path).lstat()
+        assert mode_ft[stat.S_IFMT(fstat.st_mode)] == f.type
+        assert fstat.st_mtime == f.mtime
+        assert stat.S_IMODE(fstat.st_mode) == f.mode
 
 @pytest.mark.dependency()
 def test_verify(test_dir, dep_testcase):

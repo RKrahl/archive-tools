@@ -55,6 +55,9 @@ Bug fixes and minor changes
   optional.  The default will be derived from the suffixes of the
   `path` argument.
 
++ `#65`_: Add a method :meth:`Archive.extract_member` to extract an
+  individual member of the archive.
+
 + `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
   :meth:`Archive.create` when passing a relative path as `workdir`
   argument.
@@ -63,6 +66,9 @@ Bug fixes and minor changes
 
 + `#56`_, `#57`_: Inconsistent result from `archive-tool diff` with
   option `--skip-dir-content`.
+
++ `#64`_, `#65`_: :meth:`Archive.extract` does not preserve the file
+  modification time for symbol links.
 
 + `#48`_: Review and standardize some error messages.
 
@@ -80,6 +86,8 @@ Bug fixes and minor changes
 .. _#61: https://github.com/RKrahl/archive-tools/pull/61
 .. _#62: https://github.com/RKrahl/archive-tools/issues/62
 .. _#63: https://github.com/RKrahl/archive-tools/pull/63
+.. _#64: https://github.com/RKrahl/archive-tools/issues/64
+.. _#65: https://github.com/RKrahl/archive-tools/pull/65
 
 
 0.5.1 (2020-12-12)
