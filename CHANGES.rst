@@ -15,7 +15,9 @@ New features
 + `#54`_: Add new keyword argument `fileinfos` that :class:`Manifest`
   and :meth:`Archive.create` accept.
 
-+ `#57`_: Add :func:`diff_manifest`.
++ `#57`_, `#66`_: Add :func:`diff_manifest`.  The `archive-tool diff`
+  command with `--report-meta` flag also reports differences in file
+  system metadata for directories and symbol links.
 
 + `#50`_, `#51`_: Add a header with some metadata to the index in a
   mail archive created by :class:`MailArchive`.
@@ -88,6 +90,7 @@ Bug fixes and minor changes
 .. _#63: https://github.com/RKrahl/archive-tools/pull/63
 .. _#64: https://github.com/RKrahl/archive-tools/issues/64
 .. _#65: https://github.com/RKrahl/archive-tools/pull/65
+.. _#66: https://github.com/RKrahl/archive-tools/pull/66
 
 
 0.5.1 (2020-12-12)
