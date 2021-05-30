@@ -25,7 +25,7 @@ from archive.bt.config import Config
 # - consider adding more log messages and logging configuration.
 
 log = logging.getLogger(__name__)
-subcmds = ( "create", )
+subcmds = ( "create", "index", )
 
 def backup_tool():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
