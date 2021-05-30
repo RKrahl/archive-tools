@@ -27,9 +27,17 @@ class Config(archive.config.Config):
     args_options = ('policy', 'user', 'schedule')
 
     def __init__(self, args):
+        for o in self.args_options:
+            if not hasattr(args, o):
+                setattr(args, o, None)
         host = socket.gethostname()
         config_file = get_config_file()
-        sections = ("%s/%s" % (host, args.policy), host, args.policy)
+        if args.user:
+            args.policy = 'user'
+        if args.policy:
+            sections = ("%s/%s" % (host, args.policy), host, args.policy)
+        else:
+            sections = (host,)
         self.config_file = config_file
         super().__init__(args, config_section=sections)
         if not self.config_file:

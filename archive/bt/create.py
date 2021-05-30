@@ -10,6 +10,7 @@ from archive.manifest import Manifest, DiffStatus, diff_manifest
 
 
 log = logging.getLogger(__name__)
+schedules = {'full', 'cumu', 'incr'}
 
 def get_prev_backups(config):
     idx_file = config.backupdir / ".index.yaml"
@@ -66,7 +67,7 @@ def get_fileinfos(config):
 
     return fileinfos
 
-def create(config):
+def create(args, config):
     os.umask(0o277)
     fileinfos = get_fileinfos(config)
 
@@ -80,3 +81,12 @@ def create(config):
     if config.user:
         tags.append("user:%s" % config.user)
     Archive().create(config.path, fileinfos=fileinfos, tags=tags)
+    return 0
+
+def add_parser(subparsers):
+    parser = subparsers.add_parser('create', help="create a backup")
+    clsgrp = parser.add_mutually_exclusive_group()
+    clsgrp.add_argument('--policy', default='sys')
+    clsgrp.add_argument('--user')
+    parser.add_argument('--schedule', choices=schedules, default='full')
+    parser.set_defaults(func=create)

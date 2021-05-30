@@ -2,11 +2,11 @@
 """
 
 import argparse
+import importlib
 import logging
 import sys
 from archive.exception import ArchiveError, ConfigError
 from archive.bt.config import Config
-from archive.bt.create import create
 
 
 # TODO:
@@ -25,24 +25,24 @@ from archive.bt.create import create
 # - consider adding more log messages and logging configuration.
 
 log = logging.getLogger(__name__)
-schedules = {'full', 'cumu', 'incr'}
+subcmds = ( "create", )
 
 def backup_tool():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
     argparser = argparse.ArgumentParser()
-    clsgrp = argparser.add_mutually_exclusive_group()
-    clsgrp.add_argument('--policy', default='sys')
-    clsgrp.add_argument('--user')
-    argparser.add_argument('--schedule', choices=schedules, default='full')
     argparser.add_argument('-v', '--verbose', action='store_true',
                            help=("verbose diagnostic output"))
+    subparsers = argparser.add_subparsers(title='subcommands', dest='subcmd')
+    for sc in subcmds:
+        m = importlib.import_module('archive.bt.%s' % sc)
+        m.add_parser(subparsers)
     args = argparser.parse_args()
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    if args.user:
-        args.policy = 'user'
+    if not hasattr(args, "func"):
+        argparser.error("subcommand is required")
 
     try:
         config = Config(args)
@@ -51,11 +51,15 @@ def backup_tool():
               file=sys.stderr)
         sys.exit(2)
 
-    log.info("host:%s, policy:%s", config.host, config.policy)
+    if config.policy:
+        log.info("%s %s: host:%s, policy:%s", argparser.prog, args.subcmd,
+                 config.host, config.policy)
+    else:
+        log.info("%s %s: host:%s", argparser.prog, args.subcmd, config.host)
 
     try:
-        create(config)
+        sys.exit(args.func(args, config))
     except ArchiveError as e:
-        print("%s: error: %s" % (argparser.prog, e), 
+        print("%s: error: %s" % (argparser.prog, e),
               file=sys.stderr)
         sys.exit(1)
