@@ -118,7 +118,7 @@ setup(
     url = "https://github.com/RKrahl/archive-tools",
     license = "Apache-2.0",
     requires = ["PyYAML"],
-    packages = ["archive", "archive.cli"],
+    packages = ["archive", "archive.cli", "archive.bt"],
     scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",
                "scripts/imap-to-archive.py"],
     data_files = [("/etc", ["etc/backup.cfg"])],
