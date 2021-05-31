@@ -9,8 +9,13 @@ log = logging.getLogger(__name__)
 
 def update_index(args, config):
     idx_file = config.backupdir / ".index.yaml"
-    with idx_file.open("rb") as f:
-        idx = ArchiveIndex(f)
+    if idx_file.is_file():
+        log.debug("reading index file %s", str(idx_file))
+        with idx_file.open("rb") as f:
+            idx = ArchiveIndex(f)
+    else:
+        log.debug("index file not found")
+        idx = ArchiveIndex()
     idx.add_archives(config.backupdir.glob("*.tar*"), prune=args.prune)
     idx.sort()
     with idx_file.open("wb") as f:
