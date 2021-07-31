@@ -117,7 +117,7 @@ setup(
     author_email = "rolf@rotkraut.de",
     url = "https://github.com/RKrahl/archive-tools",
     license = "Apache-2.0",
-    requires = ["PyYAML", "lark"],
+    requires = ["yaml", "lark"],
     packages = ["archive", "archive.cli", "archive.bt"],
     scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",
                "scripts/imap-to-archive.py"],
