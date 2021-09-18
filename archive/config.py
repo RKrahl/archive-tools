@@ -46,10 +46,14 @@ class Config(ChainMap):
             if subst:
                 value = value % self
             if split:
-                if type:
-                    value = [type(v) for v in value.split()]
+                if isinstance(split, str):
+                    sep = split
                 else:
-                    value = value.split()
+                    sep = None
+                if type:
+                    value = [type(v) for v in value.split(sep=sep)]
+                else:
+                    value = value.split(sep=sep)
             else:
                 if type:
                     value = type(value)
