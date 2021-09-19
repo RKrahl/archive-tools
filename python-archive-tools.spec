@@ -13,11 +13,13 @@ BuildRequires:	fdupes
 BuildRequires:	python3-base >= 3.6
 %if %{with tests}
 BuildRequires:	python3-PyYAML
+BuildRequires:	python3-lark-parser
 BuildRequires:	python3-distutils-pytest
 BuildRequires:	python3-pytest-dependency >= 0.2
 BuildRequires:	python3-pytest >= 3.0
 %endif
 Requires:	python3-PyYAML
+Requires:	python3-lark-parser
 Recommends:	python3-IMAPClient
 Recommends:	python3-python-dateutil
 BuildArch:	noarch

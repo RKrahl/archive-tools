@@ -23,8 +23,9 @@ class Config(archive.config.Config):
         'backupdir': None,
         'targetdir': "%(backupdir)s",
         'name': "%(host)s-%(date)s-%(schedule)s.tar.bz2",
+        'schedules': None,
     }
-    args_options = ('policy', 'user', 'schedule')
+    args_options = ('policy', 'user')
 
     def __init__(self, args):
         for o in self.args_options:
@@ -63,8 +64,8 @@ class Config(archive.config.Config):
         return self.get('user')
 
     @property
-    def schedule(self):
-        return self.get('schedule')
+    def schedules(self):
+        return self.get('schedules', required=True, split='/')
 
     @property
     def name(self):
