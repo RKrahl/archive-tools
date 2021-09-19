@@ -8,6 +8,10 @@ import re
 from lark import Lark, Transformer
 
 
+class NoFullBackupError(Exception):
+    pass
+
+
 class _DTMatcher:
     """datetime component matcher to be used in ScheduleDate.
     This is an abstract base class.
@@ -174,3 +178,86 @@ class ScheduleDate(_dt_tuple):
                     self.second.matches(dt.second))
         else:
             return False
+
+
+class BaseSchedule:
+    """Abstract base class for schedules.
+    """
+
+    SubClasses = dict()
+    ClsName = None
+
+    def __init__(self, name, date, parent):
+        self.name = name
+        self.date = date
+        self.parent = parent
+
+    def match_date(self, dt):
+        return dt in self.date
+
+    def get_base_archives(self, archives):
+        raise NotImplementedError
+
+    def get_child_base_archives(self, archives):
+        raise NotImplementedError
+
+    @classmethod
+    def register_clsname(cls, subcls):
+        """A class decorator to register the name for a subclass.
+        """
+        assert issubclass(subcls, cls)
+        assert subcls.ClsName and subcls.ClsName not in cls.SubClasses
+        cls.SubClasses[subcls.ClsName] = subcls
+        return subcls
+
+@BaseSchedule.register_clsname
+class FullSchedule(BaseSchedule):
+
+    ClsName = "full"
+
+    def get_base_archives(self, archives):
+        return []
+
+    def get_child_base_archives(self, archives):
+        last_full = None
+        for i in archives:
+            if i.schedule == self.name:
+                last_full = i
+        if last_full:
+            return [last_full]
+        else:
+            raise NoFullBackupError
+
+@BaseSchedule.register_clsname
+class CumuSchedule(BaseSchedule):
+
+    ClsName = "cumu"
+
+    def get_base_archives(self, archives):
+        return self.parent.get_child_base_archives(archives)
+
+    def get_child_base_archives(self, archives):
+        base_archives = self.parent.get_child_base_archives(archives)
+        p_idx = archives.index(base_archives[-1])
+        for i in archives[p_idx+1:]:
+            if i.schedule == self.name:
+                last_cumu = i
+        if last_cumu:
+            base_archives.append(last_cumu)
+        return base_archives
+
+@BaseSchedule.register_clsname
+class IncrSchedule(BaseSchedule):
+
+    ClsName = "incr"
+
+    def get_base_archives(self, archives):
+        base_archives = self.parent.get_child_base_archives(archives)
+        p_idx = archives.index(base_archives[-1])
+        for i in archives[p_idx+1:]:
+            if i.schedule == self.name:
+                base_archives.append(i)
+        return base_archives
+
+    def get_child_base_archives(self, archives):
+        return self.get_base_archives(archives)
