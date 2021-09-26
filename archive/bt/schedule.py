@@ -239,6 +239,7 @@ class CumuSchedule(BaseSchedule):
     def get_child_base_archives(self, archives):
         base_archives = self.parent.get_child_base_archives(archives)
         p_idx = archives.index(base_archives[-1])
+        last_cumu = None
         for i in archives[p_idx+1:]:
             if i.schedule == self.name:
                 last_cumu = i
