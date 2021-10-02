@@ -20,6 +20,8 @@ New features
 + `#50`_, `#51`_: Add a header with some metadata to the index in a
   mail archive created by :class:`MailArchive`.
 
++ `#67`_: Add  :mod:`archive.index` providing :class:`ArchiveIndex`.
+
 Incompatible changes
 --------------------
 
@@ -70,6 +72,7 @@ Bug fixes and minor changes
 .. _#59: https://github.com/RKrahl/archive-tools/pull/59
 .. _#60: https://github.com/RKrahl/archive-tools/pull/60
 .. _#61: https://github.com/RKrahl/archive-tools/pull/61
+.. _#67: https://github.com/RKrahl/archive-tools/pull/67
 
 
 0.5.1 (2020-12-12)
