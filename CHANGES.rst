@@ -26,6 +26,8 @@ New features
   tarfile.  This fixes failing verification if the archive contains a
   directory with a long path name.
 
++ `#67`_: Add  :mod:`archive.index` providing :class:`ArchiveIndex`.
+
 Incompatible changes
 --------------------
 
@@ -91,6 +93,7 @@ Bug fixes and minor changes
 .. _#64: https://github.com/RKrahl/archive-tools/issues/64
 .. _#65: https://github.com/RKrahl/archive-tools/pull/65
 .. _#66: https://github.com/RKrahl/archive-tools/pull/66
+.. _#67: https://github.com/RKrahl/archive-tools/pull/67
 
 
 0.5.1 (2020-12-12)
