@@ -19,9 +19,6 @@ class _BaseException(Exception):
         if hasattr(self, '__cause__'):
             self.__cause__ = None
 
-class ArgError(_BaseException):
-    pass
-
 class ArchiveError(_BaseException):
     pass
 
@@ -51,4 +48,10 @@ class ArchiveInvalidTypeError(ArchiveError):
         super().__init__("%s: %s" % (path, tstr))
 
 class ArchiveWarning(Warning):
+    pass
+
+class ArgError(_BaseException):
+    pass
+
+class ConfigError(_BaseException):
     pass

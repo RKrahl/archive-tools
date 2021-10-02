@@ -76,6 +76,11 @@ Bug fixes and minor changes
 
 + `#48`_: Review and standardize some error messages.
 
+Internal changes
+----------------
+
++ `#68`_: Add :mod:`archive.config`.
+
 .. _#48: https://github.com/RKrahl/archive-tools/pull/48
 .. _#50: https://github.com/RKrahl/archive-tools/issues/50
 .. _#51: https://github.com/RKrahl/archive-tools/pull/51
@@ -94,6 +99,7 @@ Bug fixes and minor changes
 .. _#65: https://github.com/RKrahl/archive-tools/pull/65
 .. _#66: https://github.com/RKrahl/archive-tools/pull/66
 .. _#67: https://github.com/RKrahl/archive-tools/pull/67
+.. _#68: https://github.com/RKrahl/archive-tools/pull/68
 
 
 0.5.1 (2020-12-12)
