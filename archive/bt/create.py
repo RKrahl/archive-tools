@@ -4,6 +4,7 @@
 import datetime
 import logging
 import os
+import pwd
 from archive.archive import Archive
 from archive.exception import ArchiveCreateError
 from archive.index import ArchiveIndex
@@ -63,6 +64,17 @@ def get_fileinfos(config, schedule):
             fileinfos = filter_fileinfos(base.manifest, fileinfos)
     return fileinfos
 
+def chown(path, user):
+    try:
+        pw = pwd.getpwnam(user)
+    except KeyError:
+        log.warn("User %s not found in password database", user)
+        return
+    try:
+        os.chown(path, pw.pw_uid, pw.pw_gid)
+    except OSError as e:
+        log.error("chown %s: %s: %s", path, type(e).__name__, e)
+
 def create(args, config):
     os.umask(0o277)
     schedule = get_schedule(config)
@@ -80,7 +92,9 @@ def create(args, config):
     ]
     if config.user:
         tags.append("user:%s" % config.user)
-    Archive().create(config.path, fileinfos=fileinfos, tags=tags)
+    arch = Archive().create(config.path, fileinfos=fileinfos, tags=tags)
+    if config.user:
+        chown(arch.path, config.user)
     return 0
 
 def add_parser(subparsers):
