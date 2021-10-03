@@ -149,6 +149,18 @@ class DataFileOrDir(DataItem):
     def mode(self):
         return self._mode
 
+class DataFileBase(DataFileOrDir):
+
+    Checksums = _get_checksums()
+
+    @property
+    def type(self):
+        return 'f'
+
+    @property
+    def checksum(self):
+        return self._checksum or self.Checksums[self.path.name]
+
 class DataDir(DataFileOrDir):
 
     @property
@@ -160,21 +172,11 @@ class DataDir(DataFileOrDir):
         path.mkdir(parents=True, exist_ok=True)
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class DataFile(DataFileOrDir):
-
-    Checksums = _get_checksums()
+class DataFile(DataFileBase):
 
     def __init__(self, path, mode, *, mtime=None, checksum=None):
         super().__init__(path, mode, mtime=mtime)
         self._checksum = checksum
-
-    @property
-    def type(self):
-        return 'f'
-
-    @property
-    def checksum(self):
-        return self._checksum or self.Checksums[self.path.name]
 
     def create(self, main_dir):
         path = main_dir / self.path
@@ -182,19 +184,11 @@ class DataFile(DataFileOrDir):
         shutil.copy(gettestdata(self.path.name), path)
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class DataRandomFile(DataFileOrDir):
+class DataRandomFile(DataFileBase):
 
     def __init__(self, path, mode, *, mtime=None, size=1024):
         super().__init__(path, mode, mtime=mtime)
         self._size = size
-
-    @property
-    def type(self):
-        return 'f'
-
-    @property
-    def checksum(self):
-        return self._checksum
 
     def create(self, main_dir):
         path = main_dir / self.path
