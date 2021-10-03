@@ -15,7 +15,7 @@ from archive.tools import ft_mode
 
 
 __all__ = [
-    'DataDir', 'DataFile', 'DataRandomFile', 'DataSymLink',
+    'DataDir', 'DataFile', 'DataContentFile', 'DataRandomFile', 'DataSymLink',
     'absflag', 'archive_name', 'callscript',  'check_manifest',
     'get_output', 'gettestdata', 'require_compression', 'setup_testdata',
     'sub_testdata',
@@ -184,22 +184,27 @@ class DataFile(DataFileBase):
         shutil.copy(gettestdata(self.path.name), path)
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class DataRandomFile(DataFileBase):
+class DataContentFile(DataFileBase):
 
-    def __init__(self, path, mode, *, mtime=None, size=1024):
+    def __init__(self, path, data, mode, *, mtime=None):
         super().__init__(path, mode, mtime=mtime)
-        self._size = size
+        self.data = data
 
     def create(self, main_dir):
         path = main_dir / self.path
         h = hashlib.new("sha256")
-        data = bytearray(getrandbits(8) for _ in range(self._size))
-        h.update(data)
+        h.update(self.data)
         self._checksum = h.hexdigest()
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as f:
-            f.write(data)
+            f.write(self.data)
         _set_fs_attrs(path, self.mode, self.mtime)
+
+class DataRandomFile(DataContentFile):
+
+    def __init__(self, path, mode, *, mtime=None, size=1024):
+        data = bytearray(getrandbits(8) for _ in range(size))
+        super().__init__(path, data, mode, mtime=mtime)
 
 class DataSymLink(DataItem):
 
