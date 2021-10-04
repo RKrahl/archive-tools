@@ -1,6 +1,7 @@
 """Create a backup.
 """
 
+from collections.abc import Sequence
 import datetime
 import logging
 import os
@@ -82,6 +83,11 @@ def create(args, config):
         return 0
     config['schedule'] = schedule.name
     fileinfos = get_fileinfos(config, schedule)
+    if not isinstance(fileinfos, Sequence):
+        fileinfos = list(fileinfos)
+    if not fileinfos:
+        log.debug("nothing to archive")
+        return 0
 
     log.debug("creating archive %s", config.path)
 
