@@ -9,6 +9,7 @@ from archive.archive import Archive
 from archive.exception import ArchiveCreateError
 from archive.index import ArchiveIndex
 from archive.manifest import Manifest, DiffStatus, diff_manifest
+from archive.tools import tmp_umask
 from archive.bt.schedule import ScheduleDate, BaseSchedule, NoFullBackupError
 
 
@@ -76,7 +77,6 @@ def chown(path, user):
         log.error("chown %s: %s: %s", path, type(e).__name__, e)
 
 def create(args, config):
-    os.umask(0o277)
     schedule = get_schedule(config)
     if schedule is None:
         return 0
@@ -92,9 +92,10 @@ def create(args, config):
     ]
     if config.user:
         tags.append("user:%s" % config.user)
-    arch = Archive().create(config.path, fileinfos=fileinfos, tags=tags)
-    if config.user:
-        chown(arch.path, config.user)
+    with tmp_umask(0o277):
+        arch = Archive().create(config.path, fileinfos=fileinfos, tags=tags)
+        if config.user:
+            chown(arch.path, config.user)
     return 0
 
 def add_parser(subparsers):
