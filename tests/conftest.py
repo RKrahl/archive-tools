@@ -1,6 +1,7 @@
 """pytest configuration.
 """
 
+import datetime
 import hashlib
 import os
 from pathlib import Path
@@ -15,6 +16,7 @@ from archive.tools import ft_mode
 
 
 __all__ = [
+    'FrozenDateTime', 'FrozenDate', 'MockFunction',
     'DataDir', 'DataFile', 'DataContentFile', 'DataRandomFile', 'DataSymLink',
     'absflag', 'archive_name', 'callscript',  'check_manifest',
     'get_output', 'gettestdata', 'require_compression', 'setup_testdata',
@@ -54,6 +56,39 @@ def require_compression(compression):
             import lzma
         except ImportError:
             pytest.skip(msg % ("lzma", "xz"))
+
+class FrozenDateTime(datetime.datetime):
+    _frozen = datetime.datetime.now()
+
+    @classmethod
+    def freeze(cls, dt):
+        cls._frozen = dt
+
+    @classmethod
+    def now(cls, tz=None):
+        return cls._frozen
+
+class FrozenDate(datetime.date):
+
+    @classmethod
+    def today(cls):
+        return FrozenDateTime.now().date()
+
+class MockFunction:
+    """A function returning a preset value.
+
+    May be used to mock library functions, such as pwd.getpwnam() or
+    socket.gethostname().
+    """
+
+    def __init__(self, value=None):
+        self.set_return_value(value)
+
+    def set_return_value(self, value):
+        self._value = value
+
+    def __call__(self, *args):
+        return self._value
 
 class TmpDir(object):
     """Provide a temporary directory.

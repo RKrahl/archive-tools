@@ -15,55 +15,6 @@ import pytest
 from conftest import *
 
 
-def mock_getpwnam(name):
-    """Mock pwd.getpwnam() pretending there is a user 'jdoe'.
-    """
-    if name == 'jdoe':
-        pwt = ('jdoe', '*', 1000, 1000, 'John Doe', '/home/jdoe', '/bin/bash')
-        return pwd.struct_passwd(pwt)
-    else:
-        return pwd.getpwnam(name)
-
-def get_mock_constfunc(c):
-    """Return a function returning a constant value.
-    The returned function may be used to mock socket.gethostname().
-    """
-    def mock_func():
-        return c
-    return mock_func
-
-_orig_dt_datetime = datetime.datetime
-_orig_dt_date = datetime.date
-
-class FrozenDateTimeMeta(type):
-    def __instancecheck__(self, instance):
-        if type(instance) in {_orig_dt_datetime, FrozenDateTime}:
-            return True
-
-class FrozenDateTime(datetime.datetime):
-    __metaclass__ = FrozenDateTimeMeta
-    _frozen = datetime.datetime.now()
-
-    @classmethod
-    def freeze(cls, dt):
-        cls._frozen = dt
-
-    @classmethod
-    def now(cls, tz=None):
-        return cls._frozen
-
-class FrozenDateMeta(type):
-    def __instancecheck__(self, instance):
-        if type(instance) in {_orig_dt_date, FrozenDate}:
-            return True
-
-class FrozenDate(datetime.date):
-    __metaclass__ = FrozenDateMeta
-
-    @classmethod
-    def today(cls):
-        return FrozenDateTime.now().date()
-
 cfg = """# Configuration file for backup-tool.
 # All paths are within a root directory that need to be substituted.
 
@@ -158,16 +109,21 @@ def test_dir(tmpdir):
 
 def test_backup(test_dir, monkeypatch):
     cfg_path = test_dir / "etc" / "backup.cfg"
+    gethostname = MockFunction()
+    pwt = ('jdoe', '*', 1000, 1000, 'John Doe', '/home/jdoe', '/bin/bash')
+    getpwnam = MockFunction(pwd.struct_passwd(pwt))
+
     monkeypatch.setenv("BACKUP_CFG", str(cfg_path))
     monkeypatch.setattr(datetime, "datetime", FrozenDateTime)
     monkeypatch.setattr(datetime, "date", FrozenDate)
-    monkeypatch.setattr(pwd, "getpwnam", mock_getpwnam)
+    monkeypatch.setattr(socket, "gethostname", gethostname)
+    monkeypatch.setattr(pwd, "getpwnam", getpwnam)
 
     sys_desk_full = { d.path:d for d in sys_data }
     sys_serv_full = { d.path:d for d in sys_data + sys_serv_data }
     user_full = { d.path:d for d in user_data }
 
-    monkeypatch.setattr(socket, "gethostname", get_mock_constfunc("desk"))
+    gethostname.set_return_value("desk")
     FrozenDateTime.freeze(datetime.datetime(2021, 10, 3, 19, 30))
     cmd = "backup-tool --verbose create --policy sys"
     monkeypatch.setattr(sys, "argv", cmd.split())
@@ -180,7 +136,7 @@ def test_backup(test_dir, monkeypatch):
                        prefix_dir=test_dir)
     path.rename(test_dir / "net" / "backup" / "desk-211003-full.tar.bz2")
 
-    monkeypatch.setattr(socket, "gethostname", get_mock_constfunc("serv"))
+    gethostname.set_return_value("serv")
     FrozenDateTime.freeze(datetime.datetime(2021, 10, 4, 3, 0))
     cmd = "backup-tool --verbose create --policy sys"
     monkeypatch.setattr(sys, "argv", cmd.split())
