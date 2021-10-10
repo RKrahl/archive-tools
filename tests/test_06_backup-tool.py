@@ -12,8 +12,49 @@ import sys
 from archive import Archive
 from archive.bt import backup_tool
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from conftest import *
 
+
+class BTTestEnv:
+    """Helper class to manage the environment to test backup-tool.
+    """
+
+    def __init__(self, root):
+        self.root = root
+        self.monkeypatch = MonkeyPatch()
+        self._datetime = FrozenDateTime
+        self._date = FrozenDate
+        self._gethostname = MockFunction()
+        pwt = ('jdoe', '*', 1000, 1000, 'John Doe', '/home/jdoe', '/bin/bash')
+        self._getpwnam = MockFunction(pwd.struct_passwd(pwt))
+
+    def __enter__(self):
+        self.monkeypatch.setattr(datetime, "datetime", self._datetime)
+        self.monkeypatch.setattr(datetime, "date", self._date)
+        self.monkeypatch.setattr(socket, "gethostname", self._gethostname)
+        self.monkeypatch.setattr(pwd, "getpwnam", self._getpwnam)
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.monkeypatch.undo()
+
+    def set_datetime(self, dt):
+        self._datetime.freeze(dt)
+
+    def set_hostname(self, name):
+        self._gethostname.set_return_value(name)
+
+    def run_backup_tool(self, argv):
+        self.monkeypatch.setattr(sys, "argv", argv.split())
+        with pytest.raises(SystemExit) as excinfo:
+            backup_tool()
+        assert excinfo.value.code == 0
+
+@pytest.fixture(scope="module")
+def env(tmpdir):
+    with BTTestEnv(tmpdir) as e:
+        yield e
 
 cfg = """# Configuration file for backup-tool.
 # All paths are within a root directory that need to be substituted.
@@ -96,70 +137,43 @@ excl_data = [
     DataDir(Path("var", "backup"), 0o755, mtime=1632704400),
 ]
 
-@pytest.fixture(scope="module")
-def test_dir(tmpdir):
-    subst = dict(root=tmpdir)
+def test_backup(env):
+    subst = dict(root=env.root)
     cfg_data = string.Template(cfg).substitute(subst).encode('ascii')
     cfg_path = Path("etc", "backup.cfg")
     cfg_file = DataContentFile(cfg_path, cfg_data, 0o644, mtime=1632596683)
     sys_data.append(cfg_file)
     all_data = itertools.chain(sys_data, sys_serv_data, user_data, excl_data)
-    setup_testdata(tmpdir, all_data)
-    return tmpdir
+    setup_testdata(env.root, all_data)
 
-def test_backup(test_dir, monkeypatch):
-    cfg_path = test_dir / "etc" / "backup.cfg"
-    gethostname = MockFunction()
-    pwt = ('jdoe', '*', 1000, 1000, 'John Doe', '/home/jdoe', '/bin/bash')
-    getpwnam = MockFunction(pwd.struct_passwd(pwt))
-
-    monkeypatch.setenv("BACKUP_CFG", str(cfg_path))
-    monkeypatch.setattr(datetime, "datetime", FrozenDateTime)
-    monkeypatch.setattr(datetime, "date", FrozenDate)
-    monkeypatch.setattr(socket, "gethostname", gethostname)
-    monkeypatch.setattr(pwd, "getpwnam", getpwnam)
+    env.monkeypatch.setenv("BACKUP_CFG", str(env.root / cfg_path))
 
     sys_desk_full = { d.path:d for d in sys_data }
     sys_serv_full = { d.path:d for d in sys_data + sys_serv_data }
     user_full = { d.path:d for d in user_data }
 
-    gethostname.set_return_value("desk")
-    FrozenDateTime.freeze(datetime.datetime(2021, 10, 3, 19, 30))
-    cmd = "backup-tool --verbose create --policy sys"
-    monkeypatch.setattr(sys, "argv", cmd.split())
-    with pytest.raises(SystemExit) as excinfo:
-        backup_tool()
-    assert excinfo.value.code == 0
-    path = test_dir / "var" / "backup" / "desk-211003-full.tar.bz2"
+    env.set_hostname("desk")
+    env.set_datetime(datetime.datetime(2021, 10, 3, 19, 30))
+    env.run_backup_tool("backup-tool --verbose create --policy sys")
+    path = env.root / "var" / "backup" / "desk-211003-full.tar.bz2"
     with Archive().open(path) as archive:
         check_manifest(archive.manifest, sys_desk_full.values(),
-                       prefix_dir=test_dir)
-    path.rename(test_dir / "net" / "backup" / "desk-211003-full.tar.bz2")
+                       prefix_dir=env.root)
+    path.rename(env.root / "net" / "backup" / "desk-211003-full.tar.bz2")
 
-    gethostname.set_return_value("serv")
-    FrozenDateTime.freeze(datetime.datetime(2021, 10, 4, 3, 0))
-    cmd = "backup-tool --verbose create --policy sys"
-    monkeypatch.setattr(sys, "argv", cmd.split())
-    with pytest.raises(SystemExit) as excinfo:
-        backup_tool()
-    assert excinfo.value.code == 0
-    path = test_dir / "net" / "backup" / "serv-211004-full.tar.bz2"
+    env.set_hostname("serv")
+    env.set_datetime(datetime.datetime(2021, 10, 4, 3, 0))
+    env.run_backup_tool("backup-tool --verbose create --policy sys")
+    path = env.root / "net" / "backup" / "serv-211004-full.tar.bz2"
     with Archive().open(path) as archive:
         check_manifest(archive.manifest, sys_serv_full.values(),
-                       prefix_dir=test_dir)
-    cmd = "backup-tool --verbose create --user jdoe"
-    monkeypatch.setattr(sys, "argv", cmd.split())
-    with pytest.raises(SystemExit) as excinfo:
-        backup_tool()
-    assert excinfo.value.code == 0
-    path = test_dir / "net" / "backup" / "jdoe-211004-full.tar.bz2"
+                       prefix_dir=env.root)
+    env.run_backup_tool("backup-tool --verbose create --user jdoe")
+    path = env.root / "net" / "backup" / "jdoe-211004-full.tar.bz2"
     with Archive().open(path) as archive:
         check_manifest(archive.manifest, user_full.values(),
-                       prefix_dir=test_dir)
-    cmd = "backup-tool --verbose index"
-    monkeypatch.setattr(sys, "argv", cmd.split())
-    with pytest.raises(SystemExit) as excinfo:
-        backup_tool()
+                       prefix_dir=env.root)
+    env.run_backup_tool("backup-tool --verbose index")
 
     sys_desk_cumu = {}
     sys_serv_cumu = {}
