@@ -152,6 +152,7 @@ def _set_fs_attrs(path, mode, mtime):
         path.chmod(mode)
     if mtime is not None:
         os.utime(path, (mtime, mtime), follow_symlinks=False)
+        os.utime(path.parent, (mtime, mtime), follow_symlinks=False)
 
 class DataItem:
 
