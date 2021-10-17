@@ -10,6 +10,7 @@ import socket
 import string
 import sys
 from archive import Archive
+from archive.index import IndexItem, ArchiveIndex
 from archive.bt import backup_tool
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -31,6 +32,13 @@ class BTTestEnv:
         self._getpwnam = MockFunction(pwd.struct_passwd(pwt))
         self.test_data = dict()
         self.test_data_tags = dict()
+        self.index = ArchiveIndex()
+        self.backupdir = None
+        self.tmptarget = None
+
+    def config(self, backupdir, tmptarget):
+        self.backupdir = self.root / backupdir
+        self.tmptarget = self.root / tmptarget
 
     def __enter__(self):
         self.monkeypatch.setattr(datetime, "datetime", self._datetime)
@@ -69,10 +77,39 @@ class BTTestEnv:
     def setup_test_data(self):
         setup_testdata(self.root, self.test_data.values())
 
-    def check_archive(self, path, tag, schedule):
+    def move_archive(self, name):
+        (self.tmptarget / name).rename(self.backupdir / name)
+
+    def check_archive(self, name, tag, schedule):
+        path = self.backupdir / name
         items = [ self.test_data[p] for p in self.test_data_tags[tag,schedule] ]
         with Archive().open(path) as archive:
             check_manifest(archive.manifest, items, prefix_dir=self.root)
+
+    def check_index(self):
+        idx_file = self.backupdir / ".index.yaml"
+        backupdir_content = { idx_file }
+        with idx_file.open("rb") as f:
+            idx = ArchiveIndex(f)
+        assert len(idx) == len(self.index)
+        for i1, i0 in zip(idx, self.index):
+            assert i1.as_dict() == i0.as_dict()
+            backupdir_content.add(i0.path)
+        assert set(self.backupdir.iterdir()) == backupdir_content
+        assert set(self.tmptarget.iterdir()) == set()
+
+    def add_index(self, name, host, schedule, policy=None, user=None):
+        if user:
+            policy = 'user'
+        idx_data = {
+            'date': datetime.datetime.now().isoformat(sep=' '),
+            'path': self.backupdir / name,
+            'host': host,
+            'policy': policy,
+            'user': user,
+            'schedule': schedule,
+        }
+        self.index.append(IndexItem(idx_data))
 
     def run_backup_tool(self, argv):
         self.monkeypatch.setattr(sys, "argv", argv.split())
@@ -134,6 +171,7 @@ schedule.incr.date = *
 """
 
     def init_data(self, env):
+        env.config("net/backup", "var/backup")
         subst = dict(root=env.root)
         cfg_data = string.Template(self.cfg).substitute(subst).encode('ascii')
         cfg_path = Path("etc", "backup.cfg")
@@ -182,18 +220,22 @@ schedule.incr.date = *
         env.set_hostname("desk")
         env.set_datetime(datetime.datetime(2021, 10, 3, 19, 30))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
-        path = env.root / "var" / "backup" / "desk-211003-full.tar.bz2"
-        env.check_archive(path, 'desk', 'full')
-        path.rename(env.root / "net" / "backup" / "desk-211003-full.tar.bz2")
+        archive_name = "desk-211003-full.tar.bz2"
+        env.move_archive(archive_name)
+        env.check_archive(archive_name, 'desk', 'full')
+        env.add_index(archive_name, 'desk', 'full', policy='sys')
 
         env.set_hostname("serv")
         env.set_datetime(datetime.datetime(2021, 10, 4, 3, 0))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
-        path = env.root / "net" / "backup" / "serv-211004-full.tar.bz2"
-        env.check_archive(path, 'serv', 'full')
+        archive_name = "serv-211004-full.tar.bz2"
+        env.check_archive(archive_name, 'serv', 'full')
+        env.add_index(archive_name, 'serv', 'full', policy='sys')
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
-        path = env.root / "net" / "backup" / "jdoe-211004-full.tar.bz2"
-        env.check_archive(path, 'user', 'full')
-        env.run_backup_tool("backup-tool --verbose index")
+        archive_name = "jdoe-211004-full.tar.bz2"
+        env.check_archive(archive_name, 'user', 'full')
+        env.add_index(archive_name, 'serv', 'full', user='jdoe')
 
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
         env.flush_test_data(('desk', 'serv', 'user'), 'cumu')
