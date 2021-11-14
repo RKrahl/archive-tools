@@ -123,6 +123,78 @@ def env(tmpdir, request):
         yield e
 
 class TestBackupTool:
+    """Test scenario: consider a directory having the following structure::
+
+      testdir
+       +-- etc
+       +-- home
+       |    +-- jdoe
+       +-- net
+       |    +-- backup
+       +-- root
+       +-- usr
+       |    +-- local
+       +-- var
+            +-- backup
+
+    Backups are created at different points in time and different
+    policies, see the cfg file for details:
+
+    + host=desk, policy=sys
+      schedule: monthly full, weekly incr
+
+    + host=serv, policy=sys
+      schedule: monthly full, weekly incr
+
+    + host=serv, policy=user, user=jdoe
+      schedule: monthly full, weekly cumu, daily incr
+
+    Tests:
+
+    + test_initial_full_backup: full backup of initial test data.
+      2021-10-03: host=desk, policy=sys, schedule=full
+      2021-10-04: host=serv, policy=sys, schedule=full
+      2021-10-04: host=serv, policy=user, user=jdoe, schedule=full
+
+    + test_simple_incr_backup: add a few files, both in sys and in
+      user directories.  According to schedule, only incremental user
+      backup will be made.
+      2021-10-06: host=serv, policy=user, user=jdoe, schedule=incr
+
+    + test_noop_incr_backup: add only files in directories that being
+      excluded.  Since there is nothing to backup, no backup should be
+      created at all.
+      2021-10-08: -
+
+    + test_simple_cumu_backup: add some more files, both in sys and in
+      user directories.  According to schedule, a cumulative backup
+      for user and incremental backups for sys are made.
+      2021-10-10: host=desk, policy=sys, schedule=incr
+      2021-10-11: host=serv, policy=sys, schedule=incr
+      2021-10-11: host=serv, policy=user, user=jdoe, schedule=cumu
+
+    + test_incr_backup: add another files in a user directory.
+      2021-10-13: host=serv, policy=user, user=jdoe, schedule=incr
+
+    + test_del_incr_backup: delete the file created for the last test
+      again.  Only the parent directory will be added to the
+      incremental backup for it has a changed file modification time,
+      but not its content.
+      2021-10-15: host=serv, policy=user, user=jdoe, schedule=incr
+
+    + test_cumu_backup: nothing has changed in sys directories, no
+      backups will be created for sys.  The cumulative backup for user
+      will essentially have the same content as the last one.
+      2021-10-17: -
+      2021-10-18: -
+      2021-10-18: host=serv, policy=user, user=jdoe, schedule=cumu
+
+    + test_full_backup: the next regular full backup.
+      2021-11-07: host=desk, policy=sys, schedule=full
+      2021-11-08: host=serv, policy=sys, schedule=full
+      2021-11-08: host=serv, policy=user, user=jdoe, schedule=full
+
+    """
 
     cfg = """# Configuration file for backup-tool.
 # All paths are within a root directory that need to be substituted.
