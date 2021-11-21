@@ -315,6 +315,7 @@ schedule.incr.date = *
         archive_name = "serv-211004-full.tar.bz2"
         env.check_archive(archive_name, 'serv', 'full')
         env.add_index(archive_name, 'serv', 'full', policy='sys')
+        env.set_datetime(datetime.datetime(2021, 10, 4, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211004-full.tar.bz2"
         env.check_archive(archive_name, 'user', 'full')
@@ -349,6 +350,7 @@ schedule.incr.date = *
         env.set_hostname("serv")
         env.set_datetime(datetime.datetime(2021, 10, 6, 3, 0))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.set_datetime(datetime.datetime(2021, 10, 6, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211006-incr.tar.bz2"
         env.check_archive(archive_name, 'user', 'incr')
@@ -379,6 +381,7 @@ schedule.incr.date = *
         env.set_hostname("serv")
         env.set_datetime(datetime.datetime(2021, 10, 8, 3, 0))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.set_datetime(datetime.datetime(2021, 10, 8, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
 
         env.run_backup_tool("backup-tool --verbose index")
@@ -425,6 +428,7 @@ schedule.incr.date = *
         archive_name = "serv-211011-incr.tar.bz2"
         env.check_archive(archive_name, 'serv', 'incr')
         env.add_index(archive_name, 'serv', 'incr', policy='sys')
+        env.set_datetime(datetime.datetime(2021, 10, 11, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211011-cumu.tar.bz2"
         env.check_archive(archive_name, 'user', 'cumu')
@@ -449,6 +453,7 @@ schedule.incr.date = *
         env.set_hostname("serv")
         env.set_datetime(datetime.datetime(2021, 10, 13, 3, 0))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.set_datetime(datetime.datetime(2021, 10, 13, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211013-incr.tar.bz2"
         env.check_archive(archive_name, 'user', 'incr')
@@ -477,6 +482,7 @@ schedule.incr.date = *
         env.set_hostname("serv")
         env.set_datetime(datetime.datetime(2021, 10, 15, 3, 0))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.set_datetime(datetime.datetime(2021, 10, 15, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211015-incr.tar.bz2"
         env.check_archive(archive_name, 'user', 'incr')
@@ -500,6 +506,7 @@ schedule.incr.date = *
         env.set_hostname("serv")
         env.set_datetime(datetime.datetime(2021, 10, 18, 3, 0))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.set_datetime(datetime.datetime(2021, 10, 18, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211018-cumu.tar.bz2"
         env.check_archive(archive_name, 'user', 'cumu')
@@ -527,6 +534,7 @@ schedule.incr.date = *
         archive_name = "serv-211108-full.tar.bz2"
         env.check_archive(archive_name, 'serv', 'full')
         env.add_index(archive_name, 'serv', 'full', policy='sys')
+        env.set_datetime(datetime.datetime(2021, 11, 8, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211108-full.tar.bz2"
         env.check_archive(archive_name, 'user', 'full')
