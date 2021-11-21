@@ -159,7 +159,9 @@ class _SDTf(Transformer):
             r.extend((_DTMatcherAny(), _DTMatcherAny(), _DTMatcherAny()))
         return r
 
-_sd_parser = Lark(_sd_grammar, start='sd', parser='lalr', transformer=_SDTf())
+_sd_parser = Lark(_sd_grammar,
+                  start='sd', parser='lalr', transformer=_SDTf(),
+                  maybe_placeholders=False)
 
 class ScheduleDate(_dt_tuple):
 
