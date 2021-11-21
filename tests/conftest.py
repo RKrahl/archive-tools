@@ -175,6 +175,12 @@ class DataItem:
     def create(self, main_dir):
         raise NotImplementedError
 
+    def unlink(self, main_dir, mtime):
+        path = main_dir / self.path
+        path.unlink()
+        if mtime:
+            os.utime(path.parent, (mtime, mtime), follow_symlinks=False)
+
 class DataFileOrDir(DataItem):
 
     def __init__(self, path, mode, *, mtime=None):

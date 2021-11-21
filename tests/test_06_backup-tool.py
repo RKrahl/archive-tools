@@ -65,6 +65,15 @@ class BTTestEnv:
                     self.test_data_tags.setdefault(k, set())
                     self.test_data_tags[k].add(i.path)
 
+    def remove_test_data(self, tags, items):
+        for i in items:
+            del self.test_data[i.path]
+            for t in tags:
+                for s in ('full', 'cumu', 'incr'):
+                    k = (t,s)
+                    self.test_data_tags.setdefault(k, set())
+                    self.test_data_tags[k].discard(i.path)
+
     def flush_test_data(self, tags, schedule):
         if schedule == 'cumu':
             schedules = ('cumu', 'incr')
@@ -286,7 +295,10 @@ schedule.incr.date = *
         env.setup_test_data()
         env.monkeypatch.setenv("BACKUP_CFG", str(env.root / cfg_path))
 
+    @pytest.mark.dependency()
     def test_initial_full_backup(self, env):
+        """Full backup of initial test data.
+        """
         self.init_data(env)
 
         env.set_hostname("desk")
@@ -305,6 +317,218 @@ schedule.incr.date = *
         env.add_index(archive_name, 'serv', 'full', policy='sys')
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211004-full.tar.bz2"
+        env.check_archive(archive_name, 'user', 'full')
+        env.add_index(archive_name, 'serv', 'full', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('desk', 'serv', 'user'), 'cumu')
+
+    @pytest.mark.dependency(depends=["test_initial_full_backup"], scope='class')
+    def test_simple_incr_backup(self, env):
+        """Add a few files, both in sys and in user directories.
+        According to schedule, only incremental user backup will be
+        made.
+        """
+        mtime = 1633451717
+        u_path = Path("home", "jdoe", "misc")
+        u_dir = DataDir(u_path, 0o755, mtime=mtime)
+        u_file = DataRandomFile(u_path / "rnd7.dat",
+                                0o644, size=473, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        mtime = 1633464305
+        s_path = Path("root", "rnd8.dat")
+        s_file = DataRandomFile(s_path, 0o600, size=42, mtime=mtime)
+        s_parent = env.test_data[s_path.parent]
+        s_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_dir, u_file])
+        env.add_test_data(('desk','serv'), [s_parent, s_file])
+        setup_testdata(env.root, [u_dir, u_file, s_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 6, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211006-incr.tar.bz2"
+        env.check_archive(archive_name, 'user', 'incr')
+        env.add_index(archive_name, 'serv', 'incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'incr')
+
+    @pytest.mark.dependency(depends=["test_simple_incr_backup"], scope='class')
+    def test_noop_incr_backup(self, env):
+        """Add only files in directories that being excluded.
+        Since there is nothing to backup, no backup should be created at all.
+        """
+        mtime = 1633487220
+        s_path = Path("root", ".cache", "rnd10.dat")
+        s_file = DataRandomFile(s_path, 0o600, size=27, mtime=mtime)
+        s_parent = env.test_data[s_path.parent]
+        s_parent.mtime = mtime
+        mtime = 1633500600
+        u_path = Path("home", "jdoe", "tmp", "rnd9.dat")
+        u_file = DataRandomFile(u_path, 0o640, size=582, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('excl',), [s_parent, s_file, u_parent, u_file])
+        setup_testdata(env.root, [s_file, u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 8, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'incr')
+
+    @pytest.mark.dependency(depends=["test_noop_incr_backup"], scope='class')
+    def test_simple_cumu_backup(self, env):
+        """Add some more files, both in sys and in user directories.
+        According to schedule, a cumulative backup for user and
+        incremental backups for sys are made.
+        """
+        mtime = 1633837020
+        s0_path = Path("usr", "local", "rnd11.dat")
+        s0_file = DataRandomFile(s0_path, 0o644, size=528, mtime=mtime)
+        s0_parent = env.test_data[s0_path.parent]
+        s0_parent.mtime = mtime
+        mtime = 1633843260
+        s1_path = Path("root", "rnd12.dat")
+        s1_file = DataRandomFile(s1_path, 0o600, size=17, mtime=mtime)
+        s1_parent = env.test_data[s1_path.parent]
+        s1_parent.mtime = mtime
+        mtime = 1633876920
+        u_path = Path("home", "jdoe", "misc", "rnd13.dat")
+        u_file = DataRandomFile(u_path, 0o644, size=378, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('serv',), [s0_parent, s0_file])
+        env.add_test_data(('desk','serv'), [s1_parent, s1_file])
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [s0_file, s1_file, u_file])
+
+        env.set_hostname("desk")
+        env.set_datetime(datetime.datetime(2021, 10, 10, 19, 30))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        archive_name = "desk-211010-incr.tar.bz2"
+        env.move_archive(archive_name)
+        env.check_archive(archive_name, 'desk', 'incr')
+        env.add_index(archive_name, 'desk', 'incr', policy='sys')
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 11, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        archive_name = "serv-211011-incr.tar.bz2"
+        env.check_archive(archive_name, 'serv', 'incr')
+        env.add_index(archive_name, 'serv', 'incr', policy='sys')
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211011-cumu.tar.bz2"
+        env.check_archive(archive_name, 'user', 'cumu')
+        env.add_index(archive_name, 'serv', 'cumu', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('desk', 'serv', 'user'), 'incr')
+
+    @pytest.mark.dependency(depends=["test_simple_cumu_backup"], scope='class')
+    def test_incr_backup(self, env):
+        """Add another files in a user directory.
+        """
+        mtime = 1634067525
+        u_path = Path("home", "jdoe", "misc", "rnd14.dat")
+        u_file = DataRandomFile(u_path, 0o644, size=146, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 13, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211013-incr.tar.bz2"
+        env.check_archive(archive_name, 'user', 'incr')
+        env.add_index(archive_name, 'serv', 'incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'incr')
+
+    @pytest.mark.dependency(depends=["test_incr_backup"], scope='class')
+    def test_del_incr_backup(self, env):
+        """Delete the file created for the last test again.
+        Only the parent directory will be added to the incremental
+        backup for it has a changed file modification time, but not
+        its content.
+        """
+        mtime = 1634240325
+        u_path = Path("home", "jdoe", "misc", "rnd14.dat")
+        u_file = env.test_data[u_path]
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.remove_test_data(('user',), [u_file])
+        env.add_test_data(('user',), [u_parent])
+        u_file.unlink(env.root, mtime)
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 15, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211015-incr.tar.bz2"
+        env.check_archive(archive_name, 'user', 'incr')
+        env.add_index(archive_name, 'serv', 'incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'incr')
+
+    @pytest.mark.dependency(depends=["test_del_incr_backup"], scope='class')
+    def test_cumu_backup(self, env):
+        """Do the next weekly backup.
+        Nothing has changed in sys directories, no backups will be
+        created for sys.  The cumulative backup for user will
+        essentially have the same content as the last one.
+        """
+        env.set_hostname("desk")
+        env.set_datetime(datetime.datetime(2021, 10, 17, 19, 30))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 18, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211018-cumu.tar.bz2"
+        env.check_archive(archive_name, 'user', 'cumu')
+        env.add_index(archive_name, 'serv', 'cumu', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('desk', 'serv', 'user'), 'incr')
+
+    @pytest.mark.dependency(depends=["test_cumu_backup"], scope='class')
+    def test_full_backup(self, env):
+        """Do the next monthly backup.
+        """
+        env.set_hostname("desk")
+        env.set_datetime(datetime.datetime(2021, 11, 7, 19, 30))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        archive_name = "desk-211107-full.tar.bz2"
+        env.move_archive(archive_name)
+        env.check_archive(archive_name, 'desk', 'full')
+        env.add_index(archive_name, 'desk', 'full', policy='sys')
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 11, 8, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        archive_name = "serv-211108-full.tar.bz2"
+        env.check_archive(archive_name, 'serv', 'full')
+        env.add_index(archive_name, 'serv', 'full', policy='sys')
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211108-full.tar.bz2"
         env.check_archive(archive_name, 'user', 'full')
         env.add_index(archive_name, 'serv', 'full', user='jdoe')
 
