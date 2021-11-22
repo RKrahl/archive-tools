@@ -191,6 +191,10 @@ class DataFileOrDir(DataItem):
     def mode(self):
         return self._mode
 
+    @mode.setter
+    def mode(self, mode):
+        self._mode = mode
+
 class DataFileBase(DataFileOrDir):
 
     Checksums = _get_checksums()

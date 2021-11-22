@@ -173,7 +173,15 @@ class TestBackupTool:
     + test_noop_incr_backup: add only files in directories that being
       excluded.  Since there is nothing to backup, no backup should be
       created at all.
-      2021-10-08: -
+      2021-10-07: -
+
+    + test_content_incr_backup: modify a file's content, but make sure
+      all filesystem metadata remain unchanged.
+      2021-10-08: host=serv, policy=user, user=jdoe, schedule=incr
+
+    + test_meta_incr_backup: modify a file's metadata, but keep the
+      content unchanged.
+      2021-10-09: host=serv, policy=user, user=jdoe, schedule=incr
 
     + test_simple_cumu_backup: add some more files, both in sys and in
       user directories.  According to schedule, a cumulative backup
@@ -276,6 +284,9 @@ schedule.incr.date = *
         env.add_test_data(('serv',), sys_serv_data)
         user_data = [
             DataDir(Path("home", "jdoe"), 0o700, mtime=1633263300),
+            DataRandomFile(Path("home", "jdoe", "rnd.dat"),
+                           0o600, size=7964, mtime=1626052455),
+            DataFile(Path("home", "jdoe", "rnd2.dat"), 0o640, mtime=1633050855),
             DataRandomFile(Path("home", "jdoe", "rnd3.dat"),
                            0o600, size=796, mtime=1633243020),
         ]
@@ -379,9 +390,9 @@ schedule.incr.date = *
         setup_testdata(env.root, [s_file, u_file])
 
         env.set_hostname("serv")
-        env.set_datetime(datetime.datetime(2021, 10, 8, 3, 0))
+        env.set_datetime(datetime.datetime(2021, 10, 7, 3, 0))
         env.run_backup_tool("backup-tool --verbose create --policy sys")
-        env.set_datetime(datetime.datetime(2021, 10, 8, 3, 10))
+        env.set_datetime(datetime.datetime(2021, 10, 7, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
 
         env.run_backup_tool("backup-tool --verbose index")
@@ -389,6 +400,58 @@ schedule.incr.date = *
         env.flush_test_data(('user',), 'incr')
 
     @pytest.mark.dependency(depends=["test_noop_incr_backup"], scope='class')
+    def test_content_incr_backup(self, env):
+        """Modify a file's content, but make sure all filesystem metadata
+        remain unchanged.
+        """
+        u_path = Path("home", "jdoe", "rnd2.dat")
+        u_orig_file = env.test_data[u_path]
+        with gettestdata("rnd2bis.dat").open("rb") as f:
+            u_file = DataContentFile(u_path, f.read(),
+                                     mode=u_orig_file.mode,
+                                     mtime=u_orig_file.mtime)
+        u_parent = env.test_data[u_path.parent]
+        env.add_test_data(('user',), [u_file])
+        setup_testdata(env.root, [u_parent, u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 8, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.set_datetime(datetime.datetime(2021, 10, 8, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211008-incr.tar.bz2"
+        env.check_archive(archive_name, 'user', 'incr')
+        env.add_index(archive_name, 'serv', 'incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'incr')
+
+    @pytest.mark.dependency(depends=["test_content_incr_backup"], scope='class')
+    def test_meta_incr_backup(self, env):
+        """Modify a file's metadata, but keep the content unchanged.
+        """
+        u_path = Path("home", "jdoe", "rnd3.dat")
+        u_file = env.test_data[u_path]
+        u_parent = env.test_data[u_path.parent]
+        u_file.mode = 0o644
+        env.add_test_data(('user',), [u_file])
+        (env.root / u_path).chmod(u_file.mode)
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 9, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        env.set_datetime(datetime.datetime(2021, 10, 9, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211009-incr.tar.bz2"
+        env.check_archive(archive_name, 'user', 'incr')
+        env.add_index(archive_name, 'serv', 'incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'incr')
+
+    @pytest.mark.dependency(depends=["test_meta_incr_backup"], scope='class')
     def test_simple_cumu_backup(self, env):
         """Add some more files, both in sys and in user directories.
         According to schedule, a cumulative backup for user and
