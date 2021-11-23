@@ -160,53 +160,53 @@ class TestBackupTool:
 
     Tests:
 
-    + test_initial_full_backup: full backup of initial test data.
+    + test_initial_full: full backup of initial test data.
       2021-10-03: host=desk, policy=sys, schedule=full
       2021-10-04: host=serv, policy=sys, schedule=full
       2021-10-04: host=serv, policy=user, user=jdoe, schedule=full
 
-    + test_simple_incr_backup: add a few files, both in sys and in
+    + test_simple_incr: add a few files, both in sys and in
       user directories.  According to schedule, only incremental user
       backup will be made.
       2021-10-06: host=serv, policy=user, user=jdoe, schedule=incr
 
-    + test_noop_incr_backup: add only files in directories that being
+    + test_noop_incr: add only files in directories that being
       excluded.  Since there is nothing to backup, no backup should be
       created at all.
       2021-10-07: -
 
-    + test_content_incr_backup: modify a file's content, but make sure
+    + test_content_incr: modify a file's content, but make sure
       all filesystem metadata remain unchanged.
       2021-10-08: host=serv, policy=user, user=jdoe, schedule=incr
 
-    + test_meta_incr_backup: modify a file's metadata, but keep the
+    + test_meta_incr: modify a file's metadata, but keep the
       content unchanged.
       2021-10-09: host=serv, policy=user, user=jdoe, schedule=incr
 
-    + test_simple_cumu_backup: add some more files, both in sys and in
+    + test_simple_cumu: add some more files, both in sys and in
       user directories.  According to schedule, a cumulative backup
       for user and incremental backups for sys are made.
       2021-10-10: host=desk, policy=sys, schedule=incr
       2021-10-11: host=serv, policy=sys, schedule=incr
       2021-10-11: host=serv, policy=user, user=jdoe, schedule=cumu
 
-    + test_incr_backup: add another files in a user directory.
+    + test_incr: add another files in a user directory.
       2021-10-13: host=serv, policy=user, user=jdoe, schedule=incr
 
-    + test_del_incr_backup: delete the file created for the last test
+    + test_del_incr: delete the file created for the last test
       again.  Only the parent directory will be added to the
       incremental backup for it has a changed file modification time,
       but not its content.
       2021-10-15: host=serv, policy=user, user=jdoe, schedule=incr
 
-    + test_cumu_backup: nothing has changed in sys directories, no
+    + test_cumu: nothing has changed in sys directories, no
       backups will be created for sys.  The cumulative backup for user
       will essentially have the same content as the last one.
       2021-10-17: -
       2021-10-18: -
       2021-10-18: host=serv, policy=user, user=jdoe, schedule=cumu
 
-    + test_full_backup: the next regular full backup.
+    + test_full: the next regular full backup.
       2021-11-07: host=desk, policy=sys, schedule=full
       2021-11-08: host=serv, policy=sys, schedule=full
       2021-11-08: host=serv, policy=user, user=jdoe, schedule=full
@@ -307,7 +307,7 @@ schedule.incr.date = *
         env.monkeypatch.setenv("BACKUP_CFG", str(env.root / cfg_path))
 
     @pytest.mark.dependency()
-    def test_initial_full_backup(self, env):
+    def test_initial_full(self, env):
         """Full backup of initial test data.
         """
         self.init_data(env)
@@ -336,8 +336,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('desk', 'serv', 'user'), 'cumu')
 
-    @pytest.mark.dependency(depends=["test_initial_full_backup"], scope='class')
-    def test_simple_incr_backup(self, env):
+    @pytest.mark.dependency(depends=["test_initial_full"], scope='class')
+    def test_simple_incr(self, env):
         """Add a few files, both in sys and in user directories.
         According to schedule, only incremental user backup will be
         made.
@@ -371,8 +371,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('user',), 'incr')
 
-    @pytest.mark.dependency(depends=["test_simple_incr_backup"], scope='class')
-    def test_noop_incr_backup(self, env):
+    @pytest.mark.dependency(depends=["test_simple_incr"], scope='class')
+    def test_noop_incr(self, env):
         """Add only files in directories that being excluded.
         Since there is nothing to backup, no backup should be created at all.
         """
@@ -399,8 +399,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('user',), 'incr')
 
-    @pytest.mark.dependency(depends=["test_noop_incr_backup"], scope='class')
-    def test_content_incr_backup(self, env):
+    @pytest.mark.dependency(depends=["test_noop_incr"], scope='class')
+    def test_content_incr(self, env):
         """Modify a file's content, but make sure all filesystem metadata
         remain unchanged.
         """
@@ -427,8 +427,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('user',), 'incr')
 
-    @pytest.mark.dependency(depends=["test_content_incr_backup"], scope='class')
-    def test_meta_incr_backup(self, env):
+    @pytest.mark.dependency(depends=["test_content_incr"], scope='class')
+    def test_meta_incr(self, env):
         """Modify a file's metadata, but keep the content unchanged.
         """
         u_path = Path("home", "jdoe", "rnd3.dat")
@@ -451,8 +451,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('user',), 'incr')
 
-    @pytest.mark.dependency(depends=["test_meta_incr_backup"], scope='class')
-    def test_simple_cumu_backup(self, env):
+    @pytest.mark.dependency(depends=["test_meta_incr"], scope='class')
+    def test_simple_cumu(self, env):
         """Add some more files, both in sys and in user directories.
         According to schedule, a cumulative backup for user and
         incremental backups for sys are made.
@@ -501,8 +501,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('desk', 'serv', 'user'), 'incr')
 
-    @pytest.mark.dependency(depends=["test_simple_cumu_backup"], scope='class')
-    def test_incr_backup(self, env):
+    @pytest.mark.dependency(depends=["test_simple_cumu"], scope='class')
+    def test_incr(self, env):
         """Add another files in a user directory.
         """
         mtime = 1634067525
@@ -526,8 +526,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('user',), 'incr')
 
-    @pytest.mark.dependency(depends=["test_incr_backup"], scope='class')
-    def test_del_incr_backup(self, env):
+    @pytest.mark.dependency(depends=["test_incr"], scope='class')
+    def test_del_incr(self, env):
         """Delete the file created for the last test again.
         Only the parent directory will be added to the incremental
         backup for it has a changed file modification time, but not
@@ -555,8 +555,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('user',), 'incr')
 
-    @pytest.mark.dependency(depends=["test_del_incr_backup"], scope='class')
-    def test_cumu_backup(self, env):
+    @pytest.mark.dependency(depends=["test_del_incr"], scope='class')
+    def test_cumu(self, env):
         """Do the next weekly backup.
         Nothing has changed in sys directories, no backups will be
         created for sys.  The cumulative backup for user will
@@ -579,8 +579,8 @@ schedule.incr.date = *
         env.check_index()
         env.flush_test_data(('desk', 'serv', 'user'), 'incr')
 
-    @pytest.mark.dependency(depends=["test_cumu_backup"], scope='class')
-    def test_full_backup(self, env):
+    @pytest.mark.dependency(depends=["test_cumu"], scope='class')
+    def test_full(self, env):
         """Do the next monthly backup.
         """
         env.set_hostname("desk")
