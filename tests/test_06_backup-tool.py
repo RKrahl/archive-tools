@@ -35,10 +35,12 @@ class BTTestEnv:
         self.index = ArchiveIndex()
         self.backupdir = None
         self.tmptarget = None
+        self.schedules = None
 
-    def config(self, backupdir, tmptarget):
+    def config(self, backupdir, tmptarget, schedules=('full', 'cumu', 'incr')):
         self.backupdir = self.root / backupdir
         self.tmptarget = self.root / tmptarget
+        self.schedules = schedules
 
     def __enter__(self):
         self.monkeypatch.setattr(datetime, "datetime", self._datetime)
@@ -60,7 +62,7 @@ class BTTestEnv:
         for i in items:
             self.test_data[i.path] = i
             for t in tags:
-                for s in ('full', 'cumu', 'incr'):
+                for s in self.schedules:
                     k = (t,s)
                     self.test_data_tags.setdefault(k, set())
                     self.test_data_tags[k].add(i.path)
@@ -69,18 +71,15 @@ class BTTestEnv:
         for i in items:
             del self.test_data[i.path]
             for t in tags:
-                for s in ('full', 'cumu', 'incr'):
+                for s in self.schedules:
                     k = (t,s)
                     self.test_data_tags.setdefault(k, set())
                     self.test_data_tags[k].discard(i.path)
 
     def flush_test_data(self, tags, schedule):
-        if schedule == 'cumu':
-            schedules = ('cumu', 'incr')
-        else:
-            schedules = ('incr',)
+        idx = self.schedules.index(schedule)
         for t in tags:
-            for s in schedules:
+            for s in self.schedules[idx:]:
                 self.test_data_tags[t,s] = set()
 
     def setup_test_data(self):
