@@ -41,9 +41,13 @@ def get_schedule(config):
     last_schedule = None
     schedules = []
     for s in config.schedules:
-        sd_str = config.get('schedule.%s.date' % s, required=True)
-        cls = BaseSchedule.SubClasses[s]
-        last_schedule = cls(s, ScheduleDate(sd_str), last_schedule)
+        try:
+            n, t = s.split(':')
+        except ValueError:
+            n = t = s
+        cls = BaseSchedule.SubClasses[t]
+        sd_str = config.get('schedule.%s.date' % n, required=True)
+        last_schedule = cls(n, ScheduleDate(sd_str), last_schedule)
         schedules.append(last_schedule)
     now = datetime.datetime.now()
     for s in schedules:

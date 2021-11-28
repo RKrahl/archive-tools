@@ -710,7 +710,6 @@ schedule.daily.date = *
         env.monkeypatch.setenv("BACKUP_CFG", str(env.root / cfg_path))
 
     @pytest.mark.dependency()
-    @pytest.mark.xfail(reason="named schedules not yet implemented")
     def test_initial_monthly(self, env):
         """Full backup of initial test data.
         """
