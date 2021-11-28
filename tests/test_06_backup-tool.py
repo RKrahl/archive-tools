@@ -613,9 +613,6 @@ class TestBackupToolNamedSchedule:
     Otherwise this is mostly a simplified version of class
     TestBackupTool.  The focus of the tests is on proper functioning
     of the schedule, full vs. cumulative vs. incremental.
-
-    (Named schedules are not yet implemented, thus the first test
-    xfails and subsequent tests are going to be skipped.)
     """
 
     cfg = """# Configuration file for backup-tool.
