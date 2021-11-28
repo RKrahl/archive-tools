@@ -11,5 +11,6 @@ include tests/data/manifest.yaml
 include tests/data/msg.txt
 include tests/data/rnd.dat
 include tests/data/rnd2.dat
+include tests/data/rnd2bis.dat
 include tests/pytest.ini
 include tests/test_*.py
