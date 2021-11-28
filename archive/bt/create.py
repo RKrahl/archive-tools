@@ -103,7 +103,8 @@ def create(args, config):
     if config.user:
         tags.append("user:%s" % config.user)
     with tmp_umask(0o277):
-        arch = Archive().create(config.path, fileinfos=fileinfos, tags=tags)
+        arch = Archive().create(config.path, fileinfos=fileinfos, tags=tags,
+                                dedup=config.dedup)
         if config.user:
             chown(arch.path, config.user)
     return 0

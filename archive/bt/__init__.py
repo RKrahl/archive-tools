@@ -11,9 +11,6 @@ from archive.bt.config import Config
 
 # TODO:
 #
-# - consider add configuration options for dedup mode and for checksum
-#   algorithm.
-#
 # - consider adding more log messages and logging configuration.
 
 log = logging.getLogger(__name__)

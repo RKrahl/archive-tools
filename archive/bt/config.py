@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import pwd
 import socket
+from archive.archive import DedupMode
 import archive.config
 from archive.exception import ConfigError
 
@@ -25,6 +26,7 @@ class Config(archive.config.Config):
         'targetdir': "%(backupdir)s",
         'name': "%(host)s-%(date)s-%(schedule)s.tar.bz2",
         'schedules': None,
+        'dedup': 'link',
     }
     args_options = ('policy', 'user')
 
@@ -87,6 +89,10 @@ class Config(archive.config.Config):
     @property
     def targetdir(self):
         return self.get('targetdir', required=True, type=Path)
+
+    @property
+    def dedup(self):
+        return self.get('dedup', required=True, type=DedupMode)
 
     @property
     def path(self):
