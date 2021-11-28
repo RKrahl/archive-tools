@@ -11,14 +11,6 @@ from archive.bt.config import Config
 
 # TODO:
 #
-# - in the long run, we want to select the schedule (e.g. set the
-#   conditions, when to choose which schedule) in the configuration
-#   file, and even put the definition and semantics (e.g. which
-#   schedules exist and what do they mean) there.  But this seem to be
-#   most tricky part of the whole project.  We want to get the basics
-#   working first.  So for the moment, we hard code definition and
-#   semantics here and select the schedule as a command line argument.
-#
 # - consider add configuration options for dedup mode and for checksum
 #   algorithm.
 #
