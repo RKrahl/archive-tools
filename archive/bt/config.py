@@ -7,6 +7,7 @@ from pathlib import Path
 import pwd
 import socket
 import archive.config
+from archive.exception import ConfigError
 
 
 def get_config_file():
