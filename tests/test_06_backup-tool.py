@@ -6,6 +6,7 @@ import itertools
 import os
 from pathlib import Path
 import pwd
+import shutil
 import socket
 import string
 import sys
@@ -936,3 +937,92 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
         env.flush_test_data(('sys', 'user'), 'weekly')
+
+
+class TestBackupToolDedup:
+    """Test the dedup configration option.
+    """
+
+    src_dir = Path("root")
+    src_path = Path("root", "rnd.dat")
+    lnk_path = Path("root", "rnd_lnk.dat")
+    cp_path = Path("root", "rnd_cp.dat")
+
+    cfg = """# Configuration file for backup-tool.
+# All paths are within a root directory that need to be substituted.
+
+[sys]
+name = %(host)s-%(date)s-%(schedule)s-$suffix.tar.bz2
+dirs =
+    $root/root
+backupdir = $root/net/backup
+schedules = full/incr
+schedule.full.date = Mon *-*-2..8
+schedule.incr.date = Mon *
+"""
+
+    def init_data(self, env, dedup):
+        env.config("net/backup", "var/backup")
+        subst = dict(root=env.root, suffix=str(dedup))
+        cfg = string.Template(self.cfg).substitute(subst)
+        if dedup:
+            cfg_path = env.root / "etc" / ("backup-%s.cfg" % dedup)
+            cfg += "dedup = %s\n" % dedup
+        else:
+            cfg_path = env.root / "etc" / "backup.cfg"
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        with cfg_path.open("wt") as f:
+            f.write(cfg)
+        if not (env.root / self.src_dir).is_dir():
+            sys_data = [
+                DataDir(self.src_dir, 0o700, mtime=1633274230),
+                DataFile(self.src_path, 0o600, mtime=1633243020),
+            ]
+            env.add_test_data(('sys',), sys_data)
+            excl_data = [
+                DataDir(Path("net", "backup"), 0o755, mtime=1632704400),
+            ]
+            env.add_test_data(('excl',), excl_data)
+            env.setup_test_data()
+            src_file = env.test_data[self.src_path]
+            os.link(env.root / self.src_path, env.root / self.lnk_path)
+            shutil.copy2(env.root / self.src_path, env.root / self.cp_path)
+            extra_data = [
+                DataFile(self.lnk_path, src_file.mode,
+                         mtime=src_file.mtime, checksum=src_file.checksum),
+                DataFile(self.cp_path, src_file.mode,
+                         mtime=src_file.mtime, checksum=src_file.checksum),
+            ]
+            env.add_test_data(('sys',), extra_data)
+            env.test_data[self.src_dir].create(env.root)
+        env.monkeypatch.setenv("BACKUP_CFG", str(env.root / cfg_path))
+
+    @pytest.mark.parametrize("dedup", [None, 'never', 'link', 'content'])
+    def test_full(self, env, dedup):
+        """Full backup of initial test data.
+        """
+        self.init_data(env, dedup)
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 4, 3, 0))
+        env.run_backup_tool("backup-tool --verbose create --policy sys")
+        archive_name = "serv-211004-full-%s.tar.bz2" % str(dedup)
+        env.check_archive(archive_name, 'sys', 'full')
+        with Archive().open(env.backupdir / archive_name) as archive:
+            src_path = archive._arcname(env.root / self.src_path)
+            lnk_path = archive._arcname(env.root / self.lnk_path)
+            cp_path = archive._arcname(env.root / self.cp_path)
+            ti_lnk = archive._file.getmember(lnk_path)
+            ti_cp = archive._file.getmember(cp_path)
+            if dedup == 'never':
+                assert ti_lnk.isfile()
+                assert ti_cp.isfile()
+            elif dedup is None or dedup == 'link':
+                assert ti_lnk.islnk()
+                assert ti_lnk.linkname == src_path
+                assert ti_cp.isfile()
+            elif dedup == 'content':
+                assert ti_lnk.islnk()
+                assert ti_lnk.linkname == src_path
+                assert ti_cp.islnk()
+                assert ti_cp.linkname == src_path
