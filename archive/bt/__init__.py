@@ -8,11 +8,6 @@ import sys
 from archive.exception import ArchiveError, ConfigError
 from archive.bt.config import Config
 
-
-# TODO:
-#
-# - consider adding more log messages and logging configuration.
-
 log = logging.getLogger(__name__)
 subcmds = ( "create", "index", )
 
