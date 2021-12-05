@@ -1,6 +1,7 @@
 """pytest configuration.
 """
 
+import datetime
 import hashlib
 import os
 from pathlib import Path
@@ -15,7 +16,8 @@ from archive.tools import ft_mode
 
 
 __all__ = [
-    'DataDir', 'DataFile', 'DataRandomFile', 'DataSymLink',
+    'FrozenDateTime', 'FrozenDate', 'MockFunction',
+    'DataDir', 'DataFile', 'DataContentFile', 'DataRandomFile', 'DataSymLink',
     'absflag', 'archive_name', 'callscript',  'check_manifest',
     'get_output', 'gettestdata', 'require_compression', 'setup_testdata',
     'sub_testdata',
@@ -54,6 +56,39 @@ def require_compression(compression):
             import lzma
         except ImportError:
             pytest.skip(msg % ("lzma", "xz"))
+
+class FrozenDateTime(datetime.datetime):
+    _frozen = datetime.datetime.now()
+
+    @classmethod
+    def freeze(cls, dt):
+        cls._frozen = dt
+
+    @classmethod
+    def now(cls, tz=None):
+        return cls._frozen
+
+class FrozenDate(datetime.date):
+
+    @classmethod
+    def today(cls):
+        return FrozenDateTime.now().date()
+
+class MockFunction:
+    """A function returning a preset value.
+
+    May be used to mock library functions, such as pwd.getpwnam() or
+    socket.gethostname().
+    """
+
+    def __init__(self, value=None):
+        self.set_return_value(value)
+
+    def set_return_value(self, value):
+        self._value = value
+
+    def __call__(self, *args):
+        return self._value
 
 class TmpDir(object):
     """Provide a temporary directory.
@@ -117,6 +152,7 @@ def _set_fs_attrs(path, mode, mtime):
         path.chmod(mode)
     if mtime is not None:
         os.utime(path, (mtime, mtime), follow_symlinks=False)
+        os.utime(path.parent, (mtime, mtime), follow_symlinks=False)
 
 class DataItem:
 
@@ -139,6 +175,12 @@ class DataItem:
     def create(self, main_dir):
         raise NotImplementedError
 
+    def unlink(self, main_dir, mtime=None):
+        path = main_dir / self.path
+        path.unlink()
+        if mtime:
+            os.utime(path.parent, (mtime, mtime), follow_symlinks=False)
+
 class DataFileOrDir(DataItem):
 
     def __init__(self, path, mode, *, mtime=None):
@@ -148,6 +190,22 @@ class DataFileOrDir(DataItem):
     @property
     def mode(self):
         return self._mode
+
+    @mode.setter
+    def mode(self, mode):
+        self._mode = mode
+
+class DataFileBase(DataFileOrDir):
+
+    Checksums = _get_checksums()
+
+    @property
+    def type(self):
+        return 'f'
+
+    @property
+    def checksum(self):
+        return self._checksum or self.Checksums[self.path.name]
 
 class DataDir(DataFileOrDir):
 
@@ -160,21 +218,11 @@ class DataDir(DataFileOrDir):
         path.mkdir(parents=True, exist_ok=True)
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class DataFile(DataFileOrDir):
-
-    Checksums = _get_checksums()
+class DataFile(DataFileBase):
 
     def __init__(self, path, mode, *, mtime=None, checksum=None):
         super().__init__(path, mode, mtime=mtime)
         self._checksum = checksum
-
-    @property
-    def type(self):
-        return 'f'
-
-    @property
-    def checksum(self):
-        return self._checksum or self.Checksums[self.path.name]
 
     def create(self, main_dir):
         path = main_dir / self.path
@@ -182,30 +230,27 @@ class DataFile(DataFileOrDir):
         shutil.copy(gettestdata(self.path.name), path)
         _set_fs_attrs(path, self.mode, self.mtime)
 
-class DataRandomFile(DataFileOrDir):
+class DataContentFile(DataFileBase):
 
-    def __init__(self, path, mode, *, mtime=None, size=1024):
+    def __init__(self, path, data, mode, *, mtime=None):
         super().__init__(path, mode, mtime=mtime)
-        self._size = size
-
-    @property
-    def type(self):
-        return 'f'
-
-    @property
-    def checksum(self):
-        return self._checksum
+        self.data = data
 
     def create(self, main_dir):
         path = main_dir / self.path
         h = hashlib.new("sha256")
-        data = bytearray(getrandbits(8) for _ in range(self._size))
-        h.update(data)
+        h.update(self.data)
         self._checksum = h.hexdigest()
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as f:
-            f.write(data)
+            f.write(self.data)
         _set_fs_attrs(path, self.mode, self.mtime)
+
+class DataRandomFile(DataContentFile):
+
+    def __init__(self, path, mode, *, mtime=None, size=1024):
+        data = bytearray(getrandbits(8) for _ in range(size))
+        super().__init__(path, data, mode, mtime=mtime)
 
 class DataSymLink(DataItem):
 

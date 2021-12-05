@@ -8,6 +8,8 @@ Changelog
 New features
 ------------
 
++ `#52`_, `#70`_: Add a `backup-tool` script.
+
 + `#54`_: Add command line flags `--directory <dir>` to
   `archive-tool create`.  The script will change into this directory
   prior creating the archive if provided.
@@ -84,6 +86,7 @@ Internal changes
 .. _#48: https://github.com/RKrahl/archive-tools/pull/48
 .. _#50: https://github.com/RKrahl/archive-tools/issues/50
 .. _#51: https://github.com/RKrahl/archive-tools/pull/51
+.. _#52: https://github.com/RKrahl/archive-tools/issues/52
 .. _#53: https://github.com/RKrahl/archive-tools/issues/53
 .. _#54: https://github.com/RKrahl/archive-tools/pull/54
 .. _#55: https://github.com/RKrahl/archive-tools/issues/55
@@ -100,6 +103,7 @@ Internal changes
 .. _#66: https://github.com/RKrahl/archive-tools/pull/66
 .. _#67: https://github.com/RKrahl/archive-tools/pull/67
 .. _#68: https://github.com/RKrahl/archive-tools/pull/68
+.. _#70: https://github.com/RKrahl/archive-tools/pull/70
 
 
 0.5.1 (2020-12-12)

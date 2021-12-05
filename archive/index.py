@@ -19,6 +19,7 @@ class IndexItem:
             self.policy = data.get('policy')
             self.user = data.get('user')
             self.schedule = data.get('schedule')
+            self.type = data.get('type')
         elif archive is not None:
             self.date = parse_date(archive.manifest.head['Date'])
             self.path = archive.path
@@ -38,6 +39,7 @@ class IndexItem:
             self.policy = tagmap.get('policy')
             self.user = tagmap.get('user')
             self.schedule = tagmap.get('schedule')
+            self.type = tagmap.get('type')
         else:
             raise TypeError("Either data or archive must be provided")
 
@@ -48,7 +50,7 @@ class IndexItem:
             'date': self.date.isoformat(sep=' '),
             'path': str(self.path),
         }
-        for k in ('host', 'policy', 'user', 'schedule'):
+        for k in ('host', 'policy', 'user', 'schedule', 'type'):
             v = getattr(self, k, None)
             if v:
                 d[k] = v

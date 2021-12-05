@@ -56,6 +56,10 @@ Required library packages:
 
 + `PyYAML`_
 
++ `lark-parser`_
+
+  Required for the `backup-tool.py` script.
+
 Optional library packages:
 
 + `imapclient`_
@@ -136,6 +140,7 @@ permissions and limitations under the License.
 
 .. _PyPI site: https://pypi.org/project/archive-tools/
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
+.. _lark-parser: https://github.com/lark-parser/lark
 .. _imapclient: https://github.com/mjs/imapclient/
 .. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm/
