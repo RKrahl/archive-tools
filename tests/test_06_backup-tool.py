@@ -953,6 +953,471 @@ schedule.daily.date = *
         env.flush_test_data(('sys', 'user'), 'weekly')
 
 
+class TestBackupToolMixedScheduleTypes:
+    """The schedule types may be freely mixed.
+
+    The backup-tool supports a hierarchy of the schedule types 'full',
+    'cumu', and 'incr'.  It is not required to use them in that order.
+    Only the root of the hierarchy must have the type 'full',
+    otherwise the types may be freely mixed.
+
+    The scenario considered in this test:
+    - quarterly: full,
+    - monthly: incr,
+    - weekly: cumu,
+    - daily: incr.
+    """
+
+    cfg = """# Configuration file for backup-tool.
+# All paths are within a root directory that need to be substituted.
+
+[serv]
+backupdir = $root/net/backup
+
+[user]
+name = %(user)s-%(date)s-%(schedule)s.tar.bz2
+dirs = $root/%(home)s
+excludes =
+    $root/%(home)s/.cache
+    $root/%(home)s/.thumbnails
+    $root/%(home)s/tmp
+schedules = quarterly:full/monthly:incr/weekly:cumu/daily:incr
+schedule.quarterly.date = Mon *-1,4,7,10-2..8
+schedule.monthly.date = Mon *-*-2..8
+schedule.weekly.date = Mon *
+schedule.daily.date = *
+"""
+
+    def init_data(self, env):
+        env.config("net/backup", "var",
+                   schedules=('quarterly', 'monthly', 'weekly', 'daily'))
+        subst = dict(root=env.root)
+        cfg_data = string.Template(self.cfg).substitute(subst).encode('ascii')
+        cfg_path = Path("etc", "backup.cfg")
+        sys_data = [
+            DataDir(Path("etc"), 0o755, mtime=1625363657),
+            DataContentFile(cfg_path, cfg_data, 0o644, mtime=1625243298),
+        ]
+        env.add_test_data(('sys',), sys_data)
+        user_data = [
+            DataDir(Path("home", "jdoe"), 0o700, mtime=1633263300),
+            DataRandomFile(Path("home", "jdoe", "rnd00.dat"),
+                           0o600, size=7964, mtime=1612908655),
+            DataRandomFile(Path("home", "jdoe", "rnd01.dat"),
+                           0o600, size=39, mtime=1614947739),
+        ]
+        env.add_test_data(('user',), user_data)
+        excl_data = [
+            DataDir(Path("net", "backup"), 0o755, mtime=1625360400),
+            DataDir(Path("var"), 0o755, mtime=1625360400),
+        ]
+        env.add_test_data(('excl',), excl_data)
+        env.setup_test_data()
+        env.monkeypatch.setenv("BACKUP_CFG", str(env.root / cfg_path))
+
+    @pytest.mark.dependency()
+    def test_20210705(self, env):
+        """Full backup of initial test data.
+        """
+        self.init_data(env)
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 7, 5, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210705-quarterly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'quarterly')
+        env.add_index(archive_name, 'serv', 'quarterly',
+                      type='full', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'monthly')
+
+    @pytest.mark.dependency(depends=["test_20210705"], scope='class')
+    def test_20210707(self, env):
+        """Daily incremental backup in the first week.
+        """
+        mtime = 1625562697
+        u_path = Path("home", "jdoe", "rnd02.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=446, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 7, 7, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210707-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210707"], scope='class')
+    def test_20210709(self, env):
+        """Second daily incremental backup in the first week.
+        """
+        mtime = 1625743947
+        u_path = Path("home", "jdoe", "rnd03.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=55, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 7, 9, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210709-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210709"], scope='class')
+    def test_20210712(self, env):
+        """Weekly cumulative backup.
+        """
+        mtime = 1626043402
+        u_path = Path("home", "jdoe", "rnd04.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=228, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 7, 12, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210712-weekly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'weekly')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='cumu', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210712"], scope='class')
+    def test_20210714(self, env):
+        """Daily incremental backup in the second week.
+        """
+        mtime = 1626167376
+        u_path = Path("home", "jdoe", "rnd05.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=263, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 7, 14, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210714-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210714"], scope='class')
+    def test_20210719(self, env):
+        """Weekly cumulative backup.
+        """
+        mtime = 1626575481
+        u_path = Path("home", "jdoe", "rnd06.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=287, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 7, 19, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210719-weekly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'weekly')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='cumu', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210719"], scope='class')
+    def test_20210721(self, env):
+        """Daily incremental backup in the third week.
+        """
+        mtime = 1626826403
+        u_path = Path("home", "jdoe", "rnd07.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=318, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 7, 21, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210721-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210721"], scope='class')
+    def test_20210802(self, env):
+        """Monthly backup.
+        """
+        mtime = 1627806186
+        u_path = Path("home", "jdoe", "rnd08.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=334, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 8, 2, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210802-monthly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'monthly')
+        env.add_index(archive_name, 'serv', 'monthly',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'monthly')
+
+    @pytest.mark.dependency(depends=["test_20210802"], scope='class')
+    def test_20210804(self, env):
+        """Daily incremental backup.
+        """
+        mtime = 1628026098
+        u_path = Path("home", "jdoe", "rnd09.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=404, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 8, 4, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210804-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210804"], scope='class')
+    def test_20210809(self, env):
+        """Weekly cumulative backup.
+        """
+        mtime = 1628460869
+        u_path = Path("home", "jdoe", "rnd10.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=453, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 8, 9, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210809-weekly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'weekly')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='cumu', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210809"], scope='class')
+    def test_20210811(self, env):
+        """Daily incremental backup.
+        """
+        mtime = 1628563138
+        u_path = Path("home", "jdoe", "rnd11.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=174, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 8, 11, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210811-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210811"], scope='class')
+    def test_20210906(self, env):
+        """Monthly backup.
+        """
+        mtime = 1630827561
+        u_path = Path("home", "jdoe", "rnd12.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=225, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 9, 6, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210906-monthly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'monthly')
+        env.add_index(archive_name, 'serv', 'monthly',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'monthly')
+
+    @pytest.mark.dependency(depends=["test_20210906"], scope='class')
+    def test_20210908(self, env):
+        """Daily incremental backup.
+        """
+        mtime = 1630986960
+        u_path = Path("home", "jdoe", "rnd13.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=317, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 9, 8, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210908-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210908"], scope='class')
+    def test_20210913(self, env):
+        """Weekly cumulative backup.
+        """
+        mtime = 1631419436
+        u_path = Path("home", "jdoe", "rnd14.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=159, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 9, 13, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210913-weekly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'weekly')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='cumu', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210913"], scope='class')
+    def test_20210915(self, env):
+        """Daily incremental backup.
+        """
+        mtime = 1631652957
+        u_path = Path("home", "jdoe", "rnd15.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=199, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 9, 15, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210915-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210915"], scope='class')
+    def test_20210917(self, env):
+        """Daily incremental backup.
+        """
+        mtime = 1631781786
+        u_path = Path("home", "jdoe", "rnd16.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=24, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 9, 17, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-210917-daily.tar.bz2"
+        env.check_archive(archive_name, 'user', 'daily')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'daily')
+
+    @pytest.mark.dependency(depends=["test_20210917"], scope='class')
+    def test_20211004(self, env):
+        """Quarterly full backup.
+        """
+        mtime = 1633264335
+        u_path = Path("home", "jdoe", "rnd17.dat")
+        u_file = DataRandomFile(u_path, 0o600, size=467, mtime=mtime)
+        u_parent = env.test_data[u_path.parent]
+        u_parent.mtime = mtime
+        env.add_test_data(('user',), [u_parent, u_file])
+        setup_testdata(env.root, [u_file])
+
+        env.set_hostname("serv")
+        env.set_datetime(datetime.datetime(2021, 10, 4, 3, 10))
+        env.run_backup_tool("backup-tool --verbose create --user jdoe")
+        archive_name = "jdoe-211004-quarterly.tar.bz2"
+        env.check_archive(archive_name, 'user', 'quarterly')
+        env.add_index(archive_name, 'serv', 'quarterly',
+                      type='full', user='jdoe')
+
+        env.run_backup_tool("backup-tool --verbose index")
+        env.check_index()
+        env.flush_test_data(('user',), 'monthly')
+
+
 class TestBackupToolDedup:
     """Test the dedup configration option.
     """
