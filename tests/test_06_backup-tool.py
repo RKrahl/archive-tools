@@ -107,7 +107,8 @@ class BTTestEnv:
         assert set(self.backupdir.iterdir()) == backupdir_content
         assert set(self.tmptarget.iterdir()) == set()
 
-    def add_index(self, name, host, schedule, policy=None, user=None):
+    def add_index(self, name, host, schedule,
+                  type=None, policy=None, user=None):
         if user:
             policy = 'user'
         idx_data = {
@@ -117,6 +118,7 @@ class BTTestEnv:
             'policy': policy,
             'user': user,
             'schedule': schedule,
+            'type': type or schedule,
         }
         self.index.append(IndexItem(idx_data))
 
@@ -718,12 +720,14 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --policy sys")
         archive_name = "serv-211004-monthly.tar.bz2"
         env.check_archive(archive_name, 'sys', 'monthly')
-        env.add_index(archive_name, 'serv', 'monthly', policy='sys')
+        env.add_index(archive_name, 'serv', 'monthly',
+                      type='full', policy='sys')
         env.set_datetime(datetime.datetime(2021, 10, 4, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211004-monthly.tar.bz2"
         env.check_archive(archive_name, 'user', 'monthly')
-        env.add_index(archive_name, 'serv', 'monthly', user='jdoe')
+        env.add_index(archive_name, 'serv', 'monthly',
+                      type='full', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
@@ -756,7 +760,8 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211006-daily.tar.bz2"
         env.check_archive(archive_name, 'user', 'daily')
-        env.add_index(archive_name, 'serv', 'daily', user='jdoe')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
@@ -781,7 +786,8 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211007-daily.tar.bz2"
         env.check_archive(archive_name, 'user', 'daily')
-        env.add_index(archive_name, 'serv', 'daily', user='jdoe')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
@@ -815,12 +821,14 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --policy sys")
         archive_name = "serv-211011-weekly.tar.bz2"
         env.check_archive(archive_name, 'sys', 'weekly')
-        env.add_index(archive_name, 'serv', 'weekly', policy='sys')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='incr', policy='sys')
         env.set_datetime(datetime.datetime(2021, 10, 11, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211011-weekly.tar.bz2"
         env.check_archive(archive_name, 'user', 'weekly')
-        env.add_index(archive_name, 'serv', 'weekly', user='jdoe')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='cumu', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
@@ -852,7 +860,8 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211013-daily.tar.bz2"
         env.check_archive(archive_name, 'user', 'daily')
-        env.add_index(archive_name, 'serv', 'daily', user='jdoe')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
@@ -875,12 +884,14 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --policy sys")
         archive_name = "serv-211018-weekly.tar.bz2"
         env.check_archive(archive_name, 'sys', 'weekly')
-        env.add_index(archive_name, 'serv', 'weekly', policy='sys')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='incr', policy='sys')
         env.set_datetime(datetime.datetime(2021, 10, 18, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211018-weekly.tar.bz2"
         env.check_archive(archive_name, 'user', 'weekly')
-        env.add_index(archive_name, 'serv', 'weekly', user='jdoe')
+        env.add_index(archive_name, 'serv', 'weekly',
+                      type='cumu', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
@@ -912,7 +923,8 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211020-daily.tar.bz2"
         env.check_archive(archive_name, 'user', 'daily')
-        env.add_index(archive_name, 'serv', 'daily', user='jdoe')
+        env.add_index(archive_name, 'serv', 'daily',
+                      type='incr', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()
@@ -927,12 +939,14 @@ schedule.daily.date = *
         env.run_backup_tool("backup-tool --verbose create --policy sys")
         archive_name = "serv-211108-monthly.tar.bz2"
         env.check_archive(archive_name, 'sys', 'monthly')
-        env.add_index(archive_name, 'serv', 'monthly', policy='sys')
+        env.add_index(archive_name, 'serv', 'monthly',
+                      type='full', policy='sys')
         env.set_datetime(datetime.datetime(2021, 11, 8, 3, 10))
         env.run_backup_tool("backup-tool --verbose create --user jdoe")
         archive_name = "jdoe-211108-monthly.tar.bz2"
         env.check_archive(archive_name, 'user', 'monthly')
-        env.add_index(archive_name, 'serv', 'monthly', user='jdoe')
+        env.add_index(archive_name, 'serv', 'monthly',
+                      type='full', user='jdoe')
 
         env.run_backup_tool("backup-tool --verbose index")
         env.check_index()

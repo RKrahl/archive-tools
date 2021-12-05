@@ -99,6 +99,7 @@ def create(args, config):
         "host:%s" % config.host,
         "policy:%s" % config.policy,
         "schedule:%s" % schedule.name,
+        "type:%s" % schedule.ClsName,
     ]
     if config.user:
         tags.append("user:%s" % config.user)
