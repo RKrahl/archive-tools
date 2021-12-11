@@ -54,7 +54,8 @@ python3 setup.py test
 
 %files
 %defattr(-,root,root)
-%doc README.rst
+%doc README.rst CHANGES.rst
+%license LICENSE.txt
 %config(noreplace) %{_sysconfdir}/backup.cfg
 %{python3_sitelib}/*
 %{_bindir}/*
