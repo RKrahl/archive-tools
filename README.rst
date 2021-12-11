@@ -126,7 +126,7 @@ the site-packages directory of your Python installation.
 Copyright and License
 ---------------------
 
-Copyright 2019–2020 Rolf Krahl
+Copyright 2019–2021 Rolf Krahl
 
 Licensed under the `Apache License`_, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License.
