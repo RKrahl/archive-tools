@@ -47,10 +47,10 @@ def check(args):
             if (args.prefix / fi.path in metadata or 
                 entry and _matches(args.prefix, fi, entry)):
                 if args.present and not fi.is_dir():
-                    print(str(fi.path))
+                    print(fi.path)
             else:
                 if not args.present:
-                    print(str(fi.path))
+                    print(fi.path)
                 if fi.is_dir():
                     skip = True
     return 0

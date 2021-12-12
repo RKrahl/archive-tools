@@ -31,7 +31,7 @@ def test_dir(tmpdir):
 def test_cli_create_exclude_dir(test_dir, testname, monkeypatch):
     """Exclude a single directory.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = "base"
     exclude = Path("base", "data")
@@ -45,7 +45,7 @@ def test_cli_create_exclude_dir(test_dir, testname, monkeypatch):
 def test_cli_create_exclude_mult(test_dir, testname, monkeypatch):
     """Exclude multiple items.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     paths = "base"
     excludes = [
@@ -68,7 +68,7 @@ def test_cli_create_exclude_include(test_dir, testname, monkeypatch):
     """Exclude a directory, but explicitely include an item in that
     directory.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     name = archive_name(tags=[testname])
     exclude = Path("base", "data")
     include = Path("base", "data", "rnd1.dat")

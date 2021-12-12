@@ -32,13 +32,22 @@ def test_dir(tmpdir):
 def test_cli_create_tags(test_dir, monkeypatch, tags, expected):
     """Set tags using the --tags argument.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = archive_name(tags=["tags"], counter="cli_create_tags")
     args = ["create"]
     for t in tags:
         args += ("--tag", t)
     args += (archive_path, "base")
     callscript("archive-tool.py", args)
-    with Archive().open(archive_path) as archive:
+    with Archive().open(Path(archive_path)) as archive:
         assert archive.manifest.tags == expected
+        check_manifest(archive.manifest, testdata)
+
+def test_cli_create_directory(test_dir):
+    """Change the working directory using the --directory argument.
+    """
+    archive_path = archive_name(tags=["dir"])
+    args = ["create", "--directory", str(test_dir), archive_path, "base"]
+    callscript("archive-tool.py", args)
+    with Archive().open(test_dir / archive_path) as archive:
         check_manifest(archive.manifest, testdata)

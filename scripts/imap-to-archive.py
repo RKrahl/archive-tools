@@ -3,31 +3,56 @@
 """
 
 import argparse
-from collections import ChainMap
-import configparser
 import getpass
 import logging
 import os.path
 from pathlib import Path
 import sys
 from imapclient import IMAPClient
+import archive.config
+from archive.exception import ConfigError
 from archive.mailarchive import MailArchive
-from archive.tools import now_str
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logging.getLogger('imapclient').setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 
 security_methods = {'imaps', 'starttls'}
-
 default_config_file = os.path.expanduser("~/.config/archive/imap.cfg")
-defaults = {
-    'host': None,
-    'port': None,
-    'security': 'imaps',
-    'user': None,
-    'pass': None,
-}
+
+class Config(archive.config.Config):
+
+    defaults = {
+        'host': None,
+        'port': None,
+        'security': 'imaps',
+        'user': None,
+        'pass': None,
+    }
+    args_options = ('host', 'port', 'security', 'user')
+
+    def __init__(self, args):
+        self.config_file = args.config_file
+        super().__init__(args, config_section=args.config_section)
+        if args.config_section:
+            if not self.config_file:
+                raise ConfigError("configuration file %s not found"
+                                  % args.config_file)
+            if not self.config_section:
+                raise ConfigError("configuration section %s not found"
+                                  % args.config_section)
+        if self['security'] not in security_methods:
+            raise ConfigError("invalid security method '%s'" % self['security'])
+        if not self['host']:
+            raise ConfigError("IMAP4 host name not specified")
+        if self['port'] is not None:
+            self['port'] = int(config['port'])
+        self['ssl'] = self['security'] == 'imaps'
+        if not self['user']:
+            raise ConfigError("IMAP4 user name not specified")
+        if self['pass'] is None:
+            self['pass'] = getpass.getpass()
+
 
 argparser = argparse.ArgumentParser(add_help=False)
 argparser.add_argument('--help',
@@ -54,41 +79,8 @@ args = argparser.parse_args()
 if args.verbose:
     logging.getLogger().setLevel(logging.DEBUG)
 
-class ConfigError(Exception):
-    pass
-
-def get_config(args, defaults):
-    args_cfg_options = ('host', 'port', 'security', 'user')
-    args_cfg = { k:vars(args)[k] for k in args_cfg_options if vars(args)[k] }
-    config = ChainMap({}, args_cfg)
-    if args.config_section:
-        cp = configparser.ConfigParser()
-        if not cp.read(args.config_file):
-            raise ConfigError("configuration file %s not found"
-                              % args.config_file)
-        try:
-            config.maps.append(cp[args.config_section])
-        except KeyError:
-            raise ConfigError("configuration section %s not found"
-                              % args.config_section)
-    config.maps.append(defaults)
-
-    if config['security'] not in security_methods:
-        raise ConfigError("invalid security method '%s'" % config['security'])
-    if not config['host']:
-        raise ConfigError("IMAP4 host name not specified")
-    if config['port'] is not None:
-        config['port'] = int(config['port'])
-    config['ssl'] = config['security'] == 'imaps'
-    if not config['user']:
-        raise ConfigError("IMAP4 user name not specified")
-    if config['pass'] is None:
-        config['pass'] = getpass.getpass()
-
-    return config
-
 try:
-    config = get_config(args, defaults)
+    config = Config(args)
 except ConfigError as e:
     print("%s: configuration error: %s" % (argparser.prog, e), file=sys.stderr)
     sys.exit(2)
@@ -125,7 +117,5 @@ with IMAPClient(config['host'], port=config['port'], ssl=config['ssl']) as imap:
         imap.starttls()
     imap.login(config['user'], config['pass'])
     log.debug("Login to %s successful", config['host'])
-    comment = "Fetched from %s at %s" % (config['host'], now_str())
     archive = MailArchive()
-    archive.create(archive_path, getmsgs(imap, "INBOX"), comment=comment)
-
+    archive.create(archive_path, getmsgs(imap, "INBOX"), server=config['host'])

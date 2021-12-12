@@ -17,6 +17,15 @@ testdata = [
     DataFile(Path("base", "data", "misc", "rnd.dat"), 0o644),
     DataSymLink(Path("base", "data", "s.dat"), Path("misc", "rnd.dat")),
 ]
+# Test data having a directory with a long path name, needed in
+# test_create_long_directory_name()
+long_dir_path = Path("lets_start_with_a_somewhat_long_directory_name_"
+                     "because_we_need_a_very_long_overall_path")
+testdata_long_dir = [
+    DataDir(long_dir_path, 0o755),
+    DataDir(long_dir_path / "sub-1", 0o755),
+    DataDir(long_dir_path / "sub-directory-2", 0o755),
+]
 
 @pytest.fixture(scope="module")
 def test_dir(tmpdir):
@@ -27,8 +36,8 @@ def test_dir(tmpdir):
 def test_create_default_basedir_rel(test_dir, monkeypatch):
     """Check the default basedir with relative paths.  (Issue #8)
     """
-    monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-rel.tar"
+    monkeypatch.chdir(test_dir)
+    archive_path = Path("archive-rel.tar")
     p = Path("base", "data")
     Archive().create(archive_path, "", [p])
     with Archive().open(archive_path) as archive:
@@ -39,7 +48,7 @@ def test_create_default_basedir_rel(test_dir, monkeypatch):
 def test_create_default_basedir_abs(test_dir, monkeypatch):
     """Check the default basedir with absolute paths.  (Issue #8)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path("archive-abs.tar")
     p = test_dir / Path("base", "data")
     Archive().create(archive_path, "", [p])
@@ -51,7 +60,7 @@ def test_create_default_basedir_abs(test_dir, monkeypatch):
 def test_create_sorted(test_dir, monkeypatch):
     """The entries in the manifest should be sorted.  (Issue #11)
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path("archive-sort.tar")
     files = [ Path("base", fn) for fn in ("c", "a", "d", "b") ]
     for p in files:
@@ -69,10 +78,10 @@ def test_create_sorted(test_dir, monkeypatch):
 def test_create_custom_metadata(test_dir, monkeypatch):
     """Add additional custom metadata to the archive.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = Path("archive-custom-md.tar")
     p = Path("base", "data")
-    with TemporaryFile(dir=str(test_dir)) as tmpf:
+    with TemporaryFile(dir=test_dir) as tmpf:
         archive = Archive()
         tmpf.write("Hello world!\n".encode("ascii"))
         tmpf.seek(0)
@@ -90,8 +99,8 @@ def test_create_custom_metadata(test_dir, monkeypatch):
 def test_create_add_symlink(test_dir, monkeypatch):
     """Check adding explicitly adding a symbolic link.  (Issue #37)
     """
-    monkeypatch.chdir(str(test_dir))
-    archive_path = "archive-symlink.tar"
+    monkeypatch.chdir(test_dir)
+    archive_path = Path("archive-symlink.tar")
     paths = [Path("base", "data", "misc"), Path("base", "data", "s.dat")]
     data = [ testdata[i] for i in (1,3,4) ]
     Archive().create(archive_path, "", paths)
@@ -108,8 +117,21 @@ def test_create_add_symlink(test_dir, monkeypatch):
 def test_create_tags(test_dir, monkeypatch, tags, expected):
     """Test setting tags.
     """
-    monkeypatch.chdir(str(test_dir))
-    archive_path = archive_name(tags=["tags"], counter="create_tags")
+    monkeypatch.chdir(test_dir)
+    archive_path = Path(archive_name(tags=["tags"], counter="create_tags"))
     Archive().create(archive_path, "", [Path("base")], tags=tags)
     with Archive().open(archive_path) as archive:
         assert archive.manifest.tags == expected
+
+def test_create_long_directory_name(tmpdir, monkeypatch):
+    """An archive containing a directory with a long path name.
+
+    Verification fails if the archive is created in the GNU tar format.
+    """
+    setup_testdata(tmpdir, testdata_long_dir)
+    monkeypatch.chdir(tmpdir)
+    archive_path = Path("archive-longdir.tar")
+    Archive().create(archive_path, "", [long_dir_path])
+    with Archive().open(archive_path) as archive:
+        check_manifest(archive.manifest, testdata_long_dir)
+        archive.verify()

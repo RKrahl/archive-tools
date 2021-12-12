@@ -2,6 +2,110 @@ Changelog
 =========
 
 
+0.6 (2021-12-12)
+~~~~~~~~~~~~~~~~
+
+New features
+------------
+
++ `#52`_, `#70`_: Add a `backup-tool` script.
+
++ `#54`_: Add command line flags `--directory <dir>` to
+  `archive-tool create`.  The script will change into this directory
+  prior creating the archive if provided.
+
++ `#54`_: Add new keyword argument `fileinfos` that :class:`Manifest`
+  and :meth:`Archive.create` accept.
+
++ `#57`_, `#66`_: Add :func:`diff_manifest`.  The `archive-tool diff`
+  command with `--report-meta` flag also reports differences in file
+  system metadata for directories and symbol links.
+
++ `#50`_, `#51`_: Add a header with some metadata to the index in a
+  mail archive created by :class:`MailArchive`.
+
++ `#62`_, `#63`_: Explicitely select POSIX.1-2001 (pax) format in the
+  tarfile.  This fixes failing verification if the archive contains a
+  directory with a long path name.
+
++ `#67`_: Add  :mod:`archive.index` providing :class:`ArchiveIndex`.
+
+Incompatible changes
+--------------------
+
++ `#60`_: Drop support for Python 3.4 and 3.5.
+
++ The `comment` keyword argument to :class:`MailArchive` has been
+  dropped, ref. `#51`_.
+
+Bug fixes and minor changes
+---------------------------
+
++ `#59`_: Change :attr:`Archive.path` to the absolute path of the
+  archive.
+
++ `#57`_: Do not take the paths relative to the base directory in the
+  `archive-tool diff` command.
+
++ `#58`_: Weaken the condition introduced in `#9`_ that basedir must
+  be a directory.
+
++ `#61`_: Review date helper functions in :mod:`archive.tools`
+
+  - Add :func:`date_str_rfc5322`.
+
+  - :func:`parse_date` now also accepts date strings as returned by
+    :meth:`datetime.datetime.isoformat`.
+
++ Make `compression` keyword argument to :meth:`Archive.create`
+  optional.  The default will be derived from the suffixes of the
+  `path` argument.
+
++ `#65`_: Add a method :meth:`Archive.extract_member` to extract an
+  individual member of the archive.
+
++ `#53`_, `#54`_: Spurious :exc:`FileNotFoundError` from
+  :meth:`Archive.create` when passing a relative path as `workdir`
+  argument.
+
++ `#55`_, `#57`_: `archive-tool diff` fails with :exc:`TypeError`.
+
++ `#56`_, `#57`_: Inconsistent result from `archive-tool diff` with
+  option `--skip-dir-content`.
+
++ `#64`_, `#65`_: :meth:`Archive.extract` does not preserve the file
+  modification time for symbol links.
+
++ `#48`_: Review and standardize some error messages.
+
+Internal changes
+----------------
+
++ `#68`_: Add :mod:`archive.config`.
+
+.. _#48: https://github.com/RKrahl/archive-tools/pull/48
+.. _#50: https://github.com/RKrahl/archive-tools/issues/50
+.. _#51: https://github.com/RKrahl/archive-tools/pull/51
+.. _#52: https://github.com/RKrahl/archive-tools/issues/52
+.. _#53: https://github.com/RKrahl/archive-tools/issues/53
+.. _#54: https://github.com/RKrahl/archive-tools/pull/54
+.. _#55: https://github.com/RKrahl/archive-tools/issues/55
+.. _#56: https://github.com/RKrahl/archive-tools/issues/56
+.. _#57: https://github.com/RKrahl/archive-tools/pull/57
+.. _#58: https://github.com/RKrahl/archive-tools/pull/58
+.. _#59: https://github.com/RKrahl/archive-tools/pull/59
+.. _#60: https://github.com/RKrahl/archive-tools/pull/60
+.. _#61: https://github.com/RKrahl/archive-tools/pull/61
+.. _#62: https://github.com/RKrahl/archive-tools/issues/62
+.. _#63: https://github.com/RKrahl/archive-tools/pull/63
+.. _#64: https://github.com/RKrahl/archive-tools/issues/64
+.. _#65: https://github.com/RKrahl/archive-tools/pull/65
+.. _#66: https://github.com/RKrahl/archive-tools/pull/66
+.. _#67: https://github.com/RKrahl/archive-tools/pull/67
+.. _#68: https://github.com/RKrahl/archive-tools/pull/68
+.. _#70: https://github.com/RKrahl/archive-tools/pull/70
+
+
 0.5.1 (2020-12-12)
 ~~~~~~~~~~~~~~~~~~
 
@@ -170,3 +274,5 @@ Bug fixes and minor changes
 ~~~~~~~~~~~~~~~~
 
 + Initial release.
+
+.. _#9: https://github.com/RKrahl/archive-tools/issues/9
