@@ -18,11 +18,13 @@ doc-pdf: build
 	$(MAKE) -C doc latexpdf PYTHONPATH=$(BUILDLIB)
 
 clean:
-	rm -f *~ archive/*~ scripts/*~ tests/*~
+	rm -f *~ archive/*~ archive/bt/*~ archive/cli/*~ scripts/*~ tests/*~
 	rm -rf build
 
 distclean: clean
-	rm -rf archive/__pycache__ scripts/__pycache__ tests/__pycache__
+	rm -rf archive/__pycache__ \
+	    archive/bt/__pycache__ archive/cli/__pycache__ \
+	    scripts/__pycache__ tests/__pycache__
 	rm -rf tests/.cache tests/.pytest_cache
 	rm -f MANIFEST .version
 	rm -f archive/__init__.py

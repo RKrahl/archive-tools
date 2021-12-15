@@ -1,14 +1,17 @@
 include .version
+include CHANGES.rst
 include LICENSE.txt
 include MANIFEST.in
 include README.rst
 include tests/conftest.py
 include tests/data/.sha256
 include tests/data/legacy-1_0.tar.gz
+include tests/data/mailarchive-legacy-1_0.tar.xz
 include tests/data/mails.tar.gz
 include tests/data/manifest.yaml
 include tests/data/msg.txt
 include tests/data/rnd.dat
 include tests/data/rnd2.dat
+include tests/data/rnd2bis.dat
 include tests/pytest.ini
 include tests/test_*.py

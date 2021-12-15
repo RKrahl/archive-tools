@@ -1,9 +1,9 @@
-|travis| |pypi|
+|gh-test| |pypi|
 
-.. |travis| image:: https://img.shields.io/travis/com/RKrahl/archive-tools
-   :target: https://travis-ci.com/RKrahl/archive-tools
-   :alt: Travis build status
-
+.. |gh-test| image:: https://img.shields.io/github/workflow/status/RKrahl/archive-tools/Run%20Test
+   :target: https://github.com/RKrahl/archive-tools/actions/workflows/run-tests.yaml
+   :alt: GitHub Workflow Status
+	 
 .. |pypi| image:: https://img.shields.io/pypi/v/archive-tools
    :target: https://pypi.org/project/archive-tools/
    :alt: PyPI version
@@ -50,11 +50,15 @@ System requirements
 
 Python:
 
-+ Python 3.4 or newer.
++ Python 3.6 or newer.
 
 Required library packages:
 
 + `PyYAML`_
+
++ `lark-parser`_
+
+  Required for the `backup-tool.py` script.
 
 Optional library packages:
 
@@ -122,7 +126,7 @@ the site-packages directory of your Python installation.
 Copyright and License
 ---------------------
 
-Copyright 2019–2020 Rolf Krahl
+Copyright 2019–2021 Rolf Krahl
 
 Licensed under the `Apache License`_, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License.
@@ -136,6 +140,7 @@ permissions and limitations under the License.
 
 .. _PyPI site: https://pypi.org/project/archive-tools/
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
+.. _lark-parser: https://github.com/lark-parser/lark
 .. _imapclient: https://github.com/mjs/imapclient/
 .. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm/

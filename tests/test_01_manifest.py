@@ -26,22 +26,6 @@ def test_dir(tmpdir):
     return tmpdir
 
 
-def test_manifest_from_paths(test_dir, monkeypatch):
-    """Create a manifest reading the files in test_dir.
-    """
-    monkeypatch.chdir(str(test_dir))
-    manifest = Manifest(paths=[Path("base")])
-    head = manifest.head
-    assert set(head.keys()) == {
-        "Checksums", "Date", "Generator", "Metadata", "Version"
-    }
-    assert manifest.version == Manifest.Version
-    assert isinstance(manifest.date, datetime.datetime)
-    assert manifest.checksums == tuple(FileInfo.Checksums)
-    assert manifest.tags == ()
-    check_manifest(manifest, testdata)
-
-
 def test_manifest_from_fileobj():
     """Read a manifest from a YAML file.
     """
@@ -58,12 +42,28 @@ def test_manifest_from_fileobj():
     check_manifest(manifest, testdata)
 
 
+def test_manifest_from_paths(test_dir, monkeypatch):
+    """Create a manifest reading the files in test_dir.
+    """
+    monkeypatch.chdir(test_dir)
+    manifest = Manifest(paths=[Path("base")])
+    head = manifest.head
+    assert set(head.keys()) == {
+        "Checksums", "Date", "Generator", "Metadata", "Version"
+    }
+    assert manifest.version == Manifest.Version
+    assert isinstance(manifest.date, datetime.datetime)
+    assert manifest.checksums == tuple(FileInfo.Checksums)
+    assert manifest.tags == ()
+    check_manifest(manifest, testdata)
+
+
 def test_manifest_exclude_nonexistent(test_dir, monkeypatch):
     """Test excludes argument to Manifest: excluding a nonexistent file.
 
     This is legal, but should have no effect.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     paths = [Path("base")]
     excludes = [Path("base", "non-existent.dat")]
     manifest = Manifest(paths=paths, excludes=excludes)
@@ -74,7 +74,7 @@ def test_manifest_exclude_nonexistent(test_dir, monkeypatch):
 def test_manifest_exclude_file(test_dir, monkeypatch):
     """Test excludes: excluding one single file.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     paths = [Path("base")]
     excludes = [Path("base", "msg.txt")]
     manifest = Manifest(paths=paths, excludes=excludes)
@@ -85,7 +85,7 @@ def test_manifest_exclude_file(test_dir, monkeypatch):
 def test_manifest_exclude_subdir(test_dir, monkeypatch):
     """Test excludes: excluding a subdirectory.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     paths = [Path("base")]
     excludes = [Path("base", "data")]
     manifest = Manifest(paths=paths, excludes=excludes)
@@ -96,7 +96,7 @@ def test_manifest_exclude_subdir(test_dir, monkeypatch):
 def test_manifest_exclude_samelevel(test_dir, monkeypatch):
     """Test excludes: exclude things explictely named in paths.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     paths = [Path("base", "data"), Path("base", "empty")]
     excludes = [paths[1]]
     manifest = Manifest(paths=paths, excludes=excludes)
@@ -108,17 +108,35 @@ def test_manifest_exclude_explicit_include(test_dir, monkeypatch):
     """Test excludes: it is possible to explicitely include files, even if
     their parent directory is excluded.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     paths = [Path("base"), Path("base", "data", "rnd.dat")]
     excludes = [Path("base", "data")]
     manifest = Manifest(paths=paths, excludes=excludes)
     data = sub_testdata(testdata, excludes[0], paths[1])
     check_manifest(manifest, data)
 
-def test_mnifest_sort(test_dir, monkeypatch):
+
+def test_manifest_from_fileinfos(test_dir, monkeypatch):
+    """Create a manifest providing an iterable of fileinfos.
+    """
+    monkeypatch.chdir(test_dir)
+    fileinfos = FileInfo.iterpaths([Path("base")], set())
+    manifest = Manifest(fileinfos=fileinfos)
+    head = manifest.head
+    assert set(head.keys()) == {
+        "Checksums", "Date", "Generator", "Metadata", "Version"
+    }
+    assert manifest.version == Manifest.Version
+    assert isinstance(manifest.date, datetime.datetime)
+    assert manifest.checksums == tuple(FileInfo.Checksums)
+    assert manifest.tags == ()
+    check_manifest(manifest, testdata)
+
+
+def test_manifest_sort(test_dir, monkeypatch):
     """Test the Manifest.sort() method.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     manifest = Manifest(paths=[Path("base")])
     check_manifest(manifest, testdata)
     fileinfos = set(manifest)
@@ -157,6 +175,6 @@ def test_mnifest_sort(test_dir, monkeypatch):
 def test_manifest_tags(test_dir, monkeypatch, tags, expected):
     """Set tags in a manifest reading the files in test_dir.
     """
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     manifest = Manifest(paths=[Path("base")], tags=tags)
     assert manifest.tags == expected

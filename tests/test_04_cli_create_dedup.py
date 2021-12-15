@@ -29,9 +29,9 @@ sha256sum = "sha256sum"
 def test_dir(tmpdir):
     setup_testdata(tmpdir, testdata)
     sf = next(filter(lambda f: f.path == src, testdata))
-    os.link(str(tmpdir / src), str(tmpdir / dest_lnk))
+    os.link(tmpdir / src, tmpdir / dest_lnk)
     testdata.append(DataFile(dest_lnk, sf.mode, checksum=sf.checksum))
-    shutil.copy(str(tmpdir / src), str(tmpdir / dest_cp))
+    shutil.copy(tmpdir / src, tmpdir / dest_cp)
     testdata.append(DataFile(dest_cp, sf.mode, checksum=sf.checksum))
     return tmpdir
 
@@ -53,7 +53,7 @@ def dep_testcase(request, testcase):
 @pytest.mark.dependency()
 def test_cli_create(test_dir, monkeypatch, testcase):
     dedup = testcase
-    monkeypatch.chdir(str(test_dir))
+    monkeypatch.chdir(test_dir)
     archive_path = archive_name(tags=[dedup.value])
     basedir = "base"
     args = ["create", "--deduplicate", dedup.value, archive_path, basedir]
