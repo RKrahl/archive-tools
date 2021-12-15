@@ -12,7 +12,7 @@ import archive
 # -- Project information -----------------------------------------------------
 
 project = 'archive-tools'
-copyright = '2019–2020, Rolf Krahl'
+copyright = '2019–2021, Rolf Krahl'
 author = 'Rolf Krahl'
 
 # The full version, including alpha/beta/rc tags
