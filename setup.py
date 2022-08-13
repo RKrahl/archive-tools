@@ -36,8 +36,9 @@ from pathlib import Path
 import string
 try:
     import distutils_pytest
-except ImportError:
-    pass
+    cmdclass = distutils_pytest.cmdclass
+except (ImportError, AttributeError):
+    cmdclass = dict()
 try:
     import setuptools_scm
     version = setuptools_scm.get_version()
@@ -135,5 +136,5 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Topic :: System :: Archiving",
         ],
-    cmdclass = {'build_py': build_py, 'sdist': sdist, 'init_py': init_py},
+    cmdclass = dict(cmdclass, build_py=build_py, init_py=init_py, sdist=sdist),
 )
