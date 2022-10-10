@@ -40,7 +40,26 @@ def extract_archive(testname, test_dir):
     check_dir = test_dir / testname
     check_dir.mkdir()
     with tarfile.open(archive_path, "r") as tarf:
-        tarf.extractall(path=str(check_dir))
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tarf, path=str(check_dir))
     return check_dir
 
 def test_check_allmatch(test_dir, copy_data, monkeypatch):
@@ -216,7 +235,26 @@ def test_check_extract_archive_custom_metadata(test_dir, testname, monkeypatch):
     check_dir.mkdir()
     monkeypatch.chdir(check_dir)
     with tarfile.open(archive_path, "r") as tarf:
-        tarf.extractall()
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tarf)
     with TemporaryFile(mode="w+t", dir=test_dir) as f:
         args = ["check", str(archive_path), "base"]
         callscript("archive-tool.py", args, stdout=f)
