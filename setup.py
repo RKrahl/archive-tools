@@ -134,6 +134,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: System :: Archiving",
         ],
     cmdclass = dict(cmdclass, build_py=build_py, init_py=init_py, sdist=sdist),
