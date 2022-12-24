@@ -1,6 +1,6 @@
 |gh-test| |pypi|
 
-.. |gh-test| image:: https://img.shields.io/github/workflow/status/RKrahl/archive-tools/Run%20Test
+.. |gh-test| image:: https://img.shields.io/github/actions/workflow/status/RKrahl/archive-tools/run-tests.yaml?branch=develop
    :target: https://github.com/RKrahl/archive-tools/actions/workflows/run-tests.yaml
    :alt: GitHub Workflow Status
 	 
