@@ -5,12 +5,23 @@ Changelog
 0.7 (not yet released)
 ~~~~~~~~~~~~~~~~~~~~~~
 
+Bug fixes and minor changes
+---------------------------
+
++ `#75`_: Drop :class:`distutils.version.StrictVersion` deprecated
+  since Python 3.10 in favour of our own helper
+  :class:`archive.tools.Version` based on
+  :class:`packaging.version.Version`.  This adds a dependency on
+  :mod:`packaging`.
+
+
 Internal changes
 ----------------
 
 + `#74`_: Review build tool chain.
 
 .. _#74: https://github.com/RKrahl/archive-tools/pull/74
+.. _#75: https://github.com/RKrahl/archive-tools/pull/75
 
 
 0.6 (2021-12-12)
