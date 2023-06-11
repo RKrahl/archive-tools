@@ -1,9 +1,8 @@
 *~
 __pycache__/
 /.env
-/.version
 /MANIFEST
+/_meta.py
 /archive/__init__.py
 /build/
 /dist/
-/tests/.cache/

@@ -54,6 +54,8 @@ Python:
 
 Required library packages:
 
++ `setuptools`_
+
 + `PyYAML`_
 
 + `lark-parser`_
@@ -138,6 +140,7 @@ implied.  See the License for the specific language governing
 permissions and limitations under the License.
 
 
+.. _setuptools: https://github.com/pypa/setuptools/
 .. _PyPI site: https://pypi.org/project/archive-tools/
 .. _PyYAML: http://pyyaml.org/wiki/PyYAML
 .. _lark-parser: https://github.com/lark-parser/lark

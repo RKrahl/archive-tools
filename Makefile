@@ -11,17 +11,17 @@ sdist:
 	$(PYTHON) setup.py sdist
 
 clean:
-	rm -f *~ archive/*~ archive/bt/*~ archive/cli/*~ scripts/*~ tests/*~
 	rm -rf build
+	rm -rf __pycache__
 
 distclean: clean
-	rm -rf archive/__pycache__ \
-	    archive/bt/__pycache__ archive/cli/__pycache__ \
-	    scripts/__pycache__ tests/__pycache__
-	rm -rf tests/.cache tests/.pytest_cache
-	rm -f MANIFEST .version
+	rm -f MANIFEST _meta.py
 	rm -f archive/__init__.py
 	rm -rf dist
+	rm -rf tests/.pytest_cache
+
+meta:
+	$(PYTHON) setup.py meta
 
 
-.PHONY: build test sdist clean distclean
+.PHONY: build test sdist clean distclean meta
