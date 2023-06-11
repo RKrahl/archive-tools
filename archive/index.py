@@ -2,11 +2,10 @@
 """
 
 from collections.abc import Mapping, Sequence
-from distutils.version import StrictVersion
 from pathlib import Path
 import yaml
 from archive.archive import Archive
-from archive.tools import parse_date
+from archive.tools import Version, parse_date
 
 
 class IndexItem:
@@ -106,7 +105,7 @@ class ArchiveIndex(Sequence):
 
     @property
     def version(self):
-        return StrictVersion(self.head["Version"])
+        return Version(self.head["Version"])
 
     def find(self, path):
         for i in self:

@@ -3,7 +3,6 @@
 
 from collections.abc import Sequence
 import datetime
-from distutils.version import StrictVersion
 from enum import Enum
 import grp
 import itertools
@@ -15,7 +14,8 @@ import warnings
 import yaml
 import archive
 from archive.exception import ArchiveInvalidTypeError, ArchiveWarning
-from archive.tools import now_str, parse_date, checksum, mode_ft, ft_mode
+from archive.tools import (Version, now_str, parse_date,
+                           checksum, mode_ft, ft_mode)
 
 
 class DiffStatus(Enum):
@@ -201,7 +201,7 @@ class Manifest(Sequence):
 
     @property
     def version(self):
-        return StrictVersion(self.head["Version"])
+        return Version(self.head["Version"])
 
     @property
     def date(self):

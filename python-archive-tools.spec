@@ -16,11 +16,13 @@ BuildRequires:	python3-setuptools
 BuildRequires:	python3-PyYAML
 BuildRequires:	python3-lark-parser
 BuildRequires:	python3-distutils-pytest
+BuildRequires:	python3-packaging
 BuildRequires:	python3-pytest-dependency >= 0.2
 BuildRequires:	python3-pytest >= 3.0
 %endif
 Requires:	python3-PyYAML
 Requires:	python3-lark-parser
+Requires:	python3-packaging
 Recommends:	python3-IMAPClient
 Recommends:	python3-python-dateutil
 BuildArch:	noarch
