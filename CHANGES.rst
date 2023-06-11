@@ -2,6 +2,17 @@ Changelog
 =========
 
 
+0.7 (not yet released)
+~~~~~~~~~~~~~~~~~~~~~~
+
+Internal changes
+----------------
+
++ `#74`_: Review build tool chain.
+
+.. _#74: https://github.com/RKrahl/archive-tools/pull/74
+
+
 0.6 (2021-12-12)
 ~~~~~~~~~~~~~~~~
 

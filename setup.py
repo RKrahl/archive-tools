@@ -26,11 +26,11 @@ from the embedded metadata.  Retrieving this metadata does not require
 reading through the compressed tar archive.
 """
 
-import distutils.command.build_py
+import setuptools
+from setuptools import setup
+import setuptools.command.build_py
 import distutils.command.sdist
-import distutils.core
-from distutils.core import setup
-import distutils.log
+from distutils import log
 from glob import glob
 from pathlib import Path
 import string
@@ -42,87 +42,97 @@ except (ImportError, AttributeError):
 try:
     import setuptools_scm
     version = setuptools_scm.get_version()
-    with open(".version", "wt") as f:
-        f.write(version)
 except (ImportError, LookupError):
     try:
-        with open(".version", "rt") as f:
-            version = f.read()
-    except OSError:
-        distutils.log.warn("warning: cannot determine version number")
+        import _meta
+        version = _meta.__version__
+    except ImportError:
+        log.warn("warning: cannot determine version number")
         version = "UNKNOWN"
 
-doclines = __doc__.strip().split("\n")
+docstring = __doc__
 
 
-class init_py(distutils.core.Command):
+class meta(setuptools.Command):
 
-    description = "generate the main __init__.py file"
+    description = "generate meta files"
     user_options = []
-    init_template = '''"""%s"""
+    init_template = '''"""%(doc)s"""
 
-__version__ = "%s"
+__version__ = "%(version)s"
 
 from archive.archive import Archive
 from archive.exception import *
 '''
+    meta_template = '''
+__version__ = "%(version)s"
+'''
 
     def initialize_options(self):
-        self.packages = None
         self.package_dir = None
 
     def finalize_options(self):
-        self.packages = self.distribution.packages
         self.package_dir = {}
         if self.distribution.package_dir:
             for name, path in self.distribution.package_dir.items():
                 self.package_dir[name] = convert_path(path)
 
     def run(self):
-        pkgname = "archive"
-        if pkgname not in self.packages:
-            raise DistutilsSetupError("Expected package '%s' not found"
-                                      % pkgname)
-        pkgdir = Path(self.package_dir.get(pkgname, pkgname))
-        ver = self.distribution.get_version()
-        with (pkgdir / "__init__.py").open("wt") as f:
-            print(self.init_template % (__doc__, ver), file=f)
+        values = {
+            'version': self.distribution.get_version(),
+            'doc': docstring
+        }
+        try:
+            pkgname = self.distribution.packages[0]
+        except IndexError:
+            log.warn("warning: no package defined")
+        else:
+            pkgdir = Path(self.package_dir.get(pkgname, pkgname))
+            if not pkgdir.is_dir():
+                pkgdir.mkdir()
+            with (pkgdir / "__init__.py").open("wt") as f:
+                print(self.init_template % values, file=f)
+        with Path("_meta.py").open("wt") as f:
+            print(self.meta_template % values, file=f)
 
 
+# Note: Do not use setuptools for making the source distribution,
+# rather use the good old distutils instead.
+# Rationale: https://rhodesmill.org/brandon/2009/eby-magic/
 class sdist(distutils.command.sdist.sdist):
     def run(self):
-        self.run_command('init_py')
+        self.run_command('meta')
         super().run()
         subst = {
             "version": self.distribution.get_version(),
             "url": self.distribution.get_url(),
-            "description": self.distribution.get_description(),
-            "long_description": self.distribution.get_long_description(),
+            "description": docstring.split("\n")[0],
+            "long_description": docstring.split("\n", maxsplit=2)[2].strip(),
         }
         for spec in glob("*.spec"):
             with Path(spec).open('rt') as inf:
                 with Path(self.dist_dir, spec).open('wt') as outf:
                     outf.write(string.Template(inf.read()).substitute(subst))
 
-class build_py(distutils.command.build_py.build_py):
+
+class build_py(setuptools.command.build_py.build_py):
     def run(self):
-        self.run_command('init_py')
+        self.run_command('meta')
         super().run()
+
+
+with Path("README.rst").open("rt", encoding="utf8") as f:
+    readme = f.read()
 
 setup(
     name = "archive-tools",
     version = version,
-    description = doclines[0],
-    long_description = "\n".join(doclines[2:]),
+    description = docstring.split("\n")[0],
+    long_description = readme,
+    url = "https://github.com/RKrahl/archive-tools",
     author = "Rolf Krahl",
     author_email = "rolf@rotkraut.de",
-    url = "https://github.com/RKrahl/archive-tools",
     license = "Apache-2.0",
-    requires = ["yaml", "lark"],
-    packages = ["archive", "archive.cli", "archive.bt"],
-    scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",
-               "scripts/imap-to-archive.py"],
-    data_files = [("/etc", ["etc/backup.cfg"])],
     classifiers = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: System Administrators",
@@ -135,7 +145,14 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: System :: Archiving",
-        ],
-    cmdclass = dict(cmdclass, build_py=build_py, init_py=init_py, sdist=sdist),
+    ],
+    packages = ["archive", "archive.cli", "archive.bt"],
+    python_requires = ">=3.6",
+    install_requires = ["PyYAML", "lark"],
+    scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",
+               "scripts/imap-to-archive.py"],
+    data_files = [("/etc", ["etc/backup.cfg"])],
+    cmdclass = dict(cmdclass, build_py=build_py, sdist=sdist, meta=meta),
 )

@@ -11,6 +11,7 @@ Group:		Development/Libraries/Python
 Source:		%{distname}-%{version}.tar.gz
 BuildRequires:	fdupes
 BuildRequires:	python3-base >= 3.6
+BuildRequires:	python3-setuptools
 %if %{with tests}
 BuildRequires:	python3-PyYAML
 BuildRequires:	python3-lark-parser
