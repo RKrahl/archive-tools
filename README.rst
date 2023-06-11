@@ -99,39 +99,13 @@ Optional library packages:
   Only needed to run the test suite.
 
 
-Installation
-------------
-
-This package uses the distutils Python standard library package and
-follows its conventions of packaging source distributions.  See the
-documentation on `Installing Python Modules`_ for details or to
-customize the install process.
-
-1. Download the sources, unpack, and change into the source directory.
-
-2. Build::
-
-     $ python setup.py build
-
-3. Test (optional)::
-
-     $ python setup.py test
-
-4. Install::
-
-     $ python setup.py install
-
-The last step might require admin privileges in order to write into
-the site-packages directory of your Python installation.
-
-
 Copyright and License
 ---------------------
 
-Copyright 2019–2021 Rolf Krahl
+Copyright 2019–2023 Rolf Krahl
 
 Licensed under the `Apache License`_, Version 2.0 (the "License"); you
-may not use this file except in compliance with the License.
+may not use this package except in compliance with the License.
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -142,13 +116,12 @@ permissions and limitations under the License.
 
 .. _setuptools: https://github.com/pypa/setuptools/
 .. _PyPI site: https://pypi.org/project/archive-tools/
-.. _PyYAML: http://pyyaml.org/wiki/PyYAML
+.. _PyYAML: https://pypi.org/project/PyYAML/
 .. _lark-parser: https://github.com/lark-parser/lark
 .. _imapclient: https://github.com/mjs/imapclient/
 .. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm/
-.. _pytest: http://pytest.org/
+.. _pytest: https://pytest.org/
 .. _distutils-pytest: https://github.com/RKrahl/distutils-pytest
 .. _pytest-dependency: https://pypi.python.org/pypi/pytest_dependency/
-.. _Installing Python Modules: https://docs.python.org/3.7/install/
 .. _Apache License: https://www.apache.org/licenses/LICENSE-2.0
