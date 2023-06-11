@@ -1,11 +1,10 @@
-from distutils.version import StrictVersion
 import hashlib
 from mailbox import Maildir
 from pathlib import Path
 from tempfile import TemporaryDirectory, TemporaryFile
 import yaml
 from archive import Archive
-from archive.tools import now_str, parse_date, tmp_chdir, tmp_umask
+from archive.tools import Version, now_str, parse_date, tmp_chdir, tmp_umask
 
 
 class MailIndex(list):
@@ -37,7 +36,7 @@ class MailIndex(list):
 
     @property
     def version(self):
-        return StrictVersion(self.head["Version"])
+        return Version(self.head["Version"])
 
     @property
     def date(self):
