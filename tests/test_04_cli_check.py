@@ -183,7 +183,6 @@ def test_check_present_symlink_target(test_dir, copy_data, monkeypatch):
         f.seek(0)
         assert set(get_output(f)) == all_test_files - {str(fp)}
 
-@pytest.mark.xfail(reason="Issue #76")
 def test_check_ignore_mtime(test_dir, copy_data, monkeypatch):
     monkeypatch.chdir(copy_data)
     fp = Path("base", "data", "rnd.dat")
