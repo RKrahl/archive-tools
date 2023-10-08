@@ -8,12 +8,12 @@ from archive.exception import ArgError
 from archive.manifest import FileInfo
 
 
-def _matches(prefix, fi, entry):
+def _matches(prefix, fi, entry, ignore_mtime):
     if prefix / fi.path != entry.path or fi.type != entry.type:
         return False
     if fi.is_file():
         if (fi.size != entry.size or fi.checksum != entry.checksum or 
-            fi.mtime > entry.mtime):
+            (fi.mtime > entry.mtime and not ignore_mtime)):
             return False
     if fi.is_symlink():
         if fi.target != entry.target:
@@ -45,7 +45,7 @@ def check(args):
             skip = False
             entry = archive.manifest.find(args.prefix / fi.path)
             if (args.prefix / fi.path in metadata or 
-                entry and _matches(args.prefix, fi, entry)):
+                entry and _matches(args.prefix, fi, entry, args.ignore_mtime)):
                 if args.present and not fi.is_dir():
                     print(fi.path)
             else:
@@ -58,6 +58,9 @@ def check(args):
 def add_parser(subparsers):
     parser = subparsers.add_parser('check',
                                    help="check if files are in the archive")
+    parser.add_argument('--ignore-mtime', action='store_true',
+                        help=("ignore the file modification time when "
+                              "checking whether a file is in the archive"))
     parser.add_argument('--prefix', type=Path, default=Path(""),
                         help=("prefix for the path in the archive "
                               "of files to be checked"))

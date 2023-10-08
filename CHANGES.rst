@@ -5,6 +5,13 @@ Changelog
 0.7 (not yet released)
 ~~~~~~~~~~~~~~~~~~~~~~
 
+New features
+------------
+
++ `#76`_, `#77`_: Add a command line flag `--ignore-mtime` to
+  `archive-tool check` to ignore the file modification time in the
+  checks.
+
 Bug fixes and minor changes
 ---------------------------
 
@@ -22,6 +29,8 @@ Internal changes
 
 .. _#74: https://github.com/RKrahl/archive-tools/pull/74
 .. _#75: https://github.com/RKrahl/archive-tools/pull/75
+.. _#76: https://github.com/RKrahl/archive-tools/issues/76
+.. _#77: https://github.com/RKrahl/archive-tools/pull/77
 
 
 0.6 (2021-12-12)

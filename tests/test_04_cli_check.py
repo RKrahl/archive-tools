@@ -183,6 +183,17 @@ def test_check_present_symlink_target(test_dir, copy_data, monkeypatch):
         f.seek(0)
         assert set(get_output(f)) == all_test_files - {str(fp)}
 
+def test_check_ignore_mtime(test_dir, copy_data, monkeypatch):
+    monkeypatch.chdir(copy_data)
+    fp = Path("base", "data", "rnd.dat")
+    fp.touch()
+    with TemporaryFile(mode="w+t", dir=test_dir) as f:
+        args = ["check", "--ignore-mtime",
+                str(test_dir / "archive.tar"), "base"]
+        callscript("archive-tool.py", args, stdout=f)
+        f.seek(0)
+        assert set(get_output(f)) == set()
+
 def test_check_extract_archive(test_dir, extract_archive, monkeypatch):
     """When extracting an archive and checking the result, 
     check should not report any file to be missing in the archive.
