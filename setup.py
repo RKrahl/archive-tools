@@ -78,9 +78,11 @@ __version__ = "%(version)s"
                 self.package_dir[name] = convert_path(path)
 
     def run(self):
+        version = self.distribution.get_version()
+        log.info("version: %s", version)
         values = {
-            'version': self.distribution.get_version(),
-            'doc': docstring
+            'version': version,
+            'doc': docstring,
         }
         try:
             pkgname = self.distribution.packages[0]
@@ -129,6 +131,7 @@ setup(
     version = version,
     description = docstring.split("\n")[0],
     long_description = readme,
+    long_description_content_type = "text/x-rst",
     url = "https://github.com/RKrahl/archive-tools",
     author = "Rolf Krahl",
     author_email = "rolf@rotkraut.de",
@@ -148,6 +151,10 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Topic :: System :: Archiving",
     ],
+    project_urls = dict(
+        Source="https://github.com/RKrahl/archive-tools",
+        Download="https://github.com/RKrahl/archive-tools/releases/latest",
+    ),
     packages = ["archive", "archive.cli", "archive.bt"],
     python_requires = ">=3.6",
     install_requires = ["PyYAML", "packaging", "lark"],
