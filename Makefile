@@ -13,8 +13,8 @@ sdist:
 doc-html: meta
 	$(MAKE) -C doc html PYTHONPATH=$(CURDIR)
 
-doc-pdf: meta
-	$(MAKE) -C doc latexpdf PYTHONPATH=$(CURDIR)
+doc-man: meta
+	$(MAKE) -C doc man PYTHONPATH=$(CURDIR)
 
 clean:
 	rm -rf build
@@ -31,4 +31,4 @@ meta:
 	$(PYTHON) setup.py meta
 
 
-.PHONY: build test sdist doc-html doc-pdf clean distclean meta
+.PHONY: build test sdist doc-html doc-man clean distclean meta
