@@ -45,7 +45,7 @@ try:
 except (ImportError, LookupError):
     try:
         import _meta
-        version = _meta.__version__
+        version = _meta.version
     except ImportError:
         log.warn("warning: cannot determine version number")
         version = "UNKNOWN"
@@ -65,7 +65,7 @@ from archive.archive import Archive
 from archive.exception import *
 '''
     meta_template = '''
-__version__ = "%(version)s"
+version = "%(version)s"
 '''
 
     def initialize_options(self):
