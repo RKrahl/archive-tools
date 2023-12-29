@@ -37,43 +37,22 @@ class meta(setuptools.Command):
 
     description = "generate meta files"
     user_options = []
-    init_template = '''"""%(doc)s"""
-
-__version__ = "%(version)s"
-
-from archive.archive import Archive
-from archive.exception import *
-'''
     meta_template = '''
 version = "%(version)s"
 '''
 
     def initialize_options(self):
-        self.package_dir = None
+        pass
 
     def finalize_options(self):
-        self.package_dir = {}
-        if self.distribution.package_dir:
-            for name, path in self.distribution.package_dir.items():
-                self.package_dir[name] = convert_path(path)
+        pass
 
     def run(self):
         version = self.distribution.get_version()
         log.info("version: %s", version)
         values = {
             'version': version,
-            'doc': docstring,
         }
-        try:
-            pkgname = self.distribution.packages[0]
-        except IndexError:
-            log.warn("warning: no package defined")
-        else:
-            pkgdir = Path(self.package_dir.get(pkgname, pkgname))
-            if not pkgdir.is_dir():
-                pkgdir.mkdir()
-            with (pkgdir / "__init__.py").open("wt") as f:
-                print(self.init_template % values, file=f)
         with Path("_meta.py").open("wt") as f:
             print(self.meta_template % values, file=f)
 
@@ -139,6 +118,7 @@ setup(
         Download="https://github.com/RKrahl/archive-tools/releases/latest",
     ),
     packages = ["archive", "archive.cli", "archive.bt"],
+    package_dir = {"": "src"},
     python_requires = ">=3.6",
     install_requires = ["PyYAML", "packaging", "lark"],
     scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",

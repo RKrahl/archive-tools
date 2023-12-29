@@ -3,6 +3,5 @@ __pycache__/
 /.env
 /MANIFEST
 /_meta.py
-/archive/__init__.py
 /build/
 /dist/
