@@ -60,7 +60,7 @@ Required library packages:
 
 + `packaging`_
 
-+ `lark-parser`_
++ `lark`_
 
   Required for the `backup-tool.py` script.
 
@@ -120,7 +120,7 @@ permissions and limitations under the License.
 .. _PyPI site: https://pypi.org/project/archive-tools/
 .. _PyYAML: https://pypi.org/project/PyYAML/
 .. _packaging: https://github.com/pypa/packaging/
-.. _lark-parser: https://github.com/lark-parser/lark
+.. _lark: https://github.com/lark-parser/lark
 .. _imapclient: https://github.com/mjs/imapclient/
 .. _python-dateutil: https://dateutil.readthedocs.io/en/stable/
 .. _git-props: https://github.com/RKrahl/git-props
