@@ -1,32 +1,41 @@
 %bcond_without tests
 %global distname archive-tools
 
-Name:		python3-%{distname}
+%if 0%{?sle_version} >= 150500
+%global pythons python3 python311
+%else
+%{?!python_module:%define python_module() python3-%{**}}
+%define skip_python2 1
+%endif
+
+Name:		python-%{distname}
 Version:	$version
 Release:	0
-Url:		$url
 Summary:	$description
 License:	Apache-2.0
+URL:		$url
 Group:		Development/Libraries/Python
-Source:		%{distname}-%{version}.tar.gz
+Source:		https://github.com/RKrahl/archive-tools/releases/download/%{version}/%{distname}-%{version}.tar.gz
+BuildRequires:	%{python_module base >= 3.6}
+BuildRequires:	%{python_module setuptools}
 BuildRequires:	fdupes
-BuildRequires:	python3-base >= 3.6
-BuildRequires:	python3-setuptools
+BuildRequires:	python-rpm-macros
 %if %{with tests}
-BuildRequires:	python3-PyYAML
-BuildRequires:	python3-lark-parser
-BuildRequires:	python3-distutils-pytest
-BuildRequires:	python3-packaging
-BuildRequires:	python3-pytest-dependency >= 0.2
-BuildRequires:	python3-pytest >= 3.0
+BuildRequires:	%{python_module PyYAML}
+BuildRequires:	%{python_module lark-parser}
+BuildRequires:	%{python_module distutils-pytest}
+BuildRequires:	%{python_module packaging}
+BuildRequires:	%{python_module pytest >= 3.0}
+BuildRequires:	%{python_module pytest-dependency >= 0.2}
+BuildRequires:	%{python_module python-dateutil}
 %endif
-Requires:	python3-PyYAML
-Requires:	python3-lark-parser
-Requires:	python3-packaging
-Recommends:	python3-IMAPClient
-Recommends:	python3-python-dateutil
+Requires:	python-PyYAML
+Requires:	python-lark-parser
+Requires:	python-packaging
+Recommends:	python-IMAPClient
+Recommends:	python-python-dateutil
 BuildArch:	noarch
-BuildRoot:	%{_tmppath}/%{name}-%{version}-build
+%python_subpackages
 
 %description
 $long_description
@@ -37,30 +46,29 @@ $long_description
 
 
 %build
-python3 setup.py build
+%python_build
 
 
 %install
-python3 setup.py install --optimize=1 --prefix=%{_prefix} --root=%{buildroot}
+%python_install
 for f in `ls %{buildroot}%{_bindir}`
 do
     mv %{buildroot}%{_bindir}/$$f %{buildroot}%{_bindir}/$${f%%.py}
 done
-%fdupes %{buildroot}
+%fdupes %{buildroot}%{python_sitelib}
 
 
 %if %{with tests}
 %check
-python3 setup.py test
+%python_expand $$python setup.py test
 %endif
 
 
-%files
-%defattr(-,root,root)
-%doc README.rst CHANGES.rst
+%files %{python_files}
 %license LICENSE.txt
+%doc README.rst CHANGES.rst
 %config(noreplace) %{_sysconfdir}/backup.cfg
-%{python3_sitelib}/*
+%{python_sitelib}/*
 %{_bindir}/*
 
 

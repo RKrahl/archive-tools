@@ -13,9 +13,8 @@ import stat
 import warnings
 import yaml
 import archive
-from archive.exception import ArchiveInvalidTypeError, ArchiveWarning
-from archive.tools import (Version, now_str, parse_date,
-                           checksum, mode_ft, ft_mode)
+from .exception import ArchiveInvalidTypeError, ArchiveWarning
+from .tools import Version, now_str, parse_date, checksum, mode_ft, ft_mode
 
 
 class DiffStatus(Enum):

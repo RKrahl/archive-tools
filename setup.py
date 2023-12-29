@@ -1,29 +1,9 @@
-#! /usr/bin/python
 """Tools for managing archives
 
 This package provides tools for managing archives.  An archive in
 terms of this package is a (compressed) tar archive file with some
 embedded metadata on the included files.  This metadata include the
 name, file stats, and checksums of the file.
-
-The package provides a command line tool to enable the following
-tasks:
-
-+ Create an archive, takes a list of files to include in the archive
-  as input.
-
-+ Check the integrity and consistency of an archive.
-
-+ List the contents of the archive.
-
-+ Display details on a file in an archive.
-
-+ Given a list of files as input, list those files that are either not
-  in the archive or where the file in the archive differs.
-
-All tasks providing information on an archive take this information
-from the embedded metadata.  Retrieving this metadata does not require
-reading through the compressed tar archive.
 """
 
 import setuptools
@@ -40,15 +20,15 @@ try:
 except (ImportError, AttributeError):
     cmdclass = dict()
 try:
-    import setuptools_scm
-    version = setuptools_scm.get_version()
+    import gitprops
+    release = str(gitprops.get_last_release())
+    version = str(gitprops.get_version())
 except (ImportError, LookupError):
     try:
-        import _meta
-        version = _meta.__version__
+        from _meta import release, version
     except ImportError:
         log.warn("warning: cannot determine version number")
-        version = "UNKNOWN"
+        release = version = "UNKNOWN"
 
 docstring = __doc__
 
@@ -57,43 +37,24 @@ class meta(setuptools.Command):
 
     description = "generate meta files"
     user_options = []
-    init_template = '''"""%(doc)s"""
-
-__version__ = "%(version)s"
-
-from archive.archive import Archive
-from archive.exception import *
-'''
     meta_template = '''
-__version__ = "%(version)s"
+release = "%(release)s"
+version = "%(version)s"
 '''
 
     def initialize_options(self):
-        self.package_dir = None
+        pass
 
     def finalize_options(self):
-        self.package_dir = {}
-        if self.distribution.package_dir:
-            for name, path in self.distribution.package_dir.items():
-                self.package_dir[name] = convert_path(path)
+        pass
 
     def run(self):
         version = self.distribution.get_version()
         log.info("version: %s", version)
         values = {
+            'release': release,
             'version': version,
-            'doc': docstring,
         }
-        try:
-            pkgname = self.distribution.packages[0]
-        except IndexError:
-            log.warn("warning: no package defined")
-        else:
-            pkgdir = Path(self.package_dir.get(pkgname, pkgname))
-            if not pkgdir.is_dir():
-                pkgdir.mkdir()
-            with (pkgdir / "__init__.py").open("wt") as f:
-                print(self.init_template % values, file=f)
         with Path("_meta.py").open("wt") as f:
             print(self.meta_template % values, file=f)
 
@@ -121,6 +82,9 @@ class build_py(setuptools.command.build_py.build_py):
     def run(self):
         self.run_command('meta')
         super().run()
+        package = self.distribution.packages[0].split('.')
+        outfile = self.get_module_outfile(self.build_lib, package, "_meta")
+        self.copy_file("_meta.py", outfile, preserve_mode=0)
 
 
 with Path("README.rst").open("rt", encoding="utf8") as f:
@@ -153,11 +117,13 @@ setup(
     ],
     project_urls = dict(
         Source="https://github.com/RKrahl/archive-tools",
-        Download="https://github.com/RKrahl/archive-tools/releases/latest",
+        Download=("https://github.com/RKrahl/archive-tools/releases/%s/"
+                  % release),
     ),
     packages = ["archive", "archive.cli", "archive.bt"],
+    package_dir = {"": "src"},
     python_requires = ">=3.6",
-    install_requires = ["PyYAML", "packaging", "lark"],
+    install_requires = ["setuptools", "PyYAML", "packaging", "lark"],
     scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",
                "scripts/imap-to-archive.py"],
     data_files = [("/etc", ["etc/backup.cfg"])],
