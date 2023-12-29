@@ -1,7 +1,8 @@
 PyYAML >=5.4
 distutils-pytest
+git-props
 lark-parser
 pytest >=3.6.0
 pytest-dependency >=0.2
 python-dateutil
-setuptools_scm
+setuptools
