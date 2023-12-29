@@ -9,7 +9,7 @@
 
 from collections import ChainMap
 import configparser
-from archive.exception import ConfigError
+from .exception import ConfigError
 
 class Config(ChainMap):
 

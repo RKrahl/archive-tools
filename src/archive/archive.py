@@ -10,9 +10,9 @@ import stat
 import sys
 import tarfile
 import tempfile
-from archive.manifest import Manifest
-from archive.exception import *
-from archive.tools import checksum
+from .manifest import Manifest
+from .exception import *
+from .tools import checksum
 
 def _is_normalized(p):
     """Check if the path is normalized.

@@ -4,8 +4,8 @@
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 import yaml
-from archive.archive import Archive
-from archive.tools import Version, parse_date
+from .archive import Archive
+from .tools import Version, parse_date
 
 
 class IndexItem:
