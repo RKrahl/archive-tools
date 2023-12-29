@@ -101,7 +101,9 @@ class build_py(setuptools.command.build_py.build_py):
     def run(self):
         self.run_command('meta')
         super().run()
-        self.copy_file("_meta.py", self.build_lib, preserve_mode=0)
+        package = self.distribution.packages[0].split('.')
+        outfile = self.get_module_outfile(self.build_lib, package, "_meta")
+        self.copy_file("_meta.py", outfile, preserve_mode=0)
 
 
 with Path("README.rst").open("rt", encoding="utf8") as f:
