@@ -1,7 +1,7 @@
 PyYAML
+git-props
 lark
 packaging
 python-dateutil
 setuptools
-setuptools_scm
 sphinx_rtd_theme
