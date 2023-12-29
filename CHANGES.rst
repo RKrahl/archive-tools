@@ -25,12 +25,13 @@ Bug fixes and minor changes
 Internal changes
 ----------------
 
-+ `#74`_: Review build tool chain.
++ `#74`_, `#80`_: Review build tool chain.
 
 .. _#74: https://github.com/RKrahl/archive-tools/pull/74
 .. _#75: https://github.com/RKrahl/archive-tools/pull/75
 .. _#76: https://github.com/RKrahl/archive-tools/issues/76
 .. _#77: https://github.com/RKrahl/archive-tools/pull/77
+.. _#80: https://github.com/RKrahl/archive-tools/pull/80
 
 
 0.6 (2021-12-12)
