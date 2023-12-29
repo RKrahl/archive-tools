@@ -3,8 +3,8 @@ from mailbox import Maildir
 from pathlib import Path
 from tempfile import TemporaryDirectory, TemporaryFile
 import yaml
-from archive import Archive
-from archive.tools import Version, now_str, parse_date, tmp_chdir, tmp_umask
+from .archive import Archive
+from .tools import Version, now_str, parse_date, tmp_chdir, tmp_umask
 
 
 class MailIndex(list):
