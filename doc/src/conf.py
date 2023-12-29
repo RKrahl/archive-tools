@@ -14,7 +14,7 @@ buildlib = maindir / "build" / "lib"
 sys.path[0] = str(buildlib)
 sys.dont_write_bytecode = True
 
-import archive
+import archive._meta
 
 
 # -- Project information -----------------------------------------------------
@@ -24,7 +24,7 @@ copyright = '2023, Rolf Krahl'
 author = 'Rolf Krahl'
 
 # The full version, including alpha/beta/rc tags
-release = archive.__version__
+release = archive._meta.version
 # The short X.Y version
 version = ".".join(release.split(".")[0:2])
 
