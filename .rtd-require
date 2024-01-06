@@ -1,7 +1,7 @@
-PyYAML
-git-props
+PyYAML >=5.1
 lark
 packaging
-python-dateutil
 setuptools
+git-props
+python-dateutil
 sphinx_rtd_theme
