@@ -123,7 +123,7 @@ setup(
     packages = ["archive", "archive.cli", "archive.bt"],
     package_dir = {"": "src"},
     python_requires = ">=3.6",
-    install_requires = ["setuptools", "PyYAML", "packaging", "lark"],
+    install_requires = ["setuptools", "PyYAML >=5.1", "packaging", "lark"],
     scripts = ["scripts/archive-tool.py", "scripts/backup-tool.py",
                "scripts/imap-to-archive.py"],
     data_files = [("/etc", ["etc/backup.cfg"])],
