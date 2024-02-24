@@ -119,7 +119,7 @@ class FileInfo:
             d['target'] = str(self.target)
         return d
 
-    def __str__(self):
+    def as_str_tuple(self):
         m = stat.filemode(self.st_mode)
         ug = "%s/%s" % (self.uname or self.uid, self.gname or self.gid)
         s = str(self.size if self.type == 'f' else 0)
@@ -129,7 +129,10 @@ class FileInfo:
             p = "%s -> %s" % (self.path, self.target)
         else:
             p = self.path
-        return "%s  %s  %s  %s  %s" % (m, ug, s, d, p)
+        return (m, ug, s, d, p)
+
+    def __str__(self):
+        return "%s  %s  %s  %s  %s" % self.as_str_tuple()
 
     @classmethod
     def iterpaths(cls, paths, excludes):
