@@ -15,6 +15,9 @@ New features
 Bug fixes and minor changes
 ---------------------------
 
++ `#81`_, `#82`_: `archive-tool ls` fails with :exc:`TypeError` if the
+  path of a file in the archive contains two consecutive blanks.
+
 + `#75`_: Drop :class:`distutils.version.StrictVersion` deprecated
   since Python 3.10 in favour of our own helper
   :class:`archive.tools.Version` based on
@@ -32,6 +35,8 @@ Internal changes
 .. _#76: https://github.com/RKrahl/archive-tools/issues/76
 .. _#77: https://github.com/RKrahl/archive-tools/pull/77
 .. _#80: https://github.com/RKrahl/archive-tools/pull/80
+.. _#81: https://github.com/RKrahl/archive-tools/issues/81
+.. _#82: https://github.com/RKrahl/archive-tools/pull/82
 
 
 0.6 (2021-12-12)
