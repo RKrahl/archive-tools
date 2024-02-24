@@ -12,7 +12,6 @@ from archive import Archive
 from conftest import *
 
 
-@pytest.mark.xfail(reason="Issue #81")
 def test_cli_ls_blank_path(tmpdir):
     """Test case: archive contains a file having blanks in the path.
     Ref. Issue #81.

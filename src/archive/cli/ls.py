@@ -11,7 +11,7 @@ def ls_ls_format(archive):
     l_ug = 0
     l_s = 0
     for fi in archive.manifest:
-        elems = tuple(str(fi).split("  "))
+        elems = fi.as_str_tuple()
         l_ug = max(l_ug, len(elems[1]))
         l_s = max(l_s, len(elems[2]))
         items.append(elems)
