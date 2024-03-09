@@ -4,8 +4,10 @@ Module reference
 This section provides a reference for the modules that implement the
 archive-tools.
 
-Modules defining the archive-tools API
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _modref-core:
+
+Modules defining the archive-tools core API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These modules define the core of archive-tools, e.g. the classes or
 functions that implement archives.
@@ -17,6 +19,8 @@ functions that implement archives.
    mod-exception
    mod-manifest
 
+.. _modref-special:
+
 Special purpose modules
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -27,6 +31,8 @@ These modules will generally be used in particular cases only.
 
    mod-index
    mod-mailarchive
+
+.. _modref-internal:
 
 Internal modules
 ~~~~~~~~~~~~~~~~
