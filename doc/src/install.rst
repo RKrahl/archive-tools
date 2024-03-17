@@ -130,7 +130,7 @@ installed.  Steps to manually build from the source distribution:
 
      $ python setup.py build
 
-5. Test (optional, see below)::
+5. Test (optional)::
 
      $ python setup.py test
 
