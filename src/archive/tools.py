@@ -6,6 +6,7 @@
    keep anything in here compatible between different versions.
 """
 
+from contextlib import contextmanager
 import datetime
 import hashlib
 import os
@@ -93,41 +94,27 @@ class Version(packaging.version.Version):
         return super().__ne__(other)
 
 
-class tmp_chdir():
+@contextmanager
+def tmp_chdir(dir):
     """A context manager to temporarily change directory.
     """
-    def __init__(self, dir):
-        self.save_dir = None
-        self.dir = dir
-    def __enter__(self):
-        self.save_dir = os.getcwd()
-        os.chdir(self.dir)
-    def _restore_dir(self):
-        if self.save_dir:
-            os.chdir(self.save_dir)
-        self.save_dir = None
-    def __exit__(self, type, value, tb):
-        self._restore_dir()
-    def __del__(self):
-        self._restore_dir()
+    save_dir = os.getcwd()
+    os.chdir(dir)
+    try:
+        yield dir
+    finally:
+        os.chdir(save_dir)
 
 
-class tmp_umask():
+@contextmanager
+def tmp_umask(mask):
     """A context manager to temporarily set the umask.
     """
-    def __init__(self, mask):
-        self.save_mask = None
-        self.mask = mask
-    def __enter__(self):
-        self.save_mask = os.umask(self.mask)
-    def _restore_mask(self):
-        if self.save_mask:
-            os.umask(self.save_mask)
-        self.save_mask = None
-    def __exit__(self, type, value, tb):
-        self._restore_mask()
-    def __del__(self):
-        self._restore_mask()
+    save_mask = os.umask(mask)
+    try:
+        yield mask
+    finally:
+        os.umask(save_mask)
 
 
 def date_str_rfc5322(dt):
