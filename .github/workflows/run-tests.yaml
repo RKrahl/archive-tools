@@ -32,7 +32,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          pip install -r .github/requirements.txt
+          pip install -r .github/requirements-test.txt
       - name: Test with pytest
         run: |
           python setup.py test
