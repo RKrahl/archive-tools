@@ -26,6 +26,9 @@ def _is_normalized(p):
         return False
 
 class DedupMode(Enum):
+    """De-duplication mode when creating an archive: when to use hard
+    links in the archive.
+    """
     NEVER = 'never'
     LINK = 'link'
     CONTENT = 'content'
