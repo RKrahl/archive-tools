@@ -26,6 +26,9 @@ def _is_normalized(p):
         return False
 
 class DedupMode(Enum):
+    """De-duplication mode when creating an archive: when to use hard
+    links in the archive.
+    """
     NEVER = 'never'
     LINK = 'link'
     CONTENT = 'content'
@@ -52,7 +55,7 @@ class MetadataItem:
         self.path = basedir / self.name
 
 
-compression_map = {
+_compression_map = {
     '.tar': '',
     '.tar.gz': 'gz',
     '.tar.bz2': 'bz2',
@@ -77,7 +80,7 @@ class Archive:
                dedup=DedupMode.LINK, tags=None):
         if compression is None:
             try:
-                compression = compression_map["".join(path.suffixes)]
+                compression = _compression_map["".join(path.suffixes)]
             except KeyError:
                 # Last ressort default
                 compression = 'gz'
