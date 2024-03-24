@@ -12,7 +12,7 @@ import tarfile
 import tempfile
 from .manifest import Manifest
 from .exception import *
-from .tools import checksum
+from .tools import tmp_chdir, checksum
 
 def _is_normalized(p):
     """Check if the path is normalized.
@@ -82,11 +82,7 @@ class Archive:
                 # Last ressort default
                 compression = 'gz'
         mode = 'x:' + compression
-        save_wd = None
-        try:
-            if workdir:
-                save_wd = os.getcwd()
-                os.chdir(workdir)
+        with tmp_chdir(workdir):
             self.path = path.resolve()
             self._dedup = dedup
             self._dupindex = {}
@@ -111,9 +107,6 @@ class Archive:
                 md.set_path(self.basedir)
                 self.manifest.add_metadata(md.path)
             self._create(mode)
-        finally:
-            if save_wd:
-                os.chdir(save_wd)
         return self
 
     def _create(self, mode):

@@ -99,7 +99,8 @@ def tmp_chdir(dir):
     """A context manager to temporarily change directory.
     """
     save_dir = os.getcwd()
-    os.chdir(dir)
+    if dir:
+        os.chdir(dir)
     try:
         yield dir
     finally:
