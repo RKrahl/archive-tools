@@ -38,6 +38,8 @@ class DedupMode(Enum):
         return self != self.__class__.NEVER
 
 class MetadataItem:
+    """Represent a metadata item in an archive.
+    """
 
     def __init__(self, name=None, path=None, tarinfo=None, fileobj=None,
                  mode=None):

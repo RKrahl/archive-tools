@@ -20,6 +20,10 @@
 
        when the input files have the same content
 
+.. autoclass:: archive.archive.MetadataItem
+    :members:
+    :show-inheritance:
+
 .. autoclass:: archive.archive.Archive
     :members:
     :undoc-members:
