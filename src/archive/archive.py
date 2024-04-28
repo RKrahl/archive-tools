@@ -72,80 +72,20 @@ class Archive:
         self._dedup = None
         self._dupindex = None
 
-    def create(self, path, compression=None, paths=None, fileinfos=None,
-               basedir=None, workdir=None, excludes=None,
-               dedup=DedupMode.LINK, tags=None):
-        if compression is None:
-            try:
-                compression = compression_map["".join(path.suffixes)]
-            except KeyError:
-                # Last ressort default
-                compression = 'gz'
-        mode = 'x:' + compression
-        save_wd = None
-        try:
-            if workdir:
-                save_wd = os.getcwd()
-                os.chdir(workdir)
-            self.path = path.resolve()
-            self._dedup = dedup
-            self._dupindex = {}
-            if fileinfos is not None:
-                if not isinstance(fileinfos, Sequence):
-                    fileinfos = list(fileinfos)
-                self._check_paths([fi.path for fi in fileinfos], basedir)
-                try:
-                    self.manifest = Manifest(fileinfos=fileinfos, tags=tags)
-                except ValueError as e:
-                    raise ArchiveCreateError("invalid fileinfos: %s" % e)
-            else:
-                self._check_paths(paths, basedir, excludes)
-                self.manifest = Manifest(paths=paths, excludes=excludes,
-                                         tags=tags)
-            bd_fi = self.manifest.find(self.basedir)
-            if bd_fi and not bd_fi.is_dir():
-                raise ArchiveCreateError("base directory %s must "
-                                         "be a directory" % self.basedir)
-            self.manifest.add_metadata(self.basedir / ".manifest.yaml")
-            for md in self._metadata:
-                md.set_path(self.basedir)
-                self.manifest.add_metadata(md.path)
-            self._create(mode)
-        finally:
-            if save_wd:
-                os.chdir(save_wd)
+    def __enter__(self):
         return self
 
-    def _create(self, mode):
-        with tarfile.open(self.path, mode, format=tarfile.PAX_FORMAT) as tarf:
-            with tempfile.TemporaryFile() as tmpf:
-                self.manifest.write(tmpf)
-                tmpf.seek(0)
-                self.add_metadata(".manifest.yaml", tmpf)
-                md_names = self._add_metadata_files(tarf)
-            for fi in self.manifest:
-                arcname = self._arcname(fi.path)
-                if arcname in md_names:
-                    raise ArchiveCreateError("invalid path '%s': this "
-                                             "filename is reserved" % fi.path)
-                self._add_item(tarf, fi, arcname)
+    def __exit__(self, type, value, tb):
+        self.close()
 
-    def _add_item(self, tarf, fi, arcname):
-        ti = tarf.gettarinfo(str(fi.path), arcname=arcname)
-        if fi.is_file():
-            dup = self._check_duplicate(fi, arcname)
-            if dup:
-                ti.type = tarfile.LNKTYPE
-                ti.linkname = dup
-                tarf.addfile(ti)
-            else:
-                ti.size = fi.size
-                ti.type = tarfile.REGTYPE
-                ti.linkname = ''
-                with fi.path.open("rb") as f:
-                    tarf.addfile(ti, fileobj=f)
+    def __del__(self):
+        self.close()
+
+    def _arcname(self, p):
+        if p.is_absolute():
+            return str(self.basedir / p.relative_to(p.root))
         else:
-            tarf.addfile(ti)
+            return str(p)
 
     def _check_paths(self, paths, basedir, excludes=None):
         """Check the paths to be added to an archive for several error
@@ -225,10 +165,80 @@ class Archive:
             self._dupindex[idxkey] = name
             return None
 
-    def add_metadata(self, name, fileobj, mode=0o444):
-        path = self.basedir / name if self.basedir else None
-        md = MetadataItem(name=name, path=path, fileobj=fileobj, mode=mode)
-        self._metadata.insert(0, md)
+    def _add_item(self, tarf, fi, arcname):
+        ti = tarf.gettarinfo(str(fi.path), arcname=arcname)
+        if fi.is_file():
+            dup = self._check_duplicate(fi, arcname)
+            if dup:
+                ti.type = tarfile.LNKTYPE
+                ti.linkname = dup
+                tarf.addfile(ti)
+            else:
+                ti.size = fi.size
+                ti.type = tarfile.REGTYPE
+                ti.linkname = ''
+                with fi.path.open("rb") as f:
+                    tarf.addfile(ti, fileobj=f)
+        else:
+            tarf.addfile(ti)
+
+    def _create(self, mode):
+        with tarfile.open(self.path, mode, format=tarfile.PAX_FORMAT) as tarf:
+            with tempfile.TemporaryFile() as tmpf:
+                self.manifest.write(tmpf)
+                tmpf.seek(0)
+                self.add_metadata(".manifest.yaml", tmpf)
+                md_names = self._add_metadata_files(tarf)
+            for fi in self.manifest:
+                arcname = self._arcname(fi.path)
+                if arcname in md_names:
+                    raise ArchiveCreateError("invalid path '%s': this "
+                                             "filename is reserved" % fi.path)
+                self._add_item(tarf, fi, arcname)
+
+    def create(self, path, compression=None, paths=None, fileinfos=None,
+               basedir=None, workdir=None, excludes=None,
+               dedup=DedupMode.LINK, tags=None):
+        if compression is None:
+            try:
+                compression = compression_map["".join(path.suffixes)]
+            except KeyError:
+                # Last ressort default
+                compression = 'gz'
+        mode = 'x:' + compression
+        save_wd = None
+        try:
+            if workdir:
+                save_wd = os.getcwd()
+                os.chdir(workdir)
+            self.path = path.resolve()
+            self._dedup = dedup
+            self._dupindex = {}
+            if fileinfos is not None:
+                if not isinstance(fileinfos, Sequence):
+                    fileinfos = list(fileinfos)
+                self._check_paths([fi.path for fi in fileinfos], basedir)
+                try:
+                    self.manifest = Manifest(fileinfos=fileinfos, tags=tags)
+                except ValueError as e:
+                    raise ArchiveCreateError("invalid fileinfos: %s" % e)
+            else:
+                self._check_paths(paths, basedir, excludes)
+                self.manifest = Manifest(paths=paths, excludes=excludes,
+                                         tags=tags)
+            bd_fi = self.manifest.find(self.basedir)
+            if bd_fi and not bd_fi.is_dir():
+                raise ArchiveCreateError("base directory %s must "
+                                         "be a directory" % self.basedir)
+            self.manifest.add_metadata(self.basedir / ".manifest.yaml")
+            for md in self._metadata:
+                md.set_path(self.basedir)
+                self.manifest.add_metadata(md.path)
+            self._create(mode)
+        finally:
+            if save_wd:
+                os.chdir(save_wd)
+        return self
 
     def open(self, path):
         try:
@@ -243,53 +253,6 @@ class Archive:
             # Legacy: Manifest version 1.0 did not have metadata.
             self.manifest.add_metadata(self.basedir / ".manifest.yaml")
         return self
-
-    def get_metadata(self, name):
-        ti = self._file.next()
-        path = Path(ti.path)
-        if path.name != name:
-            raise ArchiveIntegrityError("metadata item '%s' not found" % name)
-        fileobj = self._file.extractfile(ti)
-        md = MetadataItem(path=path, tarinfo=ti, fileobj=fileobj)
-        self._metadata.append(md)
-        return md
-
-    def close(self):
-        if self._file:
-            self._file.close()
-        self._file = None
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.close()
-
-    def __del__(self):
-        self.close()
-
-    def _arcname(self, p):
-        if p.is_absolute():
-            return str(self.basedir / p.relative_to(p.root))
-        else:
-            return str(p)
-
-    def verify(self):
-        if not self._file:
-            raise ValueError("archive is closed.")
-        # Verify that all metadata items are present in the proper
-        # order at the beginning of the tar file.  Start iterating for
-        # TarInfo objects in the tarfile from the beginning,
-        # regardless of what has already been read:
-        tarf_it = iter(self._file)
-        for md in self.manifest.metadata:
-            ti = next(tarf_it)
-            if ti.name != md:
-                raise ArchiveIntegrityError("metadata item '%s' not found"
-                                            % md)
-        # Check the content of the archive.
-        for fileinfo in self.manifest:
-            self._verify_item(fileinfo)
 
     def _verify_item(self, fileinfo):
 
@@ -327,6 +290,23 @@ class Archive:
         else:
             raise ArchiveIntegrityError("%s: invalid type" % (itemname))
 
+    def verify(self):
+        if not self._file:
+            raise ValueError("archive is closed.")
+        # Verify that all metadata items are present in the proper
+        # order at the beginning of the tar file.  Start iterating for
+        # TarInfo objects in the tarfile from the beginning,
+        # regardless of what has already been read:
+        tarf_it = iter(self._file)
+        for md in self.manifest.metadata:
+            ti = next(tarf_it)
+            if ti.name != md:
+                raise ArchiveIntegrityError("metadata item '%s' not found"
+                                            % md)
+        # Check the content of the archive.
+        for fileinfo in self.manifest:
+            self._verify_item(fileinfo)
+
     def extract_member(self, fi, targetdir):
         arcname = self._arcname(fi.path)
         mtimes = (fi.mtime, fi.mtime)
@@ -353,3 +333,23 @@ class Archive:
             except IndexError:
                 break
             self.extract_member(fi, targetdir)
+
+    def close(self):
+        if self._file:
+            self._file.close()
+        self._file = None
+
+    def add_metadata(self, name, fileobj, mode=0o444):
+        path = self.basedir / name if self.basedir else None
+        md = MetadataItem(name=name, path=path, fileobj=fileobj, mode=mode)
+        self._metadata.insert(0, md)
+
+    def get_metadata(self, name):
+        ti = self._file.next()
+        path = Path(ti.path)
+        if path.name != name:
+            raise ArchiveIntegrityError("metadata item '%s' not found" % name)
+        fileobj = self._file.extractfile(ti)
+        md = MetadataItem(path=path, tarinfo=ti, fileobj=fileobj)
+        self._metadata.append(md)
+        return md
