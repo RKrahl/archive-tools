@@ -18,7 +18,7 @@ Python
 Required library packages
 .........................
 
-The following packages are required to install and use python-icat.
+The following packages are required to install and use archive-tools.
 They will automatically be installed as dependencies if you install
 using pip.
 
