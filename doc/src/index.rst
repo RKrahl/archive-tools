@@ -33,7 +33,7 @@ Content of the documentation
 
    install
    usage
-   scripts
+   cli
    moduleref
    changelog
 
