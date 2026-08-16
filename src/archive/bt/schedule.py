@@ -190,8 +190,11 @@ class BaseSchedule(ABC):
 
     SubClasses = dict()
     ClsName = None
+    NeedParent = True
 
     def __init__(self, name, date, parent):
+        if self.NeedParent and not parent:
+            raise ValueError("%s type schedule needs a parent" % self.ClsName)
         self.name = name
         self.date = date
         self.parent = parent
@@ -220,6 +223,7 @@ class BaseSchedule(ABC):
 class FullSchedule(BaseSchedule):
 
     ClsName = "full"
+    NeedParent = False
 
     def get_base_archives(self, archives):
         return []
