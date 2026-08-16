@@ -1,6 +1,7 @@
 """pytest configuration.
 """
 
+from abc import ABC, abstractmethod
 import datetime
 import hashlib
 import os
@@ -154,17 +155,19 @@ def _set_fs_attrs(path, mode, mtime):
         os.utime(path, (mtime, mtime), follow_symlinks=False)
         os.utime(path.parent, (mtime, mtime), follow_symlinks=False)
 
-class DataItem:
+class DataItem(ABC):
 
     def __init__(self, path, mtime):
         self.path = path
         self.mtime = mtime
 
     @property
+    @abstractmethod
     def type(self):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def mode(self):
         raise NotImplementedError
 
@@ -172,6 +175,7 @@ class DataItem:
     def st_mode(self):
         return ft_mode[self.type] | self.mode
 
+    @abstractmethod
     def create(self, main_dir):
         raise NotImplementedError
 
