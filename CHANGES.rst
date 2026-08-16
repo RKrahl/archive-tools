@@ -29,6 +29,8 @@ Internal changes
 ----------------
 
 + `#74`_, `#80`_: Review build tool chain.
++ `#85`_, `#87`_: Verify in backup-tool that the root schedule is of
+  type `full`.
 + `#83`_: Simplify implementation of :func:`archive.tools.tmp_chdir`
   and :func:`archive.tools.tmp_umask` using :mod:`contextlib`.
 + `#86`_: Use :mod:`abc` from the standard library to explicitly mark
@@ -42,7 +44,9 @@ Internal changes
 .. _#81: https://github.com/RKrahl/archive-tools/issues/81
 .. _#82: https://github.com/RKrahl/archive-tools/pull/82
 .. _#83: https://github.com/RKrahl/archive-tools/pull/83
+.. _#85: https://github.com/RKrahl/archive-tools/issues/85
 .. _#86: https://github.com/RKrahl/archive-tools/pull/86
+.. _#87: https://github.com/RKrahl/archive-tools/pull/87
 
 
 0.6 (2021-12-12)
