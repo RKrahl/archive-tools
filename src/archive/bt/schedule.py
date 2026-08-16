@@ -1,6 +1,7 @@
 """Provide helper for the backup-tool related to schedules.
 """
 
+from abc import ABC, abstractmethod
 import collections
 import datetime
 from enum import IntEnum
@@ -12,10 +13,11 @@ class NoFullBackupError(Exception):
     pass
 
 
-class _DTMatcher:
+class _DTMatcher(ABC):
     """datetime component matcher to be used in ScheduleDate.
     This is an abstract base class.
     """
+    @abstractmethod
     def matches(self, value):
         raise NotImplementedError
 
@@ -182,7 +184,7 @@ class ScheduleDate(_dt_tuple):
             return False
 
 
-class BaseSchedule:
+class BaseSchedule(ABC):
     """Abstract base class for schedules.
     """
 
@@ -197,9 +199,11 @@ class BaseSchedule:
     def match_date(self, dt):
         return dt in self.date
 
+    @abstractmethod
     def get_base_archives(self, archives):
         raise NotImplementedError
 
+    @abstractmethod
     def get_child_base_archives(self, archives):
         raise NotImplementedError
 
