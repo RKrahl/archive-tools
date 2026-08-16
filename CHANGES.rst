@@ -31,6 +31,8 @@ Internal changes
 + `#74`_, `#80`_: Review build tool chain.
 + `#83`_: Simplify implementation of :func:`archive.tools.tmp_chdir`
   and :func:`archive.tools.tmp_umask` using :mod:`contextlib`.
++ `#86`_: Use :mod:`abc` from the standard library to explicitly mark
+  abstract base classes.
 
 .. _#74: https://github.com/RKrahl/archive-tools/pull/74
 .. _#75: https://github.com/RKrahl/archive-tools/pull/75
@@ -40,6 +42,7 @@ Internal changes
 .. _#81: https://github.com/RKrahl/archive-tools/issues/81
 .. _#82: https://github.com/RKrahl/archive-tools/pull/82
 .. _#83: https://github.com/RKrahl/archive-tools/pull/83
+.. _#86: https://github.com/RKrahl/archive-tools/pull/86
 
 
 0.6 (2021-12-12)
