@@ -19,19 +19,6 @@ functions that implement archives.
    mod-exception
    mod-manifest
 
-.. _modref-special:
-
-Special purpose modules
-~~~~~~~~~~~~~~~~~~~~~~~
-
-These modules will generally be used in particular cases only.
-
-.. toctree::
-   :maxdepth: 1
-
-   mod-index
-   mod-mailarchive
-
 .. _modref-internal:
 
 Internal modules
@@ -47,3 +34,5 @@ will not need to care about them.
    mod-tools
    mod-cli
    mod-bt
+   mod-index
+   mod-mailarchive
