@@ -29,10 +29,10 @@ the following subcommands:
 backup-tool
 ~~~~~~~~~~~
 
-Create archives.  This is script is intended to be run regularly in a
-non-interactive way, for instance from a system timer, to create
-backups.  Its behavior is controlled with a configuration file.  It
-provides the following subcommands:
+The :ref:`backup-tool` script is designed to run in the background,
+for instance launched regularly by a system timer, to create backups.
+Its behavior is controlled with a configuration file.  It provides the
+following subcommands:
 
 .. toctree::
    :maxdepth: 1
@@ -45,7 +45,8 @@ provides the following subcommands:
 imap-to-archive
 ~~~~~~~~~~~~~~~
 
-This script is experimental and basically just a prove of concept for
-now.  It is intentionally not further documented here, as it is not
-yet stable, its interface may change or it may be dropped in future
-versions.
+The :ref:`imap-to-archive` script fetches mails from an IMAP server
+and stores them in an archive.  For the moment, this is implemented as
+a proof-of-concept and still experimental.  It is intentionally not
+further documented here, as it is not yet stable, its interface may
+change or it may be dropped in future versions.
