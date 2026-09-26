@@ -35,6 +35,7 @@ Content of the documentation
    usage
    cli
    moduleref
+   known-issues
    changelog
 
 
