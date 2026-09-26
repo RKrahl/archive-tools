@@ -34,6 +34,7 @@ Content of the documentation
    install
    usage
    cli
+   backup-cfg
    moduleref
    known-issues
    changelog

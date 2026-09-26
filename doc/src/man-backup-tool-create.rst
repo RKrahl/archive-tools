@@ -1,3 +1,5 @@
+.. _backup-tool-create:
+
 backup-tool create
 ==================
 

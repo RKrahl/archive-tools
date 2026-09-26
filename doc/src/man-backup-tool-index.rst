@@ -1,3 +1,5 @@
+.. _backup-tool-index:
+
 backup-tool index
 =================
 
