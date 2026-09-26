@@ -42,7 +42,7 @@ are not required to install archive-tools and use its core features:
 
 + `imapclient`_
 
-  Required for the `imap-to-archive.py` script.
+  Only required for the :ref:`imap-to-archive` script.
 
 + `python-dateutil`_
 
