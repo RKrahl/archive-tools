@@ -51,7 +51,7 @@ are not required to install archive-tools and use its core features:
 
   - date strings will lack time zone indication.
 
-  - the `--mtime` argument to `archive-tool.py find` recognizes a
+  - the `--mtime` argument to :ref:`archive-tool-find` recognizes a
     reduced set of date formats.
 
 + `git-props`_

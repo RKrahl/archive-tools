@@ -1,3 +1,5 @@
+.. _archive-tool-find:
+
 archive-tool find
 =================
 
