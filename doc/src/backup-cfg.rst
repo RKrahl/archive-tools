@@ -70,6 +70,11 @@ configuration file.  But they are only defined in
     the value of the `--user` command line option, if given, undefined
     otherwise.
 
+.. option:: home
+
+    the home directory of the user if `user` is defined, undefined
+    otherwise.
+
 .. option:: schedule
 
     the name of the selected schedule.  This is one of the `schedules`
