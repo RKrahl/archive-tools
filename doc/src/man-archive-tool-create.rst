@@ -14,7 +14,9 @@ Description
 
 .. program:: archive-tool create
 
-Create an archive.
+Create an archive.  Adding the files and directories given in the
+`<file>` arguments in the command line to it.  Directories are added
+recursively including their content.
 
 Options
 ~~~~~~~
@@ -23,7 +25,9 @@ Options
 
 .. option:: --directory <directory>
 
-    Change to `<directory>` prior creating the archive.
+    Change to `<directory>` prior creating the archive.  Relative
+    paths in `<archive>` and `<file>` arguments will be resolved in
+    this directory.
 
 .. option:: --tag <tag>
 
@@ -31,7 +35,8 @@ Options
 
 .. option:: --compression {none,gz,bz2,xz}
 
-    Select the compression algorithm.
+    Select the compression algorithm.  The algorithm matching the
+    extension in `<archive>` argument will be taken as default.
 
 .. option:: --basedir <basedir>
 
@@ -39,7 +44,8 @@ Options
 
 .. option:: --exclude <exclude>
 
-    Exclude the path `<exclude>` from the archive.
+    Exclude the path `<exclude>` from the archive.  This option can be
+    given multiple times to exclude more than one path.
 
 .. option:: --deduplicate {never,link,content}
 
