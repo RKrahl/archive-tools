@@ -11,7 +11,9 @@ Description
 
 .. program:: archive-tool verify
 
-Verify integrity of an archive.
+Verify the integrity of an archive.  For all entries in the manifest,
+check that the corresponding object is in the archive and that file
+stats and checksums match.
 
 Options
 ~~~~~~~
