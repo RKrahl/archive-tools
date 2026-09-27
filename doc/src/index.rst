@@ -3,8 +3,8 @@ Tools for managing archives
 
 This package provides tools for managing archives.  An archive in
 terms of this package is a (compressed) tar archive file with some
-embedded metadata on the included files.  This metadata include the
-name, file stats, and checksums of the file.
+embedded metadata on the included items: the manifest.  This metadata
+includes the name, file stats, and checksum of the file.
 
 The package provides a command line tool to work with archives,
 including the following tasks:
