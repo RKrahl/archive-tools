@@ -1,3 +1,13 @@
+"""Provide the MailArchive class
+
+.. note::
+   This module implements a custom archive class that is used in the
+   imap-to-archive command line script.  It is mostly a proof of
+   concept on how to implement custom archives and is not considered
+   to be part of the API of archive-tools for the time being.  Most
+   users will not need to use it directly or even care about it.
+"""
+
 import hashlib
 from mailbox import Maildir
 from pathlib import Path

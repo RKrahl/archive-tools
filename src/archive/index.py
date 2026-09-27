@@ -1,4 +1,10 @@
 """Provide the ArchiveIndex class that represents an index of archives.
+
+.. note::
+   This module is intended as a helper for the internal use in the
+   backup-tool command line script.  It is not considered to be part
+   of the API of archive-tools.  Most users will not need to use it
+   directly or even care about it.
 """
 
 from collections.abc import Mapping, Sequence

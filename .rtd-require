@@ -1,0 +1,7 @@
+PyYAML >=5.1
+lark
+packaging
+setuptools
+git-props
+python-dateutil
+sphinx_rtd_theme

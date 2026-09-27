@@ -26,6 +26,9 @@ def _is_normalized(p):
         return False
 
 class DedupMode(Enum):
+    """De-duplication mode when creating an archive: when to use hard
+    links in the archive.
+    """
     NEVER = 'never'
     LINK = 'link'
     CONTENT = 'content'
@@ -35,6 +38,8 @@ class DedupMode(Enum):
         return self != self.__class__.NEVER
 
 class MetadataItem:
+    """Represent a metadata item in an archive.
+    """
 
     def __init__(self, name=None, path=None, tarinfo=None, fileobj=None,
                  mode=None):
@@ -52,7 +57,7 @@ class MetadataItem:
         self.path = basedir / self.name
 
 
-compression_map = {
+_compression_map = {
     '.tar': '',
     '.tar.gz': 'gz',
     '.tar.bz2': 'bz2',
@@ -62,6 +67,27 @@ compression_map = {
 
 
 class Archive:
+    """Provide the API to an archive.  An archive as a tar archive
+    that starts with one or more metadata items as members.  The first
+    metadata item is always the YAML serialization of a
+    :class:`archive.manifest.Manifest`, describing the archive
+    members.  Subclasses may add more metadata items relevant to their
+    specific scope.
+
+    An :class:`Archive` object should either be written using
+    :meth:`create` or opened for reading using :meth:`open`.  In the
+    reading case, an :class:`Archive` object may be used as a context
+    manager to automatically close the file at the end.  Typical
+    usages may look like:
+
+    >>> archive_path = Path("dummy.tar")
+    >>> paths = [Path("dummy")]
+    >>> a1 = Archive().create(archive_path, paths=paths)
+    >>> with Archive().open(archive_path) as a2:
+    ...     a2.verify()
+    ...     fi = a2.manifest.find(Path("dummy/dummy.tex"))
+    ...     a2.extract_member(fi, Path("/tmp"))
+    """
 
     def __init__(self):
         self.path = None
@@ -201,7 +227,7 @@ class Archive:
                dedup=DedupMode.LINK, tags=None):
         if compression is None:
             try:
-                compression = compression_map["".join(path.suffixes)]
+                compression = _compression_map["".join(path.suffixes)]
             except KeyError:
                 # Last ressort default
                 compression = 'gz'

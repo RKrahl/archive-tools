@@ -7,8 +7,14 @@ build:
 test:
 	$(PYTHON) setup.py test
 
-sdist:
+sdist: doc-man
 	$(PYTHON) setup.py sdist
+
+doc-html: build
+	$(MAKE) -C doc html
+
+doc-man: build
+	$(MAKE) -C doc man
 
 clean:
 	rm -rf build
@@ -18,9 +24,10 @@ distclean: clean
 	rm -f MANIFEST _meta.py
 	rm -rf dist
 	rm -rf tests/.pytest_cache
+	$(MAKE) -C doc distclean
 
 meta:
 	$(PYTHON) setup.py meta
 
 
-.PHONY: build test sdist clean distclean meta
+.PHONY: build test sdist doc-html doc-man clean distclean meta
