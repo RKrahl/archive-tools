@@ -7,7 +7,7 @@ build:
 test:
 	$(PYTHON) setup.py test
 
-sdist:
+sdist: doc-man
 	$(PYTHON) setup.py sdist
 
 doc-html: build

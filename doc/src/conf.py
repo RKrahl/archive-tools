@@ -176,8 +176,36 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, project, '%s Documentation' % project,
-     [author], 1)
+    ('man-archive-tool-create', 'archive-tool-create',
+     'Create an archive',
+     [author], 1),
+    ('man-archive-tool-verify', 'archive-tool-verify',
+     'Verify the integrity of an archive',
+     [author], 1),
+    ('man-archive-tool-ls', 'archive-tool-ls',
+     'List the content of an archive',
+     [author], 1),
+    ('man-archive-tool-info', 'archive-tool-info',
+     'Show informations about an entry in the archive',
+     [author], 1),
+    ('man-archive-tool-check', 'archive-tool-check',
+     'Check if files are in the archive',
+     [author], 1),
+    ('man-archive-tool-diff', 'archive-tool-diff',
+     'Show the differences between two archives',
+     [author], 1),
+    ('man-archive-tool-find', 'archive-tool-find',
+     'Search for entries in archives',
+     [author], 1),
+    ('man-backup-tool-create', 'backup-tool-create',
+     'Create a backup',
+     [author], 1),
+    ('man-backup-tool-index', 'backup-tool-index',
+     'Update the backup index',
+     [author], 1),
+    ('backup-cfg', 'backup.cfg',
+     'backup-tool configuration file',
+     [author], 5),
 ]
 
 

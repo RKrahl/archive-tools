@@ -32,6 +32,7 @@ BuildRequires:	%{python_module python-dateutil}
 Requires:	python-PyYAML
 Requires:	python-lark-parser
 Requires:	python-packaging
+Requires:	man
 Recommends:	python-IMAPClient
 Recommends:	python-python-dateutil
 BuildArch:	noarch
@@ -55,6 +56,9 @@ for f in `ls %{buildroot}%{_bindir}`
 do
     mv %{buildroot}%{_bindir}/$$f %{buildroot}%{_bindir}/$${f%%.py}
 done
+%__install -d -m 755 %{buildroot}%{_mandir}/man1 %{buildroot}%{_mandir}/man5
+%__cp -p doc/man/*.1 %{buildroot}%{_mandir}/man1
+%__cp -p doc/man/*.5 %{buildroot}%{_mandir}/man5
 %fdupes %{buildroot}%{python_sitelib}
 
 
@@ -70,6 +74,8 @@ done
 %config(noreplace) %{_sysconfdir}/backup.cfg
 %{python_sitelib}/*
 %{_bindir}/*
+%{_mandir}/man1/*
+%{_mandir}/man5/*
 
 
 %changelog
